@@ -12,6 +12,8 @@ public interface SubmissionService {
 
     Submission getSubmissionById(Long id);
 
+    Iterable<Submission> getBySubmissionsObject(Submission submission);
+
     Submission saveSubmission(Submission submission);
 
     boolean deleteSubmission(Long id);

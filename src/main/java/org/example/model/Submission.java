@@ -30,6 +30,6 @@ public class Submission {
     private Boolean acceptance;
 
     @Column(value = "SUBMITTERID")
-    private Integer submitterid;
+    private Long submitterid;
 
 }

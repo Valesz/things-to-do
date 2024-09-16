@@ -12,6 +12,8 @@ public interface TaskService {
 
     Task getTaskById(Long id);
 
+    Iterable<Task> getByTasksObject(Task task);
+
     Iterable<Task> getTasksByFilter(Filter filter);
 
     List<Task> getCompletedTasksForUser(Long userId);
@@ -21,5 +23,7 @@ public interface TaskService {
     boolean deleteTask(Long id);
 
     boolean deleteAll();
+
+    Task populateTask();
 
 }

@@ -10,6 +10,8 @@ public interface KeywordsForTasksService {
 
     KeywordsForTasks getKeywordForTaskById(Long id);
 
+    Iterable<KeywordsForTasks> getByKeywordsForTasksObject(KeywordsForTasks keywordsForTasks);
+
     Iterable<KeywordsForTasks> getKeywordsForTaskByTaskId(Long id);
 
     Iterable<KeywordsForTasks> getTasksByKeyword(String keyword);

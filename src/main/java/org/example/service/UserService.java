@@ -8,10 +8,14 @@ public interface UserService {
 
     User getUserById(Long id);
 
+    Iterable<User> getByUsersObject(User user);
+
     User saveUser(User user);
 
     boolean deleteUser(Long id);
 
     boolean deleteAll();
+
+    User populateUser();
 
 }

@@ -8,6 +8,8 @@ public interface CompletedTasksService {
 
     CompletedTask getCompletedTaskById(Long id);
 
+    Iterable<CompletedTask> getByCompletedTasksObject(CompletedTask completedTask);
+
     CompletedTask saveCompletedTask(CompletedTask completedTask);
 
     boolean deleteCompletedTask(Long id);

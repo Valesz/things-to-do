@@ -4,15 +4,24 @@ import org.example.model.KeywordsForTasks;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.service.KeywordsForTasksService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Service
 public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
 
     @Autowired
     private KeywordsForTasksRepository keywordsForTasksRepository;
+    @Qualifier("namedParameterJdbcTemplate")
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override
     public Iterable<KeywordsForTasks> getAllKeywordsForTasks() {
@@ -22,6 +31,53 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     @Override
     public KeywordsForTasks getKeywordForTaskById(Long id) {
         return keywordsForTasksRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Iterable<KeywordsForTasks> getByKeywordsForTasksObject(KeywordsForTasks keywordsForTasks) {
+        if (keywordsForTasks == null) {
+            return null;
+        }
+
+        SqlParameterSource namedParams = new MapSqlParameterSource()
+                .addValue("id", keywordsForTasks.getId())
+                .addValue("taskid", keywordsForTasks.getTaskid())
+                .addValue("keyword", keywordsForTasks.getKeyword());
+
+        String query = constructQueryForGetByTaskObject(keywordsForTasks);
+
+        return namedParameterJdbcTemplate.query(query, namedParams, rs -> {
+            List<KeywordsForTasks> keywordsForTasksList = new ArrayList<>();
+
+            while (rs.next()) {
+                keywordsForTasksList.add(KeywordsForTasks.builder()
+                        .id(rs.getLong("id"))
+                        .taskid(rs.getLong("taskid"))
+                        .keyword(rs.getString("keyword"))
+                        .build()
+                );
+            }
+
+            return keywordsForTasksList;
+        });
+    }
+
+    private String constructQueryForGetByTaskObject(KeywordsForTasks keywordsForTasks) {
+        StringBuilder query = new StringBuilder(" SELECT * FROM \"keywordsfortasks\" ");
+
+        if (keywordsForTasks.getId() != null) {
+            query.append(" WHERE \"id\" = :id ");
+        }
+
+        if (keywordsForTasks.getTaskid() != null) {
+            query.append(" WHERE \"taskid\" = :taskid ");
+        }
+
+        if (keywordsForTasks.getKeyword() != null) {
+            query.append(" WHERE \"keyword\" = :keyword ");
+        }
+
+        return query.toString();
     }
 
     @Override
