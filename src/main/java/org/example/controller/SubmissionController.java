@@ -2,6 +2,8 @@ package org.example.controller;
 
 import org.example.model.Submission;
 import org.example.service.SubmissionService;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ public class SubmissionController {
             return submissionService.saveSubmission(submission);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -29,6 +33,8 @@ public class SubmissionController {
             return submissionService.updateSubmission(submission);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

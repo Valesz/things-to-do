@@ -7,6 +7,8 @@ import org.example.service.CompletedTasksService;
 import org.example.service.Filter;
 import org.example.service.KeywordsForTasksService;
 import org.example.service.TaskService;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,8 @@ public class TaskController {
             return taskService.saveTask(task);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -40,6 +44,8 @@ public class TaskController {
             return taskService.updateTask(task);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -64,6 +70,8 @@ public class TaskController {
             return completedTasksService.saveCompletedTask(completedTask);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -87,6 +95,8 @@ public class TaskController {
             return keywordsForTasksService.saveKeywordsForTasks(keyword);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (NullValueException | ConstraintException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

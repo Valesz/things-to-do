@@ -1,6 +1,8 @@
 package org.example.service;
 
 import org.example.model.KeywordsForTasks;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 
 import java.util.Collection;
 
@@ -18,11 +20,11 @@ public interface KeywordsForTasksService {
 
     Iterable<KeywordsForTasks> getTasksByKeyword(Collection<String> keyword);
 
-    KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask);
+    KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) throws NullValueException, ConstraintException;
 
-    Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask);
+    Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) throws NullValueException, ConstraintException;
 
-    KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordsForTasks);
+    KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordsForTasks) throws NullValueException, ConstraintException;
 
     boolean deleteKeywordForTask(Long id);
 

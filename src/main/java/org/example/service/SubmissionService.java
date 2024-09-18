@@ -1,6 +1,8 @@
 package org.example.service;
 
 import org.example.model.Submission;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,9 +16,9 @@ public interface SubmissionService {
 
     Iterable<Submission> getBySubmissionsObject(Submission submission);
 
-    Submission saveSubmission(Submission submission);
+    Submission saveSubmission(Submission submission) throws NullValueException, ConstraintException;
 
-    Submission updateSubmission(Submission submission);
+    Submission updateSubmission(Submission submission) throws NullValueException, ConstraintException;
 
     boolean deleteSubmission(Long id);
 

@@ -2,7 +2,11 @@ package org.example.service.impl;
 
 import org.example.model.Submission;
 import org.example.repository.SubmissionRepository;
+import org.example.repository.TaskRepository;
+import org.example.repository.UserRepository;
 import org.example.service.SubmissionService;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -17,10 +21,16 @@ import java.util.List;
 public class SubmissionServiceImpl implements SubmissionService {
 
     @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Autowired
     private SubmissionRepository submissionRepository;
 
     @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public boolean setAcceptance(Long id, boolean accepted) {
@@ -105,21 +115,96 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public Submission saveSubmission(Submission submission) {
+    public Submission saveSubmission(Submission submission) throws NullValueException, ConstraintException {
         if (submission.getId() != null) {
             throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
         }
+
+        validateSubmissionProperties(submission);
 
         return submissionRepository.save(submission);
     }
 
     @Override
-    public Submission updateSubmission(Submission submission) {
+    public Submission updateSubmission(Submission submission) throws NullValueException, ConstraintException {
         if (!submissionRepository.existsById(submission.getId())) {
             throw new IllegalArgumentException("Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance.");
         }
 
-        return submissionRepository.save(submission);
+        Submission newSubmission = setNulLValues(submission);
+
+        validateSubmissionProperties(newSubmission);
+
+        return submissionRepository.save(newSubmission);
+    }
+
+    private Submission setNulLValues(Submission submission) {
+        Submission submissionInDb = submissionRepository.findById(submission.getId()).orElse(new Submission());
+
+        submission.setTaskid(submission.getTaskid() == null ? submissionInDb.getTaskid() : submission.getTaskid());
+
+        submission.setDescription(submission.getDescription() == null ? submissionInDb.getDescription() : submission.getDescription());
+
+        submission.setTimeofsubmission(submission.getTimeofsubmission() == null ? submissionInDb.getTimeofsubmission() : submission.getTimeofsubmission());
+
+        //TODO: fix 2 -> null-ra állítás
+        submission.setAcceptance(submission.getAcceptance() == null ? submissionInDb.getAcceptance() : submission.getAcceptance());
+
+        submission.setSubmitterid(submission.getSubmitterid() == null ? submissionInDb.getSubmitterid() : submission.getSubmitterid());
+
+        return submission;
+    }
+
+    private void validateSubmissionProperties(Submission submission) throws NullValueException, ConstraintException {
+
+        String errorMessage = checkForNullProperties(submission);
+
+        if (!errorMessage.isEmpty()) {
+            throw new NullValueException(errorMessage);
+        }
+
+        errorMessage = checkConstraints(submission);
+
+        if (!errorMessage.isEmpty()) {
+            throw new ConstraintException(errorMessage);
+        }
+
+    }
+
+    private String checkForNullProperties(Submission submission) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (submission.getTaskid() == null) {
+            errorMessage.append("taskid property is not set, ");
+        }
+
+        if (submission.getDescription() == null) {
+            errorMessage.append("description property is not set, ");
+        }
+
+        if (submission.getTimeofsubmission() == null) {
+            errorMessage.append("timeofsubmission property is not set, ");
+        }
+
+        if (submission.getSubmitterid() == null) {
+            errorMessage.append("submitterid property is not set, ");
+        }
+
+        return errorMessage.toString();
+    }
+
+    private String checkConstraints(Submission submission) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (!taskRepository.existsById(submission.getTaskid())) {
+            errorMessage.append("taskid property is not a valid task's ID, ");
+        }
+
+        if (!userRepository.existsById(submission.getSubmitterid())) {
+            errorMessage.append("submitterid property is not a valid user's ID, ");
+        }
+
+        return errorMessage.toString();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.model.User;
+import org.example.utils.exceptions.NullValueException;
 
 public interface UserService {
 
@@ -10,9 +11,9 @@ public interface UserService {
 
     Iterable<User> getByUsersObject(User user);
 
-    User saveUser(User user);
+    User saveUser(User user) throws NullValueException;
 
-    User updateUser(User user);
+    User updateUser(User user) throws NullValueException;
 
     boolean deleteUser(Long id);
 

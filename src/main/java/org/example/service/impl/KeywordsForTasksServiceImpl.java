@@ -2,7 +2,10 @@ package org.example.service.impl;
 
 import org.example.model.KeywordsForTasks;
 import org.example.repository.KeywordsForTasksRepository;
+import org.example.repository.TaskRepository;
 import org.example.service.KeywordsForTasksService;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -21,6 +24,9 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Override
     public Iterable<KeywordsForTasks> getAllKeywordsForTasks() {
@@ -97,26 +103,86 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     @Override
-    public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) {
+    public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) throws NullValueException, ConstraintException {
         if (keywordForTask.getId() != null) {
             throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
         }
 
+        validateKeywordsForTasksProperties(keywordForTask);
+
         return keywordsForTasksRepository.save(keywordForTask);
     }
 
     @Override
-    public Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) {
+    public Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) throws NullValueException, ConstraintException {
+        for (KeywordsForTasks item : keywordForTask) {
+            validateKeywordsForTasksProperties(item);
+        }
+
         return keywordsForTasksRepository.saveAll(keywordForTask);
     }
 
     @Override
-    public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) {
+    public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws NullValueException, ConstraintException {
         if (!keywordsForTasksRepository.existsById(keywordForTask.getId())) {
             throw new IllegalArgumentException("Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance.");
         }
 
-        return keywordsForTasksRepository.save(keywordForTask);
+        KeywordsForTasks newKeywordForTask = setNulLValues(keywordForTask);
+
+        validateKeywordsForTasksProperties(newKeywordForTask);
+
+        return keywordsForTasksRepository.save(newKeywordForTask);
+    }
+
+    private KeywordsForTasks setNulLValues(KeywordsForTasks keywordForTask) {
+        KeywordsForTasks keywordForTaskInDb = keywordsForTasksRepository.findById(keywordForTask.getId()).orElse(new KeywordsForTasks());
+
+        keywordForTask.setTaskid(keywordForTask.getTaskid() == null ? keywordForTaskInDb.getTaskid() : keywordForTask.getTaskid());
+
+        keywordForTask.setKeyword(keywordForTask.getKeyword() == null ? keywordForTaskInDb.getKeyword() : keywordForTask.getKeyword());
+
+        return keywordForTask;
+    }
+
+    private void validateKeywordsForTasksProperties(KeywordsForTasks keywordsForTasks) throws NullValueException, ConstraintException {
+
+        String errorMessage = checkForNullProperties(keywordsForTasks);
+
+        if (!errorMessage.isEmpty()) {
+            throw new NullValueException(errorMessage);
+        }
+
+        errorMessage = checkConstraints(keywordsForTasks);
+
+        if (!errorMessage.isEmpty()) {
+            throw new ConstraintException(errorMessage);
+        }
+
+    }
+
+    private String checkForNullProperties(KeywordsForTasks keywordsForTasks) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (keywordsForTasks.getTaskid() == null) {
+            errorMessage.append("taskid property is not set, ");
+        }
+
+        if (keywordsForTasks.getKeyword() == null) {
+            errorMessage.append("keyword property is not set, ");
+        }
+
+        return errorMessage.toString();
+    }
+
+    private String checkConstraints(KeywordsForTasks keywordsForTasks) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (!taskRepository.existsById(keywordsForTasks.getTaskid())) {
+            errorMessage.append("taskid property is not a valid task's ID");
+        }
+
+        return errorMessage.toString();
     }
 
     @Override

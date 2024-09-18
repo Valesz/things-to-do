@@ -2,7 +2,11 @@ package org.example.service.impl;
 
 import org.example.model.CompletedTask;
 import org.example.repository.CompletedTasksRepository;
+import org.example.repository.TaskRepository;
+import org.example.repository.UserRepository;
 import org.example.service.CompletedTasksService;
+import org.example.utils.exceptions.ConstraintException;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,11 +20,16 @@ import java.util.List;
 public class CompletedTasksServiceImpl implements CompletedTasksService {
 
     @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Autowired
     private CompletedTasksRepository completedTasksRepository;
 
     @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private UserRepository userRepository;
 
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Override
     public Iterable<CompletedTask> getAllCompletedTasks() {
@@ -82,21 +91,81 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     }
 
     @Override
-    public CompletedTask saveCompletedTask(CompletedTask completedTask) {
+    public CompletedTask saveCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException {
         if (completedTask.getId() != null) {
             throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
         }
+
+        validateCompletedTaskProperties(completedTask);
 
         return completedTasksRepository.save(completedTask);
     }
 
     @Override
-    public CompletedTask updateCompletedTask(CompletedTask completedTask) {
+    public CompletedTask updateCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException {
         if (!completedTasksRepository.existsById(completedTask.getId())) {
             throw new IllegalArgumentException("Completed task with id " + completedTask.getId() + " doesn't exist. Please use save to save this instance.");
         }
 
-        return completedTasksRepository.save(completedTask);
+        CompletedTask newCompletedTask = setNulLValues(completedTask);
+
+        validateCompletedTaskProperties(newCompletedTask);
+
+        return completedTasksRepository.save(newCompletedTask);
+    }
+
+    private CompletedTask setNulLValues(CompletedTask completedTask) {
+        CompletedTask completedTaskInDb = completedTasksRepository.findById(completedTask.getId()).orElse(new CompletedTask());
+
+        completedTask.setUserid(completedTask.getUserid() == null ? completedTaskInDb.getUserid() : completedTask.getUserid());
+
+        completedTask.setTaskid(completedTask.getTaskid() == null ? completedTaskInDb.getTaskid() : completedTask.getTaskid());
+
+        return completedTask;
+    }
+
+    private void validateCompletedTaskProperties(CompletedTask completedTask) throws NullValueException, ConstraintException {
+
+        String errorMessage = checkForNullProperties(completedTask);
+
+        if (!errorMessage.isEmpty()) {
+            throw new NullValueException(errorMessage);
+        }
+
+        errorMessage = checkConstraints(completedTask);
+
+        if (!errorMessage.isEmpty()) {
+            throw new ConstraintException(errorMessage);
+        }
+
+    }
+
+    private String checkForNullProperties(CompletedTask completedTask) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (completedTask.getUserid() == null) {
+            errorMessage.append("userid property is not set, ");
+        }
+
+        if (completedTask.getTaskid() == null) {
+            errorMessage.append("taskid property is not set, ");
+        }
+
+        return errorMessage.toString();
+    }
+
+    private String checkConstraints(CompletedTask completedTask) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (!userRepository.existsById(completedTask.getUserid())) {
+            errorMessage.append("userid property is not a valid user's ID, ");
+        }
+
+        if (!taskRepository.existsById(completedTask.getTaskid())) {
+            errorMessage.append("taskid property is not a valid task's ID");
+        }
+
+        return errorMessage.toString();
     }
 
     @Override

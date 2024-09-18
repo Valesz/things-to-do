@@ -38,7 +38,7 @@ dependencies {
 //            strictly "1.7.36"
 //        }
 //    }
-    implementation("com.h2database:h2:2.1.214")
+    implementation("com.h2database:h2:2.3.232")
 
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("org.apache.commons:commons-collections4:4.4")
@@ -54,6 +54,7 @@ dependencies {
     implementation("org.springframework:spring-web:5.3.25")
     implementation("org.springframework:spring-webmvc:5.3.25")
     implementation("org.springframework.data:spring-data-jdbc:2.4.9")
+    implementation group: 'org.springframework.security', name: 'spring-security-core', version: '5.7.5'
 //    implementation("ch.qos.logback:logback-classic:1.2.11")
 //    implementation("ch.qos.logback:logback-core:1.2.11")
 //    implementation("org.slf4j:slf4j-api:1.7.36")

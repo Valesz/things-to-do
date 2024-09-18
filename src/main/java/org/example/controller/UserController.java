@@ -2,6 +2,7 @@ package org.example.controller;
 
 import org.example.model.User;
 import org.example.service.UserService;
+import org.example.utils.exceptions.NullValueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,20 +16,29 @@ public class UserController {
     private UserService userService;
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.CREATED)
     public User addUser(@RequestBody User user) {
         try {
-            return userService.saveUser(user);
+            User savedUser = userService.saveUser(user);
+            savedUser.setPassword("");
+            return savedUser;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (NullValueException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
     @RequestMapping(value = "/", method = RequestMethod.PUT)
     public User updateUser(@RequestBody User user) {
         try {
-            return userService.updateUser(user);
+            User savedUser = userService.updateUser(user);
+            savedUser.setPassword("");
+            return savedUser;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (NullValueException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
