@@ -35,7 +35,7 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     @Override
     public Iterable<CompletedTask> getByCompletedTasksObject(CompletedTask completedTask) {
         if (completedTask == null) {
-            return null;
+            return getAllCompletedTasks();
         }
 
         SqlParameterSource namedParams = new MapSqlParameterSource()
@@ -62,18 +62,20 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     }
 
     private String constructQueryByOwnObject(CompletedTask completedTask) {
-        StringBuilder query = new StringBuilder(" SELECT * FROM \"completedTasks\n ");
+        StringBuilder query = new StringBuilder(" SELECT * FROM \"completedTasks\" ");
+
+        query.append(" WHERE 1 = 1 ");
 
         if (completedTask.getId() != null) {
-            query.append(" WHERE \"id\" = :id ");
+            query.append(" AND id = :id ");
         }
 
         if (completedTask.getUserid() != null) {
-            query.append(" WHERE \"userid\" = :userid ");
+            query.append(" AND userid = :userid ");
         }
 
         if (completedTask.getTaskid() != null) {
-            query.append(" WHERE \"taskid\" = :taskid ");
+            query.append(" AND taskid = :taskid ");
         }
 
         return query.toString();

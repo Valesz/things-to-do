@@ -15,7 +15,6 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @PropertySource("classpath:application.properties")
@@ -44,15 +43,16 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Iterable<Task> getByTasksObject(Task task) {
+
         if (task == null) {
-            return null;
+            return getAllTasks();
         }
 
         SqlParameterSource namedParams = new MapSqlParameterSource()
                 .addValue("id", task.getId())
                 .addValue("name", task.getName())
                 .addValue("description", task.getDescription())
-                .addValue("timeofcreation", task.getTimeofcreation())
+                .addValue("timeofcreation", task.getTimeofcreation() == null ? null : task.getTimeofcreation().toString())
                 .addValue("maintaskid", task.getMaintaskid())
                 .addValue("ownerid", task.getOwnerid());
 
@@ -80,28 +80,30 @@ public class TaskServiceImpl implements TaskService {
     private String contructQueryForGetByTaskObject(Task task) {
         StringBuilder query = new StringBuilder(" SELECT * FROM \"task\" ");
 
+        query.append(" WHERE 1 = 1 ");
+
         if (task.getId() != null) {
-            query.append(" WHERE \"id\" = :id ");
+            query.append(" AND id = :id ");
         }
 
         if (task.getName() != null) {
-            query.append(" WHERE \"name\" = :name ");
+            query.append(" AND name = :name ");
         }
 
         if (task.getDescription() != null) {
-            query.append(" WHERE \"description\" = :description ");
+            query.append(" AND description = :description ");
         }
 
         if (task.getTimeofcreation() != null) {
-            query.append(" WHERE \"timeofcreation\" = :timeofcreation ");
+            query.append(" AND timeofcreation = :timeofcreation ");
         }
 
         if (task.getMaintaskid() != null) {
-            query.append(" WHERE \"maintaskid\" = :maintaskid ");
+            query.append(" AND maintaskid = :maintaskid ");
         }
 
         if (task.getOwnerid() != null) {
-            query.append(" WHERE \"ownerid\" = :ownerid ");
+            query.append(" AND ownerid = :ownerid ");
         }
 
         return query.toString();
@@ -210,23 +212,4 @@ public class TaskServiceImpl implements TaskService {
         return true;
     }
 
-    @Override
-    public Task populateTask() {
-        String[] taskNames = new String[]{"A", "B", "C", "D", "E", "F", "G", "H"};
-
-        Random random = new Random();
-
-        StringBuilder name = new StringBuilder();
-
-        do {
-            name.append(taskNames[random.nextInt(taskNames.length)]);
-        } while (random.nextBoolean());
-
-        return Task.builder()
-                .name(name.toString())
-                .description("asd")
-                .timeofcreation(LocalDate.now())
-                .ownerid(1L)
-                .build();
-    }
 }

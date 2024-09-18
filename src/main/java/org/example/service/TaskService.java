@@ -24,6 +24,4 @@ public interface TaskService {
 
     boolean deleteAll();
 
-    Task populateTask();
-
 }

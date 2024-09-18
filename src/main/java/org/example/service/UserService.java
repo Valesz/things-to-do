@@ -16,6 +16,4 @@ public interface UserService {
 
     boolean deleteAll();
 
-    User populateUser();
-
 }

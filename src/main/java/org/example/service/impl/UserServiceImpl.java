@@ -5,7 +5,6 @@ import org.example.repository.UserRepository;
 import org.example.service.UserService;
 import org.example.utils.UserStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -15,14 +14,13 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     @Resource(name = "userRepository")
     UserRepository userRepository;
-    @Qualifier("namedParameterJdbcTemplate")
+
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -38,16 +36,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Iterable<User> getByUsersObject(User user) {
+
         if (user == null) {
-            return null;
+            return userRepository.findAll();
         }
 
         SqlParameterSource namedParams = new MapSqlParameterSource()
                 .addValue("id", user.getId())
                 .addValue("username", user.getUsername())
                 .addValue("email", user.getEmail())
-                .addValue("timeofcreation", user.getTimeofcreation())
-                .addValue("status", user.getStatus())
+                .addValue("timeofcreation", user.getTimeofcreation() == null ? null : user.getTimeofcreation().toString())
+                .addValue("status", user.getStatus() == null ? null : user.getStatus().toString())
                 .addValue("password", user.getPassword())
                 .addValue("classification", user.getClassification())
                 .addValue("precisionofanswers", user.getPrecisionofanswers());
@@ -65,8 +64,8 @@ public class UserServiceImpl implements UserService {
                         .timeofcreation(LocalDate.parse(rs.getString("timeofcreation")))
                         .status(UserStatusEnum.valueOf(rs.getString("status")))
                         .password(rs.getString("password"))
-                        .classification(user.getClassification())
-                        .precisionofanswers(user.getPrecisionofanswers())
+                        .classification(rs.getDouble("classification"))
+                        .precisionofanswers(rs.getDouble("precisionofanswers"))
                         .build()
                 );
             }
@@ -79,32 +78,34 @@ public class UserServiceImpl implements UserService {
     private String constructQueryByOwnObject(User user) {
         StringBuilder query = new StringBuilder(" SELECT * FROM \"user\" ");
 
+        query.append(" WHERE 1 = 1 ");
+
         if (user.getId() != null) {
-            query.append(" WHERE \"id\" = :id ");
+            query.append(" AND id = :id ");
         }
 
         if (user.getUsername() != null) {
-            query.append(" WHERE \"username\" = :username ");
+            query.append(" AND username = :username ");
         }
 
         if (user.getEmail() != null) {
-            query.append(" WHERE \"email\" = :email ");
+            query.append(" AND email = :email ");
         }
 
         if (user.getTimeofcreation() != null) {
-            query.append(" WHERE \"timeofcreation\" = :timeofcreation ");
+            query.append(" AND timeofcreation = :timeofcreation ");
         }
 
         if (user.getStatus() != null) {
-            query.append(" WHERE \"status\" = :status ");
+            query.append(" AND status = :status ");
         }
 
         if (user.getClassification() != null) {
-            query.append(" WHERE \"classification\" = :classification ");
+            query.append(" AND classification = :classification ");
         }
 
         if (user.getPrecisionofanswers() != null) {
-            query.append(" WHERE \"precisionofanswers\" = :precisionofanswers ");
+            query.append(" AND precisionofanswers = :precisionofanswers ");
         }
 
         return query.toString();
@@ -138,23 +139,6 @@ public class UserServiceImpl implements UserService {
         }
 
         return true;
-    }
-
-    @Override
-    public User populateUser() {
-        String[] randomNames = new String[]{"Léna", "Rebeka", "Valentin", "Laci", "Ádám", "Bálint", "Keve", "Zsolt", "Panni", "Erzsók", "Gergő", "Milán"};
-
-        Random random = new Random();
-
-        return User.builder()
-                .username(randomNames[random.nextInt(0, randomNames.length)])
-                .email("asd@asd.asd")
-                .timeofcreation(LocalDate.now())
-                .status(UserStatusEnum.AKTIV)
-                .password("asd")
-                .classification(random.nextDouble())
-                .precisionofanswers(random.nextDouble())
-                .build();
     }
 
 }

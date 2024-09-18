@@ -4,7 +4,6 @@ import org.example.model.KeywordsForTasks;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.service.KeywordsForTasksService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -19,7 +18,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
 
     @Autowired
     private KeywordsForTasksRepository keywordsForTasksRepository;
-    @Qualifier("namedParameterJdbcTemplate")
+
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -36,7 +35,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     @Override
     public Iterable<KeywordsForTasks> getByKeywordsForTasksObject(KeywordsForTasks keywordsForTasks) {
         if (keywordsForTasks == null) {
-            return null;
+            return getAllKeywordsForTasks();
         }
 
         SqlParameterSource namedParams = new MapSqlParameterSource()
@@ -65,16 +64,18 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     private String constructQueryForGetByTaskObject(KeywordsForTasks keywordsForTasks) {
         StringBuilder query = new StringBuilder(" SELECT * FROM \"keywordsfortasks\" ");
 
+        query.append(" WHERE 1 = 1 ");
+
         if (keywordsForTasks.getId() != null) {
-            query.append(" WHERE \"id\" = :id ");
+            query.append(" AND id = :id ");
         }
 
         if (keywordsForTasks.getTaskid() != null) {
-            query.append(" WHERE \"taskid\" = :taskid ");
+            query.append(" AND taskid = :taskid ");
         }
 
         if (keywordsForTasks.getKeyword() != null) {
-            query.append(" WHERE \"keyword\" = :keyword ");
+            query.append(" AND keyword = :keyword ");
         }
 
         return query.toString();

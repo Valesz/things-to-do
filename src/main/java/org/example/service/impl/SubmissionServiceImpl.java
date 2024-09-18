@@ -4,12 +4,12 @@ import org.example.model.Submission;
 import org.example.repository.SubmissionRepository;
 import org.example.service.SubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
     @Autowired
     private SubmissionRepository submissionRepository;
-    @Qualifier("namedParameterJdbcTemplate")
+
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -40,14 +40,14 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     public Iterable<Submission> getBySubmissionsObject(Submission submission) {
         if (submission == null) {
-            return null;
+            return getAllSubmissions();
         }
 
         SqlParameterSource namedParams = new MapSqlParameterSource()
                 .addValue("id", submission.getId())
                 .addValue("taskid", submission.getTaskid())
                 .addValue("description", submission.getDescription())
-                .addValue("timeofsubmission", submission.getTimeofsubmission())
+                .addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
                 .addValue("acceptance", submission.getAcceptance())
                 .addValue("submitterid", submission.getSubmitterid());
 
@@ -61,7 +61,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                         .id(rs.getLong("id"))
                         .taskid(rs.getLong("taskid"))
                         .description(rs.getString("description"))
-                        .timeofsubmission(rs.getDate("timeofsubmission").toLocalDate())
+                        .timeofsubmission(LocalDate.parse(rs.getString("timeofsubmission")))
                         .acceptance(rs.getBoolean("acceptance"))
                         .submitterid(rs.getLong("submitterid"))
                         .build()
@@ -75,28 +75,30 @@ public class SubmissionServiceImpl implements SubmissionService {
     private String constructQueryByOwnObject(Submission submission) {
         StringBuilder query = new StringBuilder(" SELECT * FROM \"submission\" ");
 
+        query.append(" WHERE 1 = 1 ");
+
         if (submission.getId() != null) {
-            query.append(" WHERE \"id\" = :id ");
+            query.append(" AND id = :id ");
         }
 
         if (submission.getTaskid() != null) {
-            query.append(" WHERE \"taskid\" = :taskid ");
+            query.append(" AND taskid = :taskid ");
         }
 
         if (submission.getDescription() != null) {
-            query.append(" WHERE \"description\" = :description ");
+            query.append(" AND description = :description ");
         }
 
         if (submission.getTimeofsubmission() != null) {
-            query.append(" WHERE \"timeofsubmission\" = :timeofsubmission ");
+            query.append(" AND timeofsubmission = :timeofsubmission ");
         }
 
         if (submission.getAcceptance() != null) {
-            query.append(" WHERE \"acceptance\" = :acceptance ");
+            query.append(" AND acceptance = :acceptance ");
         }
 
         if (submission.getSubmitterid() != null) {
-            query.append(" WHERE \"submitterid\" = :submitterid ");
+            query.append(" AND submitterid = :submitterid ");
         }
 
         return query.toString();
