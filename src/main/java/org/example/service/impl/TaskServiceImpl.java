@@ -185,6 +185,19 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task saveTask(Task task) {
+        if (task.getId() != null) {
+            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+        }
+
+        return taskRepository.save(task);
+    }
+
+    @Override
+    public Task updateTask(Task task) {
+        if (!taskRepository.existsById(task.getId())) {
+            throw new IllegalArgumentException("Task with id " + task.getId() + " doesn't exist. Please use save to save this instance.");
+        }
+
         return taskRepository.save(task);
     }
 

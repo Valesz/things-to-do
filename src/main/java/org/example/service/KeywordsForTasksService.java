@@ -20,6 +20,10 @@ public interface KeywordsForTasksService {
 
     KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask);
 
+    Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask);
+
+    KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordsForTasks);
+
     boolean deleteKeywordForTask(Long id);
 
     boolean deleteKeyword(String keyword);

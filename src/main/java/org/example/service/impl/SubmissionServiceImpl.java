@@ -106,6 +106,19 @@ public class SubmissionServiceImpl implements SubmissionService {
 
     @Override
     public Submission saveSubmission(Submission submission) {
+        if (submission.getId() != null) {
+            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+        }
+
+        return submissionRepository.save(submission);
+    }
+
+    @Override
+    public Submission updateSubmission(Submission submission) {
+        if (!submissionRepository.existsById(submission.getId())) {
+            throw new IllegalArgumentException("Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance.");
+        }
+
         return submissionRepository.save(submission);
     }
 

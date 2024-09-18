@@ -62,7 +62,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     private String constructQueryForGetByTaskObject(KeywordsForTasks keywordsForTasks) {
-        StringBuilder query = new StringBuilder(" SELECT * FROM \"keywordsfortasks\" ");
+        StringBuilder query = new StringBuilder(" SELECT * FROM \"keywordsForTasks\" ");
 
         query.append(" WHERE 1 = 1 ");
 
@@ -98,6 +98,24 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
 
     @Override
     public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) {
+        if (keywordForTask.getId() != null) {
+            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+        }
+
+        return keywordsForTasksRepository.save(keywordForTask);
+    }
+
+    @Override
+    public Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) {
+        return keywordsForTasksRepository.saveAll(keywordForTask);
+    }
+
+    @Override
+    public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) {
+        if (!keywordsForTasksRepository.existsById(keywordForTask.getId())) {
+            throw new IllegalArgumentException("Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance.");
+        }
+
         return keywordsForTasksRepository.save(keywordForTask);
     }
 

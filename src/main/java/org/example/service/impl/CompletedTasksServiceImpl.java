@@ -83,6 +83,19 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
 
     @Override
     public CompletedTask saveCompletedTask(CompletedTask completedTask) {
+        if (completedTask.getId() != null) {
+            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+        }
+
+        return completedTasksRepository.save(completedTask);
+    }
+
+    @Override
+    public CompletedTask updateCompletedTask(CompletedTask completedTask) {
+        if (!completedTasksRepository.existsById(completedTask.getId())) {
+            throw new IllegalArgumentException("Completed task with id " + completedTask.getId() + " doesn't exist. Please use save to save this instance.");
+        }
+
         return completedTasksRepository.save(completedTask);
     }
 

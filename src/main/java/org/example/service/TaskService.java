@@ -20,6 +20,8 @@ public interface TaskService {
 
     Task saveTask(Task task);
 
+    Task updateTask(Task task);
+
     boolean deleteTask(Long id);
 
     boolean deleteAll();

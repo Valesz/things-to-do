@@ -16,6 +16,8 @@ public interface SubmissionService {
 
     Submission saveSubmission(Submission submission);
 
+    Submission updateSubmission(Submission submission);
+
     boolean deleteSubmission(Long id);
 
     boolean deleteAll();

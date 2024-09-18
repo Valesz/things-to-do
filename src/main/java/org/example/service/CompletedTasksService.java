@@ -12,6 +12,8 @@ public interface CompletedTasksService {
 
     CompletedTask saveCompletedTask(CompletedTask completedTask);
 
+    CompletedTask updateCompletedTask(CompletedTask completedTask);
+
     boolean deleteCompletedTask(Long id);
 
     boolean deleteAll();

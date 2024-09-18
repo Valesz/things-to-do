@@ -114,6 +114,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User saveUser(User user) {
+        if (user.getId() != null) {
+            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User updateUser(User user) {
+        if (!userRepository.existsById(user.getId())) {
+            throw new IllegalArgumentException("User with id " + user.getId() + " doesn't exist. Please use save to save this instance.");
+        }
+
         return userRepository.save(user);
     }
 
