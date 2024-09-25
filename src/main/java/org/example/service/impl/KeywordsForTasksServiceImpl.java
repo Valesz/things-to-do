@@ -4,8 +4,7 @@ import org.example.model.KeywordsForTasks;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.repository.TaskRepository;
 import org.example.service.KeywordsForTasksService;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,7 +12,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -88,22 +86,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     @Override
-    public Iterable<KeywordsForTasks> getKeywordsForTaskByTaskId(Long id) {
-        return keywordsForTasksRepository.getKeywordsForTaskByTaskId(id);
-    }
-
-    @Override
-    public Iterable<KeywordsForTasks> getTasksByKeyword(String keyword) {
-        return keywordsForTasksRepository.getTasksByKeyword(keyword);
-    }
-
-    @Override
-    public Iterable<KeywordsForTasks> getTasksByKeyword(Collection<String> keywords) {
-        return keywordsForTasksRepository.getTasksByKeyword(keywords);
-    }
-
-    @Override
-    public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) throws NullValueException, ConstraintException {
+    public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException {
         if (keywordForTask.getId() != null) {
             throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
         }
@@ -114,7 +97,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     @Override
-    public Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) throws NullValueException, ConstraintException {
+    public Iterable<KeywordsForTasks> saveKeywordsForTasks(Iterable<KeywordsForTasks> keywordForTask) throws ServiceException {
         for (KeywordsForTasks item : keywordForTask) {
             validateKeywordsForTasksProperties(item);
         }
@@ -123,8 +106,8 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     @Override
-    public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws NullValueException, ConstraintException {
-        if (!keywordsForTasksRepository.existsById(keywordForTask.getId())) {
+    public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException {
+        if (keywordForTask.getId() == null || !keywordsForTasksRepository.existsById(keywordForTask.getId())) {
             throw new IllegalArgumentException("Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance.");
         }
 
@@ -145,18 +128,16 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
         return keywordForTask;
     }
 
-    private void validateKeywordsForTasksProperties(KeywordsForTasks keywordsForTasks) throws NullValueException, ConstraintException {
+    private void validateKeywordsForTasksProperties(KeywordsForTasks keywordsForTasks) throws ServiceException {
 
         String errorMessage = checkForNullProperties(keywordsForTasks);
-
         if (!errorMessage.isEmpty()) {
-            throw new NullValueException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
         }
 
         errorMessage = checkConstraints(keywordsForTasks);
-
         if (!errorMessage.isEmpty()) {
-            throw new ConstraintException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
         }
 
     }
@@ -186,38 +167,17 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     }
 
     @Override
-    public boolean deleteKeywordForTask(Long id) {
-        try {
-            keywordsForTasksRepository.deleteById(id);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + id + " keyword for task failed:\n" + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteKeywordForTask(Long id) {
+        keywordsForTasksRepository.deleteById(id);
     }
 
     @Override
-    public boolean deleteKeyword(String keyword) {
-        try {
-            keywordsForTasksRepository.deleteKeyword(keyword);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + keyword + " keyword failed:\n" + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteKeyword(String keyword) {
+        keywordsForTasksRepository.deleteKeyword(keyword);
     }
 
     @Override
-    public boolean deleteAllKeywordsForAllTasks() {
-        try {
-            keywordsForTasksRepository.deleteAll();
-        } catch (Exception e) {
-            System.out.println("Deletion of all keywords for tasks failed:\n" + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteAllKeywordsForAllTasks() {
+        keywordsForTasksRepository.deleteAll();
     }
 }

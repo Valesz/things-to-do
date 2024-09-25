@@ -5,8 +5,7 @@ import org.example.repository.CompletedTasksRepository;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
 import org.example.service.CompletedTasksService;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -91,7 +90,7 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     }
 
     @Override
-    public CompletedTask saveCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException {
+    public CompletedTask saveCompletedTask(CompletedTask completedTask) throws ServiceException {
         if (completedTask.getId() != null) {
             throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
         }
@@ -102,7 +101,7 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     }
 
     @Override
-    public CompletedTask updateCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException {
+    public CompletedTask updateCompletedTask(CompletedTask completedTask) throws ServiceException {
         if (!completedTasksRepository.existsById(completedTask.getId())) {
             throw new IllegalArgumentException("Completed task with id " + completedTask.getId() + " doesn't exist. Please use save to save this instance.");
         }
@@ -124,18 +123,16 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
         return completedTask;
     }
 
-    private void validateCompletedTaskProperties(CompletedTask completedTask) throws NullValueException, ConstraintException {
+    private void validateCompletedTaskProperties(CompletedTask completedTask) throws ServiceException {
 
         String errorMessage = checkForNullProperties(completedTask);
-
         if (!errorMessage.isEmpty()) {
-            throw new NullValueException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
         }
 
         errorMessage = checkConstraints(completedTask);
-
         if (!errorMessage.isEmpty()) {
-            throw new ConstraintException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
         }
 
     }
@@ -169,26 +166,12 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     }
 
     @Override
-    public boolean deleteCompletedTask(Long id) {
-        try {
-            completedTasksRepository.deleteById(id);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + id + " user failed:\n" + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteCompletedTask(Long id) {
+        completedTasksRepository.deleteById(id);
     }
 
     @Override
-    public boolean deleteAll() {
-        try {
-            completedTasksRepository.deleteAll();
-        } catch (Exception e) {
-            System.out.println("Deletion of all users failed:\n" + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteAll() {
+        completedTasksRepository.deleteAll();
     }
 }

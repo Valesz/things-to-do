@@ -4,7 +4,8 @@ import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.service.UserService;
 import org.example.utils.UserStatusEnum;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.ServiceException;
+import org.example.utils.exceptions.ServiceExceptionType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,7 +13,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Resource(name = "userRepository")
+    @Autowired
     UserRepository userRepository;
 
     @Autowired
@@ -118,9 +118,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User saveUser(User user) throws NullValueException {
+    public User saveUser(User user) throws ServiceException {
         if (user.getId() != null) {
-            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Remove id property, or use Update instead of Save."
+            );
         }
 
         validateUserProperties(user);
@@ -131,9 +133,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(User user) throws NullValueException {
-        if (!userRepository.existsById(user.getId())) {
-            throw new IllegalArgumentException("User with id " + user.getId() + " doesn't exist. Please use save to save this instance.");
+    public User updateUser(User user) throws ServiceException {
+        if (user.getId() == null || !userRepository.existsById(user.getId())) {
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "User with id " + user.getId() + " doesn't exist. Please use save to save this instance."
+            );
         }
 
         User newUser = setNullProperties(user);
@@ -161,73 +165,58 @@ public class UserServiceImpl implements UserService {
         user.setPrecisionofanswers(user.getPrecisionofanswers() == null ? userInDb.getPrecisionofanswers() : user.getPrecisionofanswers());
 
         return user;
-
     }
 
-    private void validateUserProperties(User user) throws NullValueException {
+    private void validateUserProperties(User user) throws ServiceException{
         String errorMessage = checkForNullProperties(user);
 
         if (!errorMessage.isEmpty()) {
-            throw new NullValueException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
         }
     }
 
     private String checkForNullProperties(User user) {
-        StringBuilder errorMessage = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         if (user.getUsername() == null) {
-            errorMessage.append("username property not set, ");
+            sb.append("Username must not be null, ");
         }
 
         if (user.getEmail() == null) {
-            errorMessage.append("email property not set, ");
+            sb.append("Email must not be null, ");
         }
 
         if (user.getTimeofcreation() == null) {
-            errorMessage.append("timeofcreation property not set, ");
+            sb.append("Timeofcreation must not be null, ");
         }
 
         if (user.getStatus() == null) {
-            errorMessage.append("status property not set, ");
+            sb.append("Status must not be null, ");
         }
 
         if (user.getPassword() == null) {
-            errorMessage.append("password property not set, ");
+            sb.append("Password must not be null, ");
         }
 
-        if (user.getClassification() == null) {
-            errorMessage.append("classification property not set, ");
-        }
-
-        if (user.getPrecisionofanswers() == null) {
-            errorMessage.append("precisionofanswers property not set, ");
-        }
-
-        return errorMessage.toString();
+        return sb.toString();
     }
 
     @Override
-    public boolean deleteUser(Long id) {
-        try {
-            userRepository.deleteById(id);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + id + " user failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteUser(Long id) {
+        getUserById(id);
+        updateUser(User.builder()
+                .id(id)
+                .status(UserStatusEnum.INAKTIV)
+                .build()
+        );
     }
 
     @Override
-    public boolean deleteAll() {
-        try {
-            userRepository.deleteAll();
-        } catch (Exception e) {
-            System.out.println("Deletion of all users failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteAll() {
+        getAllUsers().forEach(user -> {
+            user.setStatus(UserStatusEnum.INAKTIV);
+            updateUser(user);
+        });
     }
 
 }

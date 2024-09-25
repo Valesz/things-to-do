@@ -5,8 +5,7 @@ import org.example.model.Task;
 import org.example.repository.UserRepository;
 import org.example.service.Filter;
 import org.example.service.TaskService;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -31,11 +30,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Override
-    public boolean assignUnderTask(Long subtaskId, Long maintaskId) {
-        return taskRepository.assignUnderTask(subtaskId, maintaskId);
-    }
 
     @Override
     public Iterable<Task> getAllTasks() {
@@ -73,8 +67,8 @@ public class TaskServiceImpl implements TaskService {
                         .name(rs.getString("name"))
                         .description(rs.getString("description"))
                         .timeofcreation(LocalDate.parse(rs.getString("timeofcreation")))
-                        .maintaskid(task.getMaintaskid())
-                        .ownerid(task.getOwnerid())
+                        .maintaskid(rs.getLong("maintaskid") == 0 ? null : rs.getLong("maintaskid"))
+                        .ownerid(rs.getLong("ownerid"))
                         .build()
                 );
             }
@@ -85,6 +79,11 @@ public class TaskServiceImpl implements TaskService {
 
     private String contructQueryForGetByTaskObject(Task task) {
         StringBuilder query = new StringBuilder(" SELECT * FROM \"task\" ");
+
+        //TODO: Ask because of Iterable<(Task, User)> return
+//        if (task.getOwnerid() != null) {
+//            query.append(" INNER JOIN \"user\" ON \"user\".id = \"task\".ownerid ");
+//        }
 
         query.append(" WHERE 1 = 1 ");
 
@@ -124,9 +123,9 @@ public class TaskServiceImpl implements TaskService {
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("name", filter.getName())
-                .addValue("ownerId", filter.getOwnerId())
+                .addValue("ownerid", filter.getOwnerId())
                 .addValue("keywords", filter.getKeywords())
-                .addValue("userId", filter.getCompletedUserId());
+                .addValue("userid", filter.getCompletedUserId());
 
         String query = constructQueryByFilter(filter);
 
@@ -138,8 +137,8 @@ public class TaskServiceImpl implements TaskService {
                         .id(rs.getLong("id"))
                         .name(rs.getString("name"))
                         .description(rs.getString("description"))
-                        .timeofcreation(rs.getDate("timeOfCreation").toLocalDate())
-                        .maintaskid(rs.getLong("mainTaskId") == 0 ? null : rs.getLong("maintaskId"))
+                        .timeofcreation(rs.getDate("timeofcreation").toLocalDate())
+                        .maintaskid(rs.getLong("maintaskid") == 0 ? null : rs.getLong("maintaskId"))
                         .ownerid(rs.getLong("ownerId"))
                         .build());
             }
@@ -185,14 +184,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<Task> getCompletedTasksForUser(Long userId) {
-        return taskRepository.getCompletedTasksForUser(userId);
-    }
-
-    @Override
-    public Task saveTask(Task task) throws IllegalArgumentException, NullValueException, ConstraintException {
+    public Task saveTask(Task task) throws ServiceException {
         if (task.getId() != null) {
-            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Remove id property, or use Update instead of Save."
+            );
         }
 
         validateTaskProperties(task);
@@ -201,9 +197,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task updateTask(Task task) throws IllegalArgumentException, NullValueException, ConstraintException {
-        if (!taskRepository.existsById(task.getId())) {
-            throw new IllegalArgumentException("Task with id " + task.getId() + " doesn't exist. Please use save to save this instance.");
+    public Task updateTask(Task task) throws ServiceException {
+        if (task.getId() == null || !taskRepository.existsById(task.getId())) {
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Task with id " + task.getId() + " doesn't exist. Please use save to save this instance."
+            );
         }
 
         Task newTask = setNulLValues(task);
@@ -230,78 +228,61 @@ public class TaskServiceImpl implements TaskService {
         return task;
     }
 
-    private void validateTaskProperties(Task task) throws NullValueException, ConstraintException {
-
+    private void validateTaskProperties(Task task) throws ServiceException {
         String errorMessage = checkForNullProperties(task);
         if (!errorMessage.isEmpty()) {
-            throw new NullValueException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
         }
 
         errorMessage = checkConstraints(task);
         if (!errorMessage.isEmpty()) {
-            throw new ConstraintException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
         }
-
     }
 
     private String checkForNullProperties(Task task) {
-        StringBuilder errorMessage = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         if (task.getName() == null) {
-            errorMessage.append("name property not set, ");
+            sb.append("name property not set, ");
         }
 
         if (task.getDescription() == null) {
-            errorMessage.append("description property not set, ");
+            sb.append("description property not set, ");
         }
 
         if (task.getTimeofcreation() == null) {
-            errorMessage.append("timeofcreation property not set, ");
+            sb.append("timeofcreation property not set, ");
         }
 
         if (task.getOwnerid() == null) {
-            errorMessage.append("ownerid property not set, ");
+            sb.append("ownerid property not set, ");
         }
 
-        return errorMessage.toString();
+        return sb.toString();
     }
 
     private String checkConstraints(Task task) {
-        StringBuilder errorMessage = new StringBuilder();
-
+        StringBuilder sb = new StringBuilder();
         if (task.getMaintaskid() != null && !taskRepository.existsById(task.getMaintaskid())) {
-            errorMessage.append("maintaskid is not a valid task's ID, ");
+            sb.append("maintaskid is not a valid task's ID, ");
         }
 
         if (!userRepository.existsById(task.getOwnerid())) {
-            errorMessage.append("ownerid is not a valid user's ID, ");
+            sb.append("ownerid is not a valid user's ID, ");
         }
 
-        return errorMessage.toString();
+        return sb.toString();
     }
 
     @Override
-    public boolean deleteTask(Long id) {
-        try {
-            taskRepository.deleteById(id);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + id + " task failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteTask(Long id) {
+        taskRepository.deleteById(id);
     }
 
     @Override
-    public boolean deleteAll() {
-        try {
-            taskRepository.deleteAll();
-        } catch (Exception e) {
-            System.out.println("Deletion of all tasks failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteAll() {
+        taskRepository.deleteAll();
     }
 
 }

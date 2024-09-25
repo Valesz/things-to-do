@@ -5,8 +5,7 @@ import org.example.repository.SubmissionRepository;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
 import org.example.service.SubmissionService;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -115,9 +114,11 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public Submission saveSubmission(Submission submission) throws NullValueException, ConstraintException {
+    public Submission saveSubmission(Submission submission) throws ServiceException {
         if (submission.getId() != null) {
-            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Remove id property, or use Update instead of Save."
+            );
         }
 
         validateSubmissionProperties(submission);
@@ -126,9 +127,11 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public Submission updateSubmission(Submission submission) throws NullValueException, ConstraintException {
-        if (!submissionRepository.existsById(submission.getId())) {
-            throw new IllegalArgumentException("Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance.");
+    public Submission updateSubmission(Submission submission) throws ServiceException {
+        if (submission.getId() == null || !submissionRepository.existsById(submission.getId())) {
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance."
+            );
         }
 
         Submission newSubmission = setNulLValues(submission);
@@ -155,18 +158,16 @@ public class SubmissionServiceImpl implements SubmissionService {
         return submission;
     }
 
-    private void validateSubmissionProperties(Submission submission) throws NullValueException, ConstraintException {
+    private void validateSubmissionProperties(Submission submission) throws ServiceException {
 
         String errorMessage = checkForNullProperties(submission);
-
         if (!errorMessage.isEmpty()) {
-            throw new NullValueException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
         }
 
         errorMessage = checkConstraints(submission);
-
         if (!errorMessage.isEmpty()) {
-            throw new ConstraintException(errorMessage);
+            throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
         }
 
     }
@@ -208,26 +209,12 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public boolean deleteSubmission(Long id) {
-        try {
-            submissionRepository.deleteById(id);
-        } catch (Exception e) {
-            System.out.println("Deletion of " + id + " submission failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteSubmission(Long id) {
+        submissionRepository.deleteById(id);
     }
 
     @Override
-    public boolean deleteAll() {
-        try {
-            submissionRepository.deleteAll();
-        } catch (Exception e) {
-            System.out.println("Deletion of all submissions failed: " + e.getMessage());
-            return false;
-        }
-
-        return true;
+    public void deleteAll() {
+        submissionRepository.deleteAll();
     }
 }

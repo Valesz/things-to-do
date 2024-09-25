@@ -1,14 +1,9 @@
 package org.example.service;
 
 import org.example.model.Task;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
-
-import java.util.List;
+import org.example.utils.exceptions.ServiceException;
 
 public interface TaskService {
-
-    boolean assignUnderTask(Long subtaskId, Long maintaskId);
 
     Iterable<Task> getAllTasks();
 
@@ -18,14 +13,12 @@ public interface TaskService {
 
     Iterable<Task> getTasksByFilter(Filter filter);
 
-    List<Task> getCompletedTasksForUser(Long userId);
+    Task saveTask(Task task) throws ServiceException;
 
-    Task saveTask(Task task) throws NullValueException, ConstraintException;
+    Task updateTask(Task task) throws ServiceException;
 
-    Task updateTask(Task task) throws NullValueException, ConstraintException;
+    void deleteTask(Long id);
 
-    boolean deleteTask(Long id);
-
-    boolean deleteAll();
+    void deleteAll();
 
 }

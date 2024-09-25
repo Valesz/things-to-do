@@ -35,4 +35,5 @@ public class Task {
 
     @Column(value = "OWNERID")
     private Long ownerid;
+
 }

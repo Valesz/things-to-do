@@ -1,8 +1,7 @@
 package org.example.service;
 
 import org.example.model.CompletedTask;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.ServiceException;
 
 public interface CompletedTasksService {
 
@@ -12,12 +11,12 @@ public interface CompletedTasksService {
 
     Iterable<CompletedTask> getByCompletedTasksObject(CompletedTask completedTask);
 
-    CompletedTask saveCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException;
+    CompletedTask saveCompletedTask(CompletedTask completedTask) throws ServiceException;
 
-    CompletedTask updateCompletedTask(CompletedTask completedTask) throws NullValueException, ConstraintException;
+    CompletedTask updateCompletedTask(CompletedTask completedTask) throws ServiceException;
 
-    boolean deleteCompletedTask(Long id);
+    void deleteCompletedTask(Long id);
 
-    boolean deleteAll();
+    void deleteAll();
 
 }

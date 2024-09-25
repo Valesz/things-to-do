@@ -7,8 +7,7 @@ import org.example.service.CompletedTasksService;
 import org.example.service.Filter;
 import org.example.service.KeywordsForTasksService;
 import org.example.service.TaskService;
-import org.example.utils.exceptions.ConstraintException;
-import org.example.utils.exceptions.NullValueException;
+import org.example.utils.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -31,10 +30,20 @@ public class TaskController {
     public Task addTask(@RequestBody Task task) {
         try {
             return taskService.saveTask(task);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (NullValueException | ConstraintException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (ServiceException e) {
+            switch (e.getServiceExceptionTypeEnum()) {
+                case NULL_ARGUMENT:
+                case CONSTRAINT_VIOLATION:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                case ILLEGAL_ID_ARGUMENT:
+                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+                default:
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        } catch (Exception e) {
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+
         }
     }
 
@@ -42,10 +51,18 @@ public class TaskController {
     public Task updateTask(@RequestBody Task task) {
         try {
             return taskService.updateTask(task);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (NullValueException | ConstraintException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (ServiceException e) {
+            switch (e.getServiceExceptionTypeEnum()) {
+                case NULL_ARGUMENT:
+                case CONSTRAINT_VIOLATION:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                case ILLEGAL_ID_ARGUMENT:
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+                default:
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -60,18 +77,30 @@ public class TaskController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public boolean deleteTask(@PathVariable(value = "id") Long taskId) {
-        return taskService.deleteTask(taskId);
+    public void deleteTask(@PathVariable(value = "id") Long taskId) {
+        try {
+            taskService.deleteTask(taskId);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     @RequestMapping(value = "/completed", method = RequestMethod.POST)
     public CompletedTask addCompletedTask(@RequestBody CompletedTask completedTask) {
         try {
             return completedTasksService.saveCompletedTask(completedTask);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (NullValueException | ConstraintException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (ServiceException e) {
+            switch (e.getServiceExceptionTypeEnum()) {
+                case NULL_ARGUMENT:
+                case CONSTRAINT_VIOLATION:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                case ILLEGAL_ID_ARGUMENT:
+                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+                default:
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -81,11 +110,11 @@ public class TaskController {
     }
 
     @RequestMapping(value = "/completed/{id}", method = RequestMethod.DELETE)
-    public boolean deleteCompleteTask(@PathVariable(value = "id") long id) {
+    public void deleteCompleteTask(@PathVariable(value = "id") long id) {
         try {
-            return completedTasksService.deleteCompletedTask(id);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+            completedTasksService.deleteCompletedTask(id);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -93,10 +122,20 @@ public class TaskController {
     public Iterable<KeywordsForTasks> addKeyword(@RequestBody Iterable<KeywordsForTasks> keyword) {
         try {
             return keywordsForTasksService.saveKeywordsForTasks(keyword);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (NullValueException | ConstraintException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (ServiceException e) {
+            switch (e.getServiceExceptionTypeEnum()) {
+                case NULL_ARGUMENT:
+                case CONSTRAINT_VIOLATION:
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+
+                case ILLEGAL_ID_ARGUMENT:
+                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+
+                default:
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -106,8 +145,12 @@ public class TaskController {
     }
 
     @RequestMapping(value = "/keyword/{id}", method = RequestMethod.DELETE)
-    public boolean deleteKeyword(@PathVariable(value = "id") Long id) {
-        return keywordsForTasksService.deleteKeywordForTask(id);
+    public void deleteKeyword(@PathVariable(value = "id") Long id) {
+        try {
+            keywordsForTasksService.deleteKeywordForTask(id);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
 }

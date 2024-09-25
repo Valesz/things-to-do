@@ -62,8 +62,16 @@ dependencies {
 
     implementation "org.springframework.boot:spring-boot-starter-web:2.3.12.RELEASE"
 
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "com.h2database:h2:2.3.232"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:2.3.12.RELEASE"
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.8.0'
+//    testImplementation "org.springframework.security:spring-security-test"
+
+//    testImplementation platform('org.junit:junit-bom:5.10.0')
+//    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+
 }
 
 test {
