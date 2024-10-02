@@ -28,7 +28,7 @@ public class CompletedTaskRepositoryTest extends AbstractTest {
     @Autowired
     private CompletedTasksRepository completedTasksRepository;
 
-    private User user = User.builder()
+    private final User user = User.builder()
             .username("teszt elek")
             .email("teszt@teszt.teszt")
             .timeofcreation(LocalDate.now())
@@ -38,7 +38,7 @@ public class CompletedTaskRepositoryTest extends AbstractTest {
             .precisionofanswers(0.8)
             .build();
 
-    private Task task = Task.builder()
+    private final Task task = Task.builder()
             .name("Pelda Task")
             .description("Leiras")
             .timeofcreation(LocalDate.now())

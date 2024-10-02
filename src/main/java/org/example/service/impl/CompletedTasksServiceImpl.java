@@ -92,7 +92,9 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
     @Override
     public CompletedTask saveCompletedTask(CompletedTask completedTask) throws ServiceException {
         if (completedTask.getId() != null) {
-            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Remove id property, or use Update instead of Save."
+            );
         }
 
         validateCompletedTaskProperties(completedTask);
@@ -102,8 +104,10 @@ public class CompletedTasksServiceImpl implements CompletedTasksService {
 
     @Override
     public CompletedTask updateCompletedTask(CompletedTask completedTask) throws ServiceException {
-        if (!completedTasksRepository.existsById(completedTask.getId())) {
-            throw new IllegalArgumentException("Completed task with id " + completedTask.getId() + " doesn't exist. Please use save to save this instance.");
+        if (completedTask.getId() == null || !completedTasksRepository.existsById(completedTask.getId())) {
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Completed task with id " + completedTask.getId() + " doesn't exist. Please use save to save this instance."
+            );
         }
 
         CompletedTask newCompletedTask = setNulLValues(completedTask);

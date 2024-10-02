@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface SubmissionService {
 
-    boolean setAcceptance(Long id, boolean accepted);
+    boolean setAcceptance(Long id, Boolean accepted);
 
     Iterable<Submission> getAllSubmissions();
 

@@ -21,7 +21,7 @@ public class TaskRepositoryTest extends AbstractTest {
     @Autowired
     private UserRepository userRepository;
 
-    private User user = User.builder()
+    private final User user = User.builder()
                 .username("teszt elek")
                 .email("teszt@teszt.teszt")
                 .timeofcreation(LocalDate.now())
@@ -33,7 +33,7 @@ public class TaskRepositoryTest extends AbstractTest {
 
     @Before
     public void setUp() {
-        this.user = userRepository.save(user);
+        userRepository.save(user);
     }
 
     @After

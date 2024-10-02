@@ -32,7 +32,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private UserRepository userRepository;
 
     @Override
-    public boolean setAcceptance(Long id, boolean accepted) {
+    public boolean setAcceptance(Long id, Boolean accepted) {
         return submissionRepository.setAcceptance(id, accepted);
     }
 
@@ -66,15 +66,20 @@ public class SubmissionServiceImpl implements SubmissionService {
             List<Submission> submissionList = new ArrayList<>();
 
             while (rs.next()) {
-                submissionList.add(Submission.builder()
+                Submission tmpSubmission = Submission.builder()
                         .id(rs.getLong("id"))
                         .taskid(rs.getLong("taskid"))
                         .description(rs.getString("description"))
                         .timeofsubmission(LocalDate.parse(rs.getString("timeofsubmission")))
-                        .acceptance(rs.getBoolean("acceptance"))
                         .submitterid(rs.getLong("submitterid"))
-                        .build()
-                );
+                        .build();
+
+                tmpSubmission.setAcceptance(rs.getBoolean("acceptance"));
+                if (rs.wasNull()) {
+                    tmpSubmission.setAcceptance(null);
+                }
+
+                submissionList.add(tmpSubmission);
             }
 
             return submissionList;

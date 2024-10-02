@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO: Add setMainTaskId() method
 @Service
 @PropertySource("classpath:application.properties")
 public class TaskServiceImpl implements TaskService {
@@ -115,10 +116,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Iterable<Task> getTasksByFilter(Filter filter) {
+    public Iterable<Task> getTasksByFilter(Filter filter) throws ServiceException {
 
         if (filter == null) {
-            throw new IllegalArgumentException("filter cannot be null");
+            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT,
+                    "filter cannot be null"
+            );
         }
 
         SqlParameterSource params = new MapSqlParameterSource()
@@ -167,7 +170,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         if (filter.getOwnerId() != null) {
-            sb.append(" AND ownerId = :ownerId ");
+            sb.append(" AND ownerId = :ownerid ");
         }
 
         if (filter.getKeywords() != null) {
@@ -175,7 +178,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         if (filter.getCompletedUserId() != null) {
-            sb.append(" AND \"completedTasks\".userId = :userId ");
+            sb.append(" AND \"completedTasks\".userId = :userid ");
         }
 
         sb.append(" GROUP BY \"task\".id ORDER BY \"task\".id ASC ");

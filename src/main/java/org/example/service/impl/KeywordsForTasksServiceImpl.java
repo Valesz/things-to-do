@@ -88,7 +88,9 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     @Override
     public KeywordsForTasks saveKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException {
         if (keywordForTask.getId() != null) {
-            throw new IllegalArgumentException("Remove id property, or use Update instead of Save.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Remove id property, or use Update instead of Save."
+            );
         }
 
         validateKeywordsForTasksProperties(keywordForTask);
@@ -108,7 +110,9 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService {
     @Override
     public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException {
         if (keywordForTask.getId() == null || !keywordsForTasksRepository.existsById(keywordForTask.getId())) {
-            throw new IllegalArgumentException("Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance.");
+            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+                    "Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance."
+            );
         }
 
         KeywordsForTasks newKeywordForTask = setNulLValues(keywordForTask);

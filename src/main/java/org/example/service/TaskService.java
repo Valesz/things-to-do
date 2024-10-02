@@ -11,7 +11,7 @@ public interface TaskService {
 
     Iterable<Task> getByTasksObject(Task task);
 
-    Iterable<Task> getTasksByFilter(Filter filter);
+    Iterable<Task> getTasksByFilter(Filter filter) throws ServiceException;
 
     Task saveTask(Task task) throws ServiceException;
 
