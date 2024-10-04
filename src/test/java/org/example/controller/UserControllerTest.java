@@ -3,6 +3,7 @@ package org.example.controller;
 import org.example.AbstractTest;
 import org.example.model.User;
 import org.example.service.UserService;
+import org.example.utils.HttpErrorResponseForTests;
 import org.example.utils.UserStatusEnum;
 import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +116,63 @@ public class UserControllerTest extends AbstractTest
 		Assert.assertEquals(testUser.getStatus(), usersInDb[4].getStatus());
 		Assert.assertEquals(testUser.getClassification(), usersInDb[4].getClassification());
 		Assert.assertEquals(testUser.getPrecisionofanswers(), usersInDb[4].getPrecisionofanswers());
+	}
+
+	@Test
+	public void addUserWithNullValuesTest()
+	{
+		User testUser = User.builder()
+			.username("Ebéd Elek")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
+		Assert.assertEquals("Bad Request", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
+	}
+
+	@Test
+	public void addUserWithIdTest()
+	{
+		User testUser = User.builder()
+			.id(1L)
+			.username("Ebéd Elek")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
+		Assert.assertEquals("Unprocessable Entity", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
+	}
+
+	@Test
+	public void addNullUserTest()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<Object> requestBodyWithHeaders = new HttpEntity<>(null, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
+		Assert.assertEquals("Bad Request", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
 	}
 
 	@Test
@@ -248,7 +306,48 @@ public class UserControllerTest extends AbstractTest
 	}
 
 	@Test
-	public void deleteUser()
+	public void updateUserWithoutIdTest()
+	{
+		User propertiesToUpdate = User.builder()
+			.username("Sanyi a ló")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
+		Assert.assertEquals("Bad Request", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
+	}
+
+	@Test
+	public void updateUserWithInvalidIdTest()
+	{
+		User propertiesToUpdate = User.builder()
+			.id(Long.MAX_VALUE)
+			.username("Sanyi a ló")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
+		Assert.assertEquals("Not Found", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
+	}
+
+	@Test
+	public void deleteUserTest()
 	{
 		this.restTemplate.exchange(baseURI + user1.getId(), HttpMethod.DELETE, new HttpEntity<>(user1), Void.class);
 
@@ -261,5 +360,16 @@ public class UserControllerTest extends AbstractTest
 		Assert.assertNotNull(usersArray);
 
 		Assert.assertEquals(2, usersArray.length);
+	}
+
+	@Test
+	public void deleteUserWithNonExistingIdTest()
+	{
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseURI + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 }

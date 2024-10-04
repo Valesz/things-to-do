@@ -447,7 +447,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 		taskService.saveTask(task2);
 
-		taskService.updateTask(Task.builder().id(task2.getId()).maintaskid(null).build());
+		taskService.setMainTaskId(task2.getId(), null);
 
 		Assert.assertNull(taskService.getTaskById(task2.getId()).getMaintaskid());
 	}

@@ -46,10 +46,6 @@ public class UserController
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
 		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-		}
 		catch (Exception e)
 		{
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -70,20 +66,12 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case NULL_ARGUMENT:
-				case CONSTRAINT_VIOLATION:
-					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-
 				case ILLEGAL_ID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -120,9 +108,15 @@ public class UserController
 		{
 			userService.deleteUser(id);
 		}
-		catch (IllegalArgumentException e)
+		catch (ServiceException e)
 		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch (Exception e)
 		{

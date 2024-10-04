@@ -13,5 +13,5 @@ public interface KeywordsForTasksRepository extends CrudRepository<KeywordsForTa
 
 	@Modifying
 	@Query("DELETE FROM \"keywordsForTasks\" WHERE KEYWORD = :KEYWORD")
-	int deleteKeyword(@Param("keyword") String keyword);
+	int deleteKeyword(@Param("KEYWORD") String keyword);
 }

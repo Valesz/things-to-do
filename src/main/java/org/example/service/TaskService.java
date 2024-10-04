@@ -18,6 +18,8 @@ public interface TaskService
 
 	Task updateTask(Task task) throws ServiceException;
 
+	boolean setMainTaskId(Long id, Long mainTaskId);
+
 	void deleteTask(Long id);
 
 	void deleteAll();

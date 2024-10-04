@@ -33,20 +33,16 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case CONSTRAINT_VIOLATION:
 				case NULL_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
+				case CONSTRAINT_VIOLATION:
 				case ILLEGAL_ID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
 
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -68,19 +64,12 @@ public class SubmissionController
 			switch (e.getServiceExceptionTypeEnum())
 			{
 				case CONSTRAINT_VIOLATION:
-				case NULL_ARGUMENT:
-					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-
 				case ILLEGAL_ID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -116,9 +105,15 @@ public class SubmissionController
 		{
 			submissionService.deleteSubmission(id);
 		}
-		catch (IllegalArgumentException e)
+		catch (ServiceException e)
 		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch (Exception e)
 		{

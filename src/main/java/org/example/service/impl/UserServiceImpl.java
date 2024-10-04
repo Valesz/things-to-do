@@ -150,6 +150,7 @@ public class UserServiceImpl implements UserService
 	@Override
 	public User updateUser(User user) throws ServiceException
 	{
+		//TODO: Separate null, because that would be a Bad Request not a Not Found
 		if (user.getId() == null || !userRepository.existsById(user.getId()))
 		{
 			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,

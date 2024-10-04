@@ -7,6 +7,7 @@ import org.example.model.User;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
 import org.example.service.SubmissionService;
+import org.example.utils.HttpErrorResponseForTests;
 import org.example.utils.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
@@ -171,6 +172,163 @@ public class SubmissionControllerTest extends AbstractTest
 	}
 
 	@Test
+	public void addSubmissionWithNullValuesTest()
+	{
+		Submission submission = Submission.builder()
+			.description("descriptión")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(submission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addSubmissionWithIdTest()
+	{
+		Submission testSubmission = Submission.builder()
+			.id(1L)
+			.taskid(this.task1.getId())
+			.description("buena descripción")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(this.user1.getId())
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addNullSubmissionTest()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(null, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addSubmissionWithInvalidTaskidTest()
+	{
+		Submission testSubmission = Submission.builder()
+			.taskid(Long.MAX_VALUE)
+			.description("buena descripción")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(this.user1.getId())
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addSubmissionWithoutTaskIdTest()
+	{
+		Submission testSubmission = Submission.builder()
+			.taskid(null)
+			.description("buena descripción")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(this.user1.getId())
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addSubmissionWithInvalidSubmitteridTest()
+	{
+		Submission testSubmission = Submission.builder()
+			.taskid(this.task1.getId())
+			.description("buena descripción")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(Long.MAX_VALUE)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addSubmissionWithNullSubmitterIdTest()
+	{
+		Submission testSubmission = Submission.builder()
+			.taskid(null)
+			.description("buena descripción")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(null)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
 	public void getSingleSubmissionTest()
 	{
 		Submission querySubmission = Submission.builder()
@@ -275,6 +433,89 @@ public class SubmissionControllerTest extends AbstractTest
 	}
 
 	@Test
+	public void updateSubmissionWithoutIdTest()
+	{
+		Submission propertiesToUpdate = Submission.builder()
+			.description("descriptión")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void updateTaskWithInvalidIdTest()
+	{
+		Submission propertiesToUpdate = Submission.builder()
+			.id(Long.MAX_VALUE)
+			.description("descriptión")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void updateSubmissionToInvalidTaskIdTest()
+	{
+		Submission propertiesToUpdate = Submission.builder()
+			.id(this.submission1.getId())
+			.taskid(Long.MAX_VALUE)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void updateSubmissionToInvalidSubmitterIdTest()
+	{
+		Submission propertiesToUpdate = Submission.builder()
+			.id(this.submission1.getId())
+			.submitterid(Long.MAX_VALUE)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
 	public void deleteSubmissionTest()
 	{
 		ResponseEntity<Void> response = this.restTemplate.exchange(baseEndpoint + this.submission1.getId(), HttpMethod.DELETE, null, Void.class);
@@ -288,5 +529,16 @@ public class SubmissionControllerTest extends AbstractTest
 		Assert.assertEquals(this.submission2, submissionsAccordingToQuery[0]);
 		Assert.assertEquals(this.submission3, submissionsAccordingToQuery[1]);
 		Assert.assertEquals(this.submission4, submissionsAccordingToQuery[2]);
+	}
+
+	@Test
+	public void deleteSubmissionWithNonExistingIdTest()
+	{
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, null, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 }

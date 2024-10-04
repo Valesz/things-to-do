@@ -10,6 +10,7 @@ import org.example.repository.KeywordsForTasksRepository;
 import org.example.service.Filter;
 import org.example.service.TaskService;
 import org.example.service.UserService;
+import org.example.utils.HttpErrorResponseForTests;
 import org.example.utils.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
@@ -178,6 +179,108 @@ public class TaskControllerTest extends AbstractTest
 	}
 
 	@Test
+	public void addTaskWithNullValuesTest()
+	{
+		Task testTask = Task.builder()
+			.name("Krumplisteszta")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addTaskWithIdTest()
+	{
+		Task testTask = Task.builder()
+			.id(1L)
+			.name("Krumplisteszta")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addNullTaskTest()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(null, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addTaskWithInvalidOwnerIdTest()
+	{
+		Task testTask = Task.builder()
+			.name("tarea de ejemplo")
+			.description("descripción")
+			.timeofcreation(LocalDate.now())
+			.ownerid(Long.MAX_VALUE)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addTaskWithoutOwnerIdTest()
+	{
+		Task testTask = Task.builder()
+			.name("tarea de ejemplo")
+			.description("descripción")
+			.timeofcreation(LocalDate.now())
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
 	public void getSingleTaskTest()
 	{
 		Task queryTask = Task.builder()
@@ -338,6 +441,69 @@ public class TaskControllerTest extends AbstractTest
 	}
 
 	@Test
+	public void updateTaskWithoutIdTest()
+	{
+		Task propertiesToUpdate = Task.builder()
+			.name("potato pasta")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void updateTaskWithInvalidIdTest()
+	{
+		Task propertiesToUpdate = Task.builder()
+			.id(Long.MAX_VALUE)
+			.name("potato pasta")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void updateTaskToInvalidOwnerIdTest()
+	{
+		Task propertiesToUpdate = Task.builder()
+			.id(this.task1.getId())
+			.name("potato pasta")
+			.ownerid(Long.MAX_VALUE)
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+
+		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
 	public void deleteTaskTest()
 	{
 		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(baseEndpoint + this.task1.getId(), HttpMethod.DELETE, new HttpEntity<>(null), Void.class);
@@ -353,6 +519,17 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(task2, tasksFromDb[0]);
 		Assert.assertEquals(task3, tasksFromDb[1]);
 		Assert.assertEquals(task4, tasksFromDb[2]);
+	}
+
+	@Test
+	public void deleteTaskWithNonExistingIdTest()
+	{
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
 	@Test
@@ -386,6 +563,62 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(responseEntity.getBody()[0], keywordsInDb[3]);
 		Assert.assertEquals(responseEntity.getBody()[1], keywordsInDb[4]);
 		Assert.assertEquals(responseEntity.getBody()[2], keywordsInDb[5]);
+	}
+
+	@Test
+	public void addKeywordWithNullValuesTest()
+	{
+		KeywordsForTasks keyword = KeywordsForTasks.builder().keyword("ABC").build();
+
+		List<KeywordsForTasks> keywordList = List.of(keyword);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addKeywordWithIdTest()
+	{
+		KeywordsForTasks keyword = KeywordsForTasks.builder().id(1L).taskid(this.task1.getId()).keyword("ABC").build();
+
+		List<KeywordsForTasks> keywordList = List.of(keyword);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addNullKeywordTest()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(null, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
 	@Test
@@ -459,6 +692,17 @@ public class TaskControllerTest extends AbstractTest
 	}
 
 	@Test
+	public void deleteKeywordWithNonExistingIdTest()
+	{
+		ResponseEntity<HttpErrorResponseForTests> deleteResponse = this.restTemplate.exchange(keywordsEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, deleteResponse.getStatusCode());
+		Assert.assertNotNull(deleteResponse.getBody());
+		Assert.assertEquals("Not Found", deleteResponse.getBody().getError());
+		Assert.assertNotNull(deleteResponse.getBody().getMessage());
+	}
+
+	@Test
 	public void addCompletedTasksTest()
 	{
 		CompletedTask testCompletedTask = CompletedTask.builder().taskid(task3.getId()).userid(this.user2.getId()).build();
@@ -479,6 +723,58 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(completedTaskFromResponse, completedTasksFromDb[3]);
 		Assert.assertEquals(testCompletedTask.getTaskid(), completedTaskFromResponse.getTaskid());
 		Assert.assertEquals(testCompletedTask.getUserid(), completedTaskFromResponse.getUserid());
+	}
+
+	@Test
+	public void addCompletedTaskWithNulLValuesTest()
+	{
+		CompletedTask testCompletedTask = CompletedTask.builder().userid(this.user2.getId()).build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addCompletedTaskWithIdTest()
+	{
+		CompletedTask testCompletedTask = CompletedTask.builder().id(1L).taskid(this.task1.getId()).userid(this.user2.getId()).build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
+	}
+
+	@Test
+	public void addNullCompletedTaskTest()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(null, headers);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
 	@Test
@@ -566,5 +862,16 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(2, completedTasksFromDb.length);
 		Assert.assertEquals(this.completedTask2, completedTasksFromDb[0]);
 		Assert.assertEquals(this.completedTask3, completedTasksFromDb[1]);
+	}
+
+	@Test
+	public void deleteCompletedTaskWithNonExistingIdTest()
+	{
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(completedTaskEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		Assert.assertNotNull(response.getBody());
+		Assert.assertEquals("Not Found", response.getBody().getError());
+		Assert.assertNotNull(response.getBody().getMessage());
 	}
 }

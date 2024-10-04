@@ -116,6 +116,13 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	{
 		for (KeywordsForTasks item : keywordForTask)
 		{
+			if (item.getId() != null)
+			{
+				throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+					"Remove id property, or use Update instead of Save."
+				);
+			}
+
 			validateKeywordsForTasksProperties(item);
 		}
 
@@ -196,8 +203,15 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	}
 
 	@Override
-	public void deleteKeywordForTask(Long id)
+	public void deleteKeywordForTask(Long id) throws ServiceException
 	{
+		KeywordsForTasks found = getKeywordForTaskById(id);
+		if (found == null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Keyword with id " + id + " doesn't exist."
+			);
+		}
 		keywordsForTasksRepository.deleteById(id);
 	}
 

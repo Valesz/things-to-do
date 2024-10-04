@@ -46,17 +46,13 @@ public class TaskController
 			switch (e.getServiceExceptionTypeEnum())
 			{
 				case NULL_ARGUMENT:
-				case CONSTRAINT_VIOLATION:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+				case CONSTRAINT_VIOLATION:
 				case ILLEGAL_ID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -86,10 +82,6 @@ public class TaskController
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -141,9 +133,15 @@ public class TaskController
 		{
 			taskService.deleteTask(taskId);
 		}
-		catch (IllegalArgumentException e)
+		catch (ServiceException e)
 		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch (Exception e)
 		{
@@ -172,10 +170,6 @@ public class TaskController
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
 		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-		}
 		catch (Exception e)
 		{
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -202,9 +196,15 @@ public class TaskController
 		{
 			completedTasksService.deleteCompletedTask(id);
 		}
-		catch (IllegalArgumentException e)
+		catch (ServiceException e)
 		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch (Exception e)
 		{
@@ -235,10 +235,6 @@ public class TaskController
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}
 		}
-		catch (IllegalArgumentException e)
-		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-		}
 		catch (Exception e)
 		{
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -267,9 +263,15 @@ public class TaskController
 		{
 			keywordsForTasksService.deleteKeywordForTask(id);
 		}
-		catch (IllegalArgumentException e)
+		catch (ServiceException e)
 		{
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
 		}
 		catch (Exception e)
 		{

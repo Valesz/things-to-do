@@ -247,6 +247,13 @@ public class SubmissionServiceImpl implements SubmissionService
 	@Override
 	public void deleteSubmission(Long id)
 	{
+		Submission found = getSubmissionById(id);
+		if (found == null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Submission with id " + id + " doesn't exist."
+			);
+		}
 		submissionRepository.deleteById(id);
 	}
 

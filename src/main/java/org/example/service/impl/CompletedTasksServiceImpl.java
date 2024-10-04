@@ -194,8 +194,16 @@ public class CompletedTasksServiceImpl implements CompletedTasksService
 	}
 
 	@Override
-	public void deleteCompletedTask(Long id)
+	public void deleteCompletedTask(Long id) throws ServiceException
 	{
+		CompletedTask found = getCompletedTaskById(id);
+		if (found == null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Completed Task with given id does not exist!"
+			);
+		}
+
 		completedTasksRepository.deleteById(id);
 	}
 

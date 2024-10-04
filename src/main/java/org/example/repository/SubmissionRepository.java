@@ -13,5 +13,5 @@ public interface SubmissionRepository extends CrudRepository<Submission, Long>
 
 	@Modifying
 	@Query("UPDATE \"submission\" SET ACCEPTANCE = :ACCEPTANCE WHERE ID = :ID")
-	boolean setAcceptance(@Param("id") Long id, @Param("acceptance") Boolean acceptance);
+	boolean setAcceptance(@Param("ID") Long id, @Param("ACCEPTANCE") Boolean acceptance);
 }

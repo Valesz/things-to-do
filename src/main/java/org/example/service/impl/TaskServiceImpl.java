@@ -311,7 +311,7 @@ public class TaskServiceImpl implements TaskService
 			sb.append("maintaskid is not a valid task's ID, ");
 		}
 
-		if (!userRepository.existsById(task.getOwnerid()))
+		if (task.getOwnerid() == null || !userRepository.existsById(task.getOwnerid()))
 		{
 			sb.append("ownerid is not a valid user's ID, ");
 		}
@@ -320,8 +320,21 @@ public class TaskServiceImpl implements TaskService
 	}
 
 	@Override
-	public void deleteTask(Long id)
+	public boolean setMainTaskId(Long id, Long mainTaskId)
 	{
+		return taskRepository.setMainTaskId(id, mainTaskId);
+	}
+
+	@Override
+	public void deleteTask(Long id) throws ServiceException
+	{
+		Task found = getTaskById(id);
+		if (found == null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Task with given ID does not exist"
+			);
+		}
 		taskRepository.deleteById(id);
 	}
 
