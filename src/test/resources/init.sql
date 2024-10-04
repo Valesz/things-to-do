@@ -6,56 +6,66 @@ DROP TABLE IF EXISTS "user";
 
 // Creating tables
 CREATE TABLE "user" (
-                        id Integer AUTO_INCREMENT NOT NULL,
-                        username VARCHAR(30) NOT NULL,
-                        email VARCHAR(30) NOT NULL,
-                        timeOfCreation DATE NOT NULL,
-                        status VARCHAR(30) NOT NULL,
-                        password VARCHAR(255) NOT NULL,
-                        classification FLOAT NOT NULL,
-                        precisionOfAnswers FLOAT NOT NULL
+	ID                 INTEGER AUTO_INCREMENT NOT NULL,
+	USERNAME           VARCHAR(30)  NOT NULL,
+	EMAIL              VARCHAR(30)  NOT NULL,
+	TIMEOFCREATION     DATE         NOT NULL,
+	STATUS             VARCHAR(30)  NOT NULL,
+	PASSWORD           VARCHAR(255) NOT NULL,
+	CLASSIFICATION     FLOAT        NOT NULL,
+	PRECISIONOFANSWERS FLOAT        NOT NULL
 );
 
 CREATE TABLE "task" (
-                        id INTEGER auto_increment NOT NULL,
-                        name VARCHAR(255) NOT NULL,
-                        description VARCHAR(400) NOT NULL,
-                        timeOfCreation DATE NOT NULL,
-                        mainTaskId INTEGER,
-                        ownerId INTEGER NOT NULL
+	ID             INTEGER auto_increment NOT NULL,
+	NAME           VARCHAR(255) NOT NULL,
+	DESCRIPTION    VARCHAR(400) NOT NULL,
+	TIMEOFCREATION DATE         NOT NULL,
+	MAINTASKID     INTEGER,
+	OWNERID        INTEGER      NOT NULL
 );
 
 CREATE TABLE "submission" (
-                              id INTEGER AUTO_INCREMENT NOT NULL,
-                              taskId INTEGER NOT NULL,
-                              description VARCHAR(400) NOT NULL,
-                              timeOfSubmission DATE NOT NULL,
-                              acceptance BOOLEAN,
-                              submitterId INTEGER NOT NULL
+	ID               INTEGER AUTO_INCREMENT NOT NULL,
+	TASKID           INTEGER      NOT NULL,
+	DESCRIPTION      VARCHAR(400) NOT NULL,
+	TIMEOFSUBMISSION DATE         NOT NULL,
+	ACCEPTANCE       BOOLEAN,
+	SUBMITTERID      INTEGER      NOT NULL
 );
 
 CREATE TABLE "completedTasks" (
-                                  id INTEGER AUTO_INCREMENT NOT NULL,
-                                  userId INTEGER NOT NULL,
-                                  taskId INTEGER NOT NULL
+	ID     INTEGER AUTO_INCREMENT NOT NULL,
+	USERID INTEGER NOT NULL,
+	TASKID INTEGER NOT NULL
 );
 
 CREATE TABLE "keywordsForTasks" (
-                                    id INTEGER AUTO_INCREMENT NOT NULL,
-                                    taskId INTEGER NOT NULL,
-                                    keyword VARCHAR(20) NOT NULL
+	ID      INTEGER AUTO_INCREMENT NOT NULL,
+	TASKID  INTEGER     NOT NULL,
+	KEYWORD VARCHAR(20) NOT NULL
 );
 
-// Primary Keys
-ALTER TABLE "user" ADD PRIMARY KEY (id);
-ALTER TABLE "task" ADD PRIMARY KEY (id);
-ALTER TABLE "submission" ADD PRIMARY KEY (id);
-ALTER TABLE "completedTasks" ADD PRIMARY KEY (id);
-ALTER TABLE "keywordsForTasks" ADD PRIMARY KEY (id);
+// PRIMARY Keys
+ALTER TABLE "user"
+ADD PRIMARY KEY (ID);
+ALTER TABLE "task"
+ADD PRIMARY KEY (ID);
+ALTER TABLE "submission"
+ADD PRIMARY KEY (ID);
+ALTER TABLE "completedTasks"
+ADD PRIMARY KEY (ID);
+ALTER TABLE "keywordsForTasks"
+ADD PRIMARY KEY (ID);
 
-// Adding Foreign key constraints
-ALTER TABLE "task" ADD FOREIGN KEY (ownerId) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "submission" ADD FOREIGN KEY (taskId) REFERENCES "task"(id) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "completedTasks" ADD FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "completedTasks" ADD FOREIGN KEY (taskId) REFERENCES "task"(id) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "keywordsForTasks" ADD FOREIGN KEY (taskId) REFERENCES "task"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+// Adding FOREIGN KEY CONSTRAINTS
+ALTER TABLE "task"
+ADD FOREIGN KEY (OWNERID) REFERENCES "user"(ID) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "submission"
+ADD FOREIGN KEY (TASKID) REFERENCES "task"(ID) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "completedTasks"
+ADD FOREIGN KEY (USERID) REFERENCES "user"(ID) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "completedTasks"
+ADD FOREIGN KEY (TASKID) REFERENCES "task"(ID) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "keywordsForTasks"
+ADD FOREIGN KEY (TASKID) REFERENCES "task"(ID) ON DELETE CASCADE ON UPDATE CASCADE;

@@ -15,89 +15,114 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/submission")
 @Import(value = {MyConfiguration.class})
-public class SubmissionController {
+public class SubmissionController
+{
 
-    @Autowired
-    SubmissionService submissionService;
+	@Autowired
+	SubmissionService submissionService;
 
-    @RequestMapping(value = "/", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.CREATED)
-    public Submission addSubmission(@RequestBody Submission submission) {
-        try {
-            return submissionService.saveSubmission(submission);
-        } catch (ServiceException e) {
-            switch (e.getServiceExceptionTypeEnum()) {
-                case CONSTRAINT_VIOLATION:
-                case NULL_ARGUMENT:
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+	@RequestMapping(value = "/", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.CREATED)
+	public Submission addSubmission(@RequestBody Submission submission)
+	{
+		try
+		{
+			return submissionService.saveSubmission(submission);
+		}
+		catch (ServiceException e)
+		{
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case CONSTRAINT_VIOLATION:
+				case NULL_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
-                case ILLEGAL_ID_ARGUMENT:
-                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
 
-                default:
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-            }
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-    }
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+		catch (Exception e)
+		{
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+	}
 
-    //TODO: Figure out how to handle 2 -> null value change.
-    @RequestMapping(value = "/", method = RequestMethod.PUT)
-    @ResponseStatus(HttpStatus.OK)
-    public Submission updateSubmission(@RequestBody Submission submission) {
-        try {
-            return submissionService.updateSubmission(submission);
-        } catch (ServiceException e) {
-            switch (e.getServiceExceptionTypeEnum()) {
-                case CONSTRAINT_VIOLATION:
-                case NULL_ARGUMENT:
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+	//TODO: Figure out how to handle 2 -> null value change.
+	@RequestMapping(value = "/", method = RequestMethod.PUT)
+	@ResponseStatus(HttpStatus.OK)
+	public Submission updateSubmission(@RequestBody Submission submission)
+	{
+		try
+		{
+			return submissionService.updateSubmission(submission);
+		}
+		catch (ServiceException e)
+		{
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case CONSTRAINT_VIOLATION:
+				case NULL_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
-                case ILLEGAL_ID_ARGUMENT:
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				case ILLEGAL_ID_ARGUMENT:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
-                default:
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-            }
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-    }
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+		catch (Exception e)
+		{
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+	}
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    @ResponseStatus(HttpStatus.OK)
-    public Iterable<Submission> listSubmissions(@RequestParam(required = false, value = "id") Long id,
-                                                @RequestParam(required = false, value = "taskid") Long taskid,
-                                                @RequestParam(required = false, value = "description") String description,
-                                                @RequestParam(required = false, value = "timeofsubmission") String timeofsubmission,
-                                                @RequestParam(required = false, value = "acceptance") Boolean acceptance,
-                                                @RequestParam(required = false, value = "submitterid") Long submitterid) {
-        return submissionService.getBySubmissionsObject(Submission.builder()
-                .id(id)
-                .taskid(taskid)
-                .description(description != null && !description.isEmpty() ? description : null)
-                .timeofsubmission(timeofsubmission != null && !timeofsubmission.isEmpty() ? LocalDate.parse(timeofsubmission) : null)
-                .acceptance(acceptance)
-                .submitterid(submitterid)
-                .build()
-        );
-    }
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	public Iterable<Submission> listSubmissions(@RequestParam(required = false, value = "id") Long id,
+		@RequestParam(required = false, value = "taskid") Long taskid,
+		@RequestParam(required = false, value = "description") String description,
+		@RequestParam(required = false, value = "timeofsubmission") String timeofsubmission,
+		@RequestParam(required = false, value = "acceptance") Boolean acceptance,
+		@RequestParam(required = false, value = "submitterid") Long submitterid)
+	{
+		return submissionService.getBySubmissionsObject(Submission.builder()
+			.id(id)
+			.taskid(taskid)
+			.description(description != null && !description.isEmpty() ? description : null)
+			.timeofsubmission(timeofsubmission != null && !timeofsubmission.isEmpty() ? LocalDate.parse(timeofsubmission) : null)
+			.acceptance(acceptance)
+			.submitterid(submitterid)
+			.build()
+		);
+	}
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteSubmission(@PathVariable(value = "id") Long id) {
-        try {
-            submissionService.deleteSubmission(id);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-    }
-
+	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteSubmission(@PathVariable(value = "id") Long id)
+	{
+		try
+		{
+			submissionService.deleteSubmission(id);
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+		catch (Exception e)
+		{
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+	}
 }

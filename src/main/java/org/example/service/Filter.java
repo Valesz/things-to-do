@@ -7,14 +7,14 @@ import java.util.Collection;
 
 @Data
 @Builder
-public class Filter {
+public class Filter
+{
 
-    Collection<String> keywords;
+	Collection<String> keywords;
 
-    String name;
+	String name;
 
-    Long ownerId;
+	Long ownerId;
 
-    Long completedUserId;
-
+	Long completedUserId;
 }

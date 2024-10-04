@@ -15,25 +15,25 @@ import java.time.LocalDate;
 @Table(name = "task")
 @AllArgsConstructor
 @NoArgsConstructor
-public class Task {
+public class Task
+{
 
-    @Id
-    @Column(value = "ID")
-    private Long id;
+	@Id
+	@Column(value = "ID")
+	private Long id;
 
-    @Column(value = "NAME")
-    private String name;
+	@Column(value = "NAME")
+	private String name;
 
-    @Column(value = "DESCRIPTION")
-    private String description;
+	@Column(value = "DESCRIPTION")
+	private String description;
 
-    @Column(value = "TIMEOFCREATION")
-    private LocalDate timeofcreation;
+	@Column(value = "TIMEOFCREATION")
+	private LocalDate timeofcreation;
 
-    @Column(value = "MAINTASKID")
-    private Long maintaskid;
+	@Column(value = "MAINTASKID")
+	private Long maintaskid;
 
-    @Column(value = "OWNERID")
-    private Long ownerid;
-
+	@Column(value = "OWNERID")
+	private Long ownerid;
 }

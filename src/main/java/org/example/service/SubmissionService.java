@@ -5,22 +5,22 @@ import org.example.utils.exceptions.ServiceException;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface SubmissionService {
+public interface SubmissionService
+{
 
-    boolean setAcceptance(Long id, Boolean accepted);
+	boolean setAcceptance(Long id, Boolean accepted);
 
-    Iterable<Submission> getAllSubmissions();
+	Iterable<Submission> getAllSubmissions();
 
-    Submission getSubmissionById(Long id);
+	Submission getSubmissionById(Long id);
 
-    Iterable<Submission> getBySubmissionsObject(Submission submission);
+	Iterable<Submission> getBySubmissionsObject(Submission submission);
 
-    Submission saveSubmission(Submission submission) throws ServiceException;
+	Submission saveSubmission(Submission submission) throws ServiceException;
 
-    Submission updateSubmission(Submission submission) throws ServiceException;
+	Submission updateSubmission(Submission submission) throws ServiceException;
 
-    void deleteSubmission(Long id);
+	void deleteSubmission(Long id);
 
-    void deleteAll();
-
+	void deleteAll();
 }

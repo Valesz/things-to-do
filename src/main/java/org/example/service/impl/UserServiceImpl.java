@@ -18,205 +18,233 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService
+{
 
-    @Autowired
-    UserRepository userRepository;
+	@Autowired
+	UserRepository userRepository;
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+	@Autowired
+	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @Override
-    public Iterable<User> getAllUsers() {
-        return userRepository.findAll();
-    }
+	@Override
+	public Iterable<User> getAllUsers()
+	{
+		return userRepository.findAll();
+	}
 
-    @Override
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
-    }
+	@Override
+	public User getUserById(Long id)
+	{
+		return userRepository.findById(id).orElse(null);
+	}
 
-    @Override
-    public Iterable<User> getByUsersObject(User user) {
+	@Override
+	public Iterable<User> getByUsersObject(User user)
+	{
 
-        if (user == null) {
-            return userRepository.findAll();
-        }
+		if (user == null)
+		{
+			return userRepository.findAll();
+		}
 
-        SqlParameterSource namedParams = new MapSqlParameterSource()
-                .addValue("id", user.getId())
-                .addValue("username", user.getUsername())
-                .addValue("email", user.getEmail())
-                .addValue("timeofcreation", user.getTimeofcreation() == null ? null : user.getTimeofcreation().toString())
-                .addValue("status", user.getStatus() == null ? null : user.getStatus().toString())
-                .addValue("password", user.getPassword())
-                .addValue("classification", user.getClassification())
-                .addValue("precisionofanswers", user.getPrecisionofanswers());
+		SqlParameterSource namedParams = new MapSqlParameterSource()
+			.addValue("id", user.getId())
+			.addValue("username", user.getUsername())
+			.addValue("email", user.getEmail())
+			.addValue("timeofcreation", user.getTimeofcreation() == null ? null : user.getTimeofcreation().toString())
+			.addValue("status", user.getStatus() == null ? null : user.getStatus().toString())
+			.addValue("password", user.getPassword())
+			.addValue("classification", user.getClassification())
+			.addValue("precisionofanswers", user.getPrecisionofanswers());
 
-        String query = constructQueryByOwnObject(user);
+		String query = constructQueryByOwnObject(user);
 
-        return namedParameterJdbcTemplate.query(query, namedParams, rs -> {
-            List<User> userList = new ArrayList<>();
+		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
+		{
+			List<User> userList = new ArrayList<>();
 
-            while (rs.next()) {
-                userList.add(User.builder()
-                        .id(rs.getLong("id"))
-                        .username(rs.getString("username"))
-                        .email(rs.getString("email"))
-                        .timeofcreation(LocalDate.parse(rs.getString("timeofcreation")))
-                        .status(UserStatusEnum.valueOf(rs.getString("status")))
-                        .password(rs.getString("password"))
-                        .classification(rs.getDouble("classification"))
-                        .precisionofanswers(rs.getDouble("precisionofanswers"))
-                        .build()
-                );
-            }
+			while (rs.next())
+			{
+				userList.add(User.builder()
+					.id(rs.getLong("id"))
+					.username(rs.getString("username"))
+					.email(rs.getString("email"))
+					.timeofcreation(LocalDate.parse(rs.getString("timeofcreation")))
+					.status(UserStatusEnum.valueOf(rs.getString("status")))
+					.password(rs.getString("password"))
+					.classification(rs.getDouble("classification"))
+					.precisionofanswers(rs.getDouble("precisionofanswers"))
+					.build()
+				);
+			}
 
-            return userList;
-        });
+			return userList;
+		});
+	}
 
-    }
+	private String constructQueryByOwnObject(User user)
+	{
+		StringBuilder query = new StringBuilder(" SELECT * FROM \"user\" ");
 
-    private String constructQueryByOwnObject(User user) {
-        StringBuilder query = new StringBuilder(" SELECT * FROM \"user\" ");
+		query.append(" WHERE 1 = 1 ");
 
-        query.append(" WHERE 1 = 1 ");
+		if (user.getId() != null)
+		{
+			query.append(" AND id = :id ");
+		}
 
-        if (user.getId() != null) {
-            query.append(" AND id = :id ");
-        }
+		if (user.getUsername() != null)
+		{
+			query.append(" AND username = :username ");
+		}
 
-        if (user.getUsername() != null) {
-            query.append(" AND username = :username ");
-        }
+		if (user.getEmail() != null)
+		{
+			query.append(" AND email = :email ");
+		}
 
-        if (user.getEmail() != null) {
-            query.append(" AND email = :email ");
-        }
+		if (user.getTimeofcreation() != null)
+		{
+			query.append(" AND timeofcreation = :timeofcreation ");
+		}
 
-        if (user.getTimeofcreation() != null) {
-            query.append(" AND timeofcreation = :timeofcreation ");
-        }
+		if (user.getStatus() != null)
+		{
+			query.append(" AND status = :status ");
+		}
 
-        if (user.getStatus() != null) {
-            query.append(" AND status = :status ");
-        }
+		if (user.getClassification() != null)
+		{
+			query.append(" AND classification = :classification ");
+		}
 
-        if (user.getClassification() != null) {
-            query.append(" AND classification = :classification ");
-        }
+		if (user.getPrecisionofanswers() != null)
+		{
+			query.append(" AND precisionofanswers = :precisionofanswers ");
+		}
 
-        if (user.getPrecisionofanswers() != null) {
-            query.append(" AND precisionofanswers = :precisionofanswers ");
-        }
+		return query.toString();
+	}
 
-        return query.toString();
+	@Override
+	public User saveUser(User user) throws ServiceException
+	{
+		if (user.getId() != null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Remove id property, or use Update instead of Save."
+			);
+		}
 
-    }
+		validateUserProperties(user);
 
-    @Override
-    public User saveUser(User user) throws ServiceException {
-        if (user.getId() != null) {
-            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
-                    "Remove id property, or use Update instead of Save."
-            );
-        }
+		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
-        validateUserProperties(user);
+		return userRepository.save(user);
+	}
 
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+	@Override
+	public User updateUser(User user) throws ServiceException
+	{
+		if (user.getId() == null || !userRepository.existsById(user.getId()))
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"User with id " + user.getId() + " doesn't exist. Please use save to save this instance."
+			);
+		}
 
-        return userRepository.save(user);
-    }
+		User newUser = setNullProperties(user);
 
-    @Override
-    public User updateUser(User user) throws ServiceException {
-        if (user.getId() == null || !userRepository.existsById(user.getId())) {
-            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
-                    "User with id " + user.getId() + " doesn't exist. Please use save to save this instance."
-            );
-        }
+		validateUserProperties(newUser);
 
-        User newUser = setNullProperties(user);
+		return userRepository.save(newUser);
+	}
 
-        validateUserProperties(newUser);
+	private User setNullProperties(User user)
+	{
+		User userInDb = userRepository.findById(user.getId()).orElse(new User());
 
-        return userRepository.save(newUser);
-    }
+		user.setUsername(user.getUsername() == null ? userInDb.getUsername() : user.getUsername());
 
-    private User setNullProperties(User user) {
-        User userInDb = userRepository.findById(user.getId()).orElse(new User());
+		user.setEmail(user.getEmail() == null ? userInDb.getEmail() : user.getEmail());
 
-        user.setUsername(user.getUsername() == null ? userInDb.getUsername() : user.getUsername());
+		user.setTimeofcreation(user.getTimeofcreation() == null ? userInDb.getTimeofcreation() : user.getTimeofcreation());
 
-        user.setEmail(user.getEmail() == null ? userInDb.getEmail() : user.getEmail());
+		user.setStatus(user.getStatus() == null ? userInDb.getStatus() : user.getStatus());
 
-        user.setTimeofcreation(user.getTimeofcreation() == null ? userInDb.getTimeofcreation() : user.getTimeofcreation());
+		user.setPassword(user.getPassword() == null ? userInDb.getPassword() : bCryptPasswordEncoder.encode(user.getPassword()));
 
-        user.setStatus(user.getStatus() == null ? userInDb.getStatus() : user.getStatus());
+		user.setClassification(user.getClassification() == null ? userInDb.getClassification() : user.getClassification());
 
-        user.setPassword(user.getPassword() == null ? userInDb.getPassword() : bCryptPasswordEncoder.encode(user.getPassword()));
+		user.setPrecisionofanswers(user.getPrecisionofanswers() == null ? userInDb.getPrecisionofanswers() : user.getPrecisionofanswers());
 
-        user.setClassification(user.getClassification() == null ? userInDb.getClassification() : user.getClassification());
+		return user;
+	}
 
-        user.setPrecisionofanswers(user.getPrecisionofanswers() == null ? userInDb.getPrecisionofanswers() : user.getPrecisionofanswers());
+	private void validateUserProperties(User user) throws ServiceException
+	{
+		String errorMessage = checkForNullProperties(user);
 
-        return user;
-    }
+		if (!errorMessage.isEmpty())
+		{
+			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
+		}
+	}
 
-    private void validateUserProperties(User user) throws ServiceException{
-        String errorMessage = checkForNullProperties(user);
+	private String checkForNullProperties(User user)
+	{
+		StringBuilder sb = new StringBuilder();
 
-        if (!errorMessage.isEmpty()) {
-            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
-        }
-    }
+		if (user.getUsername() == null)
+		{
+			sb.append("Username must not be null, ");
+		}
 
-    private String checkForNullProperties(User user) {
-        StringBuilder sb = new StringBuilder();
+		if (user.getEmail() == null)
+		{
+			sb.append("Email must not be null, ");
+		}
 
-        if (user.getUsername() == null) {
-            sb.append("Username must not be null, ");
-        }
+		if (user.getTimeofcreation() == null)
+		{
+			sb.append("Timeofcreation must not be null, ");
+		}
 
-        if (user.getEmail() == null) {
-            sb.append("Email must not be null, ");
-        }
+		if (user.getStatus() == null)
+		{
+			sb.append("Status must not be null, ");
+		}
 
-        if (user.getTimeofcreation() == null) {
-            sb.append("Timeofcreation must not be null, ");
-        }
+		if (user.getPassword() == null)
+		{
+			sb.append("Password must not be null, ");
+		}
 
-        if (user.getStatus() == null) {
-            sb.append("Status must not be null, ");
-        }
+		return sb.toString();
+	}
 
-        if (user.getPassword() == null) {
-            sb.append("Password must not be null, ");
-        }
+	@Override
+	public void deleteUser(Long id)
+	{
+		getUserById(id);
+		updateUser(User.builder()
+			.id(id)
+			.status(UserStatusEnum.INAKTIV)
+			.build()
+		);
+	}
 
-        return sb.toString();
-    }
-
-    @Override
-    public void deleteUser(Long id) {
-        getUserById(id);
-        updateUser(User.builder()
-                .id(id)
-                .status(UserStatusEnum.INAKTIV)
-                .build()
-        );
-    }
-
-    @Override
-    public void deleteAll() {
-        getAllUsers().forEach(user -> {
-            user.setStatus(UserStatusEnum.INAKTIV);
-            updateUser(user);
-        });
-    }
-
+	@Override
+	public void deleteAll()
+	{
+		getAllUsers().forEach(user ->
+		{
+			user.setStatus(UserStatusEnum.INAKTIV);
+			updateUser(user);
+		});
+	}
 }

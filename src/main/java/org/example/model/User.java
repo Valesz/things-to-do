@@ -16,31 +16,31 @@ import java.time.LocalDate;
 @Table(name = "user")
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User
+{
 
-    @Id
-    @Column(value = "ID")
-    private Long id;
+	@Id
+	@Column(value = "ID")
+	private Long id;
 
-    @Column(value = "USERNAME")
-    private String username;
+	@Column(value = "USERNAME")
+	private String username;
 
-    @Column(value = "EMAIL")
-    private String email;
+	@Column(value = "EMAIL")
+	private String email;
 
-    @Column(value = "TIMEOFCREATION")
-    private LocalDate timeofcreation;
+	@Column(value = "TIMEOFCREATION")
+	private LocalDate timeofcreation;
 
-    @Column(value = "STATUS")
-    private UserStatusEnum status;
+	@Column(value = "STATUS")
+	private UserStatusEnum status;
 
-    @Column(value = "PASSWORD")
-    private String password;
+	@Column(value = "PASSWORD")
+	private String password;
 
-    @Column(value = "CLASSIFICATION")
-    private Double classification;
+	@Column(value = "CLASSIFICATION")
+	private Double classification;
 
-    @Column(value = "PRECISIONOFANSWERS")
-    private Double precisionofanswers;
-
+	@Column(value = "PRECISIONOFANSWERS")
+	private Double precisionofanswers;
 }

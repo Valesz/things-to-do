@@ -17,209 +17,242 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class SubmissionServiceImpl implements SubmissionService {
+public class SubmissionServiceImpl implements SubmissionService
+{
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+	@Autowired
+	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    private SubmissionRepository submissionRepository;
+	@Autowired
+	private SubmissionRepository submissionRepository;
 
-    @Autowired
-    private TaskRepository taskRepository;
+	@Autowired
+	private TaskRepository taskRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+	@Autowired
+	private UserRepository userRepository;
 
-    @Override
-    public boolean setAcceptance(Long id, Boolean accepted) {
-        return submissionRepository.setAcceptance(id, accepted);
-    }
+	@Override
+	public boolean setAcceptance(Long id, Boolean accepted)
+	{
+		return submissionRepository.setAcceptance(id, accepted);
+	}
 
-    @Override
-    public Iterable<Submission> getAllSubmissions() {
-        return submissionRepository.findAll();
-    }
+	@Override
+	public Iterable<Submission> getAllSubmissions()
+	{
+		return submissionRepository.findAll();
+	}
 
-    @Override
-    public Submission getSubmissionById(Long id) {
-        return submissionRepository.findById(id).orElse(null);
-    }
+	@Override
+	public Submission getSubmissionById(Long id)
+	{
+		return submissionRepository.findById(id).orElse(null);
+	}
 
-    @Override
-    public Iterable<Submission> getBySubmissionsObject(Submission submission) {
-        if (submission == null) {
-            return getAllSubmissions();
-        }
+	@Override
+	public Iterable<Submission> getBySubmissionsObject(Submission submission)
+	{
+		if (submission == null)
+		{
+			return getAllSubmissions();
+		}
 
-        SqlParameterSource namedParams = new MapSqlParameterSource()
-                .addValue("id", submission.getId())
-                .addValue("taskid", submission.getTaskid())
-                .addValue("description", submission.getDescription())
-                .addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
-                .addValue("acceptance", submission.getAcceptance())
-                .addValue("submitterid", submission.getSubmitterid());
+		SqlParameterSource namedParams = new MapSqlParameterSource()
+			.addValue("id", submission.getId())
+			.addValue("taskid", submission.getTaskid())
+			.addValue("description", submission.getDescription())
+			.addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
+			.addValue("acceptance", submission.getAcceptance())
+			.addValue("submitterid", submission.getSubmitterid());
 
-        String query = constructQueryByOwnObject(submission);
+		String query = constructQueryByOwnObject(submission);
 
-        return namedParameterJdbcTemplate.query(query, namedParams, rs -> {
-            List<Submission> submissionList = new ArrayList<>();
+		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
+		{
+			List<Submission> submissionList = new ArrayList<>();
 
-            while (rs.next()) {
-                Submission tmpSubmission = Submission.builder()
-                        .id(rs.getLong("id"))
-                        .taskid(rs.getLong("taskid"))
-                        .description(rs.getString("description"))
-                        .timeofsubmission(LocalDate.parse(rs.getString("timeofsubmission")))
-                        .submitterid(rs.getLong("submitterid"))
-                        .build();
+			while (rs.next())
+			{
+				Submission tmpSubmission = Submission.builder()
+					.id(rs.getLong("id"))
+					.taskid(rs.getLong("taskid"))
+					.description(rs.getString("description"))
+					.timeofsubmission(LocalDate.parse(rs.getString("timeofsubmission")))
+					.submitterid(rs.getLong("submitterid"))
+					.build();
 
-                tmpSubmission.setAcceptance(rs.getBoolean("acceptance"));
-                if (rs.wasNull()) {
-                    tmpSubmission.setAcceptance(null);
-                }
+				tmpSubmission.setAcceptance(rs.getBoolean("acceptance"));
+				if (rs.wasNull())
+				{
+					tmpSubmission.setAcceptance(null);
+				}
 
-                submissionList.add(tmpSubmission);
-            }
+				submissionList.add(tmpSubmission);
+			}
 
-            return submissionList;
-        });
-    }
+			return submissionList;
+		});
+	}
 
-    private String constructQueryByOwnObject(Submission submission) {
-        StringBuilder query = new StringBuilder(" SELECT * FROM \"submission\" ");
+	private String constructQueryByOwnObject(Submission submission)
+	{
+		StringBuilder query = new StringBuilder(" SELECT * FROM \"submission\" ");
 
-        query.append(" WHERE 1 = 1 ");
+		query.append(" WHERE 1 = 1 ");
 
-        if (submission.getId() != null) {
-            query.append(" AND id = :id ");
-        }
+		if (submission.getId() != null)
+		{
+			query.append(" AND id = :id ");
+		}
 
-        if (submission.getTaskid() != null) {
-            query.append(" AND taskid = :taskid ");
-        }
+		if (submission.getTaskid() != null)
+		{
+			query.append(" AND taskid = :taskid ");
+		}
 
-        if (submission.getDescription() != null) {
-            query.append(" AND description = :description ");
-        }
+		if (submission.getDescription() != null)
+		{
+			query.append(" AND description = :description ");
+		}
 
-        if (submission.getTimeofsubmission() != null) {
-            query.append(" AND timeofsubmission = :timeofsubmission ");
-        }
+		if (submission.getTimeofsubmission() != null)
+		{
+			query.append(" AND timeofsubmission = :timeofsubmission ");
+		}
 
-        if (submission.getAcceptance() != null) {
-            query.append(" AND acceptance = :acceptance ");
-        }
+		if (submission.getAcceptance() != null)
+		{
+			query.append(" AND acceptance = :acceptance ");
+		}
 
-        if (submission.getSubmitterid() != null) {
-            query.append(" AND submitterid = :submitterid ");
-        }
+		if (submission.getSubmitterid() != null)
+		{
+			query.append(" AND submitterid = :submitterid ");
+		}
 
-        return query.toString();
-    }
+		return query.toString();
+	}
 
-    @Override
-    public Submission saveSubmission(Submission submission) throws ServiceException {
-        if (submission.getId() != null) {
-            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
-                    "Remove id property, or use Update instead of Save."
-            );
-        }
+	@Override
+	public Submission saveSubmission(Submission submission) throws ServiceException
+	{
+		if (submission.getId() != null)
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Remove id property, or use Update instead of Save."
+			);
+		}
 
-        validateSubmissionProperties(submission);
+		validateSubmissionProperties(submission);
 
-        return submissionRepository.save(submission);
-    }
+		return submissionRepository.save(submission);
+	}
 
-    @Override
-    public Submission updateSubmission(Submission submission) throws ServiceException {
-        if (submission.getId() == null || !submissionRepository.existsById(submission.getId())) {
-            throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
-                    "Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance."
-            );
-        }
+	@Override
+	public Submission updateSubmission(Submission submission) throws ServiceException
+	{
+		if (submission.getId() == null || !submissionRepository.existsById(submission.getId()))
+		{
+			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				"Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance."
+			);
+		}
 
-        Submission newSubmission = setNulLValues(submission);
+		Submission newSubmission = setNulLValues(submission);
 
-        validateSubmissionProperties(newSubmission);
+		validateSubmissionProperties(newSubmission);
 
-        return submissionRepository.save(newSubmission);
-    }
+		return submissionRepository.save(newSubmission);
+	}
 
-    private Submission setNulLValues(Submission submission) {
-        Submission submissionInDb = submissionRepository.findById(submission.getId()).orElse(new Submission());
+	private Submission setNulLValues(Submission submission)
+	{
+		Submission submissionInDb = submissionRepository.findById(submission.getId()).orElse(new Submission());
 
-        submission.setTaskid(submission.getTaskid() == null ? submissionInDb.getTaskid() : submission.getTaskid());
+		submission.setTaskid(submission.getTaskid() == null ? submissionInDb.getTaskid() : submission.getTaskid());
 
-        submission.setDescription(submission.getDescription() == null ? submissionInDb.getDescription() : submission.getDescription());
+		submission.setDescription(submission.getDescription() == null ? submissionInDb.getDescription() : submission.getDescription());
 
-        submission.setTimeofsubmission(submission.getTimeofsubmission() == null ? submissionInDb.getTimeofsubmission() : submission.getTimeofsubmission());
+		submission.setTimeofsubmission(submission.getTimeofsubmission() == null ? submissionInDb.getTimeofsubmission() : submission.getTimeofsubmission());
 
-        //TODO: fix 2 -> null-ra állítás
-        submission.setAcceptance(submission.getAcceptance() == null ? submissionInDb.getAcceptance() : submission.getAcceptance());
+		//TODO: fix 2 -> null-ra állítás
+		submission.setAcceptance(submission.getAcceptance() == null ? submissionInDb.getAcceptance() : submission.getAcceptance());
 
-        submission.setSubmitterid(submission.getSubmitterid() == null ? submissionInDb.getSubmitterid() : submission.getSubmitterid());
+		submission.setSubmitterid(submission.getSubmitterid() == null ? submissionInDb.getSubmitterid() : submission.getSubmitterid());
 
-        return submission;
-    }
+		return submission;
+	}
 
-    private void validateSubmissionProperties(Submission submission) throws ServiceException {
+	private void validateSubmissionProperties(Submission submission) throws ServiceException
+	{
 
-        String errorMessage = checkForNullProperties(submission);
-        if (!errorMessage.isEmpty()) {
-            throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
-        }
+		String errorMessage = checkForNullProperties(submission);
+		if (!errorMessage.isEmpty())
+		{
+			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
+		}
 
-        errorMessage = checkConstraints(submission);
-        if (!errorMessage.isEmpty()) {
-            throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
-        }
+		errorMessage = checkConstraints(submission);
+		if (!errorMessage.isEmpty())
+		{
+			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
+		}
+	}
 
-    }
+	private String checkForNullProperties(Submission submission)
+	{
+		StringBuilder errorMessage = new StringBuilder();
 
-    private String checkForNullProperties(Submission submission) {
-        StringBuilder errorMessage = new StringBuilder();
+		if (submission.getTaskid() == null)
+		{
+			errorMessage.append("taskid property is not set, ");
+		}
 
-        if (submission.getTaskid() == null) {
-            errorMessage.append("taskid property is not set, ");
-        }
+		if (submission.getDescription() == null)
+		{
+			errorMessage.append("description property is not set, ");
+		}
 
-        if (submission.getDescription() == null) {
-            errorMessage.append("description property is not set, ");
-        }
+		if (submission.getTimeofsubmission() == null)
+		{
+			errorMessage.append("timeofsubmission property is not set, ");
+		}
 
-        if (submission.getTimeofsubmission() == null) {
-            errorMessage.append("timeofsubmission property is not set, ");
-        }
+		if (submission.getSubmitterid() == null)
+		{
+			errorMessage.append("submitterid property is not set, ");
+		}
 
-        if (submission.getSubmitterid() == null) {
-            errorMessage.append("submitterid property is not set, ");
-        }
+		return errorMessage.toString();
+	}
 
-        return errorMessage.toString();
-    }
+	private String checkConstraints(Submission submission)
+	{
+		StringBuilder errorMessage = new StringBuilder();
 
-    private String checkConstraints(Submission submission) {
-        StringBuilder errorMessage = new StringBuilder();
+		if (!taskRepository.existsById(submission.getTaskid()))
+		{
+			errorMessage.append("taskid property is not a valid task's ID, ");
+		}
 
-        if (!taskRepository.existsById(submission.getTaskid())) {
-            errorMessage.append("taskid property is not a valid task's ID, ");
-        }
+		if (!userRepository.existsById(submission.getSubmitterid()))
+		{
+			errorMessage.append("submitterid property is not a valid user's ID, ");
+		}
 
-        if (!userRepository.existsById(submission.getSubmitterid())) {
-            errorMessage.append("submitterid property is not a valid user's ID, ");
-        }
+		return errorMessage.toString();
+	}
 
-        return errorMessage.toString();
-    }
+	@Override
+	public void deleteSubmission(Long id)
+	{
+		submissionRepository.deleteById(id);
+	}
 
-    @Override
-    public void deleteSubmission(Long id) {
-        submissionRepository.deleteById(id);
-    }
-
-    @Override
-    public void deleteAll() {
-        submissionRepository.deleteAll();
-    }
+	@Override
+	public void deleteAll()
+	{
+		submissionRepository.deleteAll();
+	}
 }

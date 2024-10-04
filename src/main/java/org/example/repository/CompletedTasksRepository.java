@@ -5,5 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository("completedTasksRepository")
-public interface CompletedTasksRepository extends CrudRepository<CompletedTask, Long> {
+public interface CompletedTasksRepository extends CrudRepository<CompletedTask, Long>
+{
 }

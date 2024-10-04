@@ -8,10 +8,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository("submissionRepository")
-public interface SubmissionRepository extends CrudRepository<Submission, Long> {
+public interface SubmissionRepository extends CrudRepository<Submission, Long>
+{
 
-    @Modifying
-    @Query("UPDATE \"submission\" SET acceptance = :acceptance WHERE id = :id")
-    boolean setAcceptance(@Param("id") Long id, @Param("acceptance") Boolean acceptance);
-
+	@Modifying
+	@Query("UPDATE \"submission\" SET ACCEPTANCE = :ACCEPTANCE WHERE ID = :ID")
+	boolean setAcceptance(@Param("id") Long id, @Param("acceptance") Boolean acceptance);
 }

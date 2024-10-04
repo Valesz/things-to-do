@@ -13,16 +13,16 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("keywordsForTasks")
 @AllArgsConstructor
 @NoArgsConstructor
-public class KeywordsForTasks {
+public class KeywordsForTasks
+{
 
-    @Id
-    @Column(value = "ID")
-    private Long id;
+	@Id
+	@Column(value = "ID")
+	private Long id;
 
-    @Column(value = "TASKID")
-    private Long taskid;
+	@Column(value = "TASKID")
+	private Long taskid;
 
-    @Column(value = "KEYWORD")
-    private String keyword;
-
+	@Column(value = "KEYWORD")
+	private String keyword;
 }

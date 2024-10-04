@@ -13,16 +13,16 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table(name = "completedTasks")
 @AllArgsConstructor
 @NoArgsConstructor
-public class CompletedTask {
+public class CompletedTask
+{
 
-    @Id
-    @Column(value = "ID")
-    private Long id;
+	@Id
+	@Column(value = "ID")
+	private Long id;
 
-    @Column(value = "USERID")
-    private Long userid;
+	@Column(value = "USERID")
+	private Long userid;
 
-    @Column(value = "TASKID")
-    private Long taskid;
-
+	@Column(value = "TASKID")
+	private Long taskid;
 }

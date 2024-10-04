@@ -23,32 +23,38 @@ import java.sql.SQLException;
 @RunWith(SpringRunner.class)
 @Import(MyConfiguration.class)
 @TestPropertySource(value = "classpath:test.application.properties")
-public class AbstractTest {
+public class AbstractTest
+{
 
-    @Autowired
-    private Environment environment;
+	@Autowired
+	private Environment environment;
 
-    @PostConstruct
-    public void inMemoryBdSetup() {
-        try {
-            Connection conn = DriverManager.getConnection(
-                    environment.getProperty("datasource.url"),
-                    environment.getProperty("datasource.username"),
-                    environment.getProperty("datasource.password"));
+	@PostConstruct
+	public void inMemoryBdSetup()
+	{
+		try
+		{
+			Connection conn = DriverManager.getConnection(
+				environment.getProperty("datasource.url"),
+				environment.getProperty("datasource.username"),
+				environment.getProperty("datasource.password"));
 
-            ScriptRunner sr = new ScriptRunner(conn);
+			ScriptRunner sr = new ScriptRunner(conn);
 
-            File file = ResourceUtils.getFile("classpath:init.sql");
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            sr.setLogWriter(null);
-            sr.runScript(br);
+			File file = ResourceUtils.getFile("classpath:init.sql");
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			sr.setLogWriter(null);
+			sr.runScript(br);
 
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("File not found: " + e.getMessage());
-        }
-    }
-
+			conn.close();
+		}
+		catch (SQLException e)
+		{
+			System.out.println("SQLException: " + e.getMessage());
+		}
+		catch (IOException e)
+		{
+			System.out.println("File not found: " + e.getMessage());
+		}
+	}
 }

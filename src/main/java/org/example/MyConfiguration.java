@@ -17,42 +17,48 @@ import javax.sql.DataSource;
 @Configuration
 @EnableJdbcRepositories
 @PropertySource("classpath:application.properties")
-public class MyConfiguration extends AbstractJdbcConfiguration {
+public class MyConfiguration extends AbstractJdbcConfiguration
+{
 
-    @Autowired
-    Environment environment;
+	@Autowired
+	Environment environment;
 
-    @Autowired
-    DataSource dataSource;
+	@Autowired
+	DataSource dataSource;
 
-    @Bean
-    DataSource createDataSource() {
-        PoolDataSource dataSource;
+	@Bean
+	DataSource createDataSource()
+	{
+		PoolDataSource dataSource;
 
-        try {
-            dataSource = PoolDataSourceFactory.getPoolDataSource();
+		try
+		{
+			dataSource = PoolDataSourceFactory.getPoolDataSource();
 
-            dataSource.setConnectionFactoryClassName(environment.getProperty("datasource.driver"));
-            dataSource.setURL(environment.getProperty("datasource.url"));
-            dataSource.setUser(environment.getProperty("datasource.username"));
-            dataSource.setPassword(environment.getProperty("datasource.password"));
-            dataSource.setMinPoolSize(0);
-            dataSource.setMaxPoolSize(100);
+			dataSource.setConnectionFactoryClassName(environment.getProperty("datasource.driver"));
+			dataSource.setURL(environment.getProperty("datasource.url"));
+			dataSource.setUser(environment.getProperty("datasource.username"));
+			dataSource.setPassword(environment.getProperty("datasource.password"));
+			dataSource.setMinPoolSize(0);
+			dataSource.setMaxPoolSize(100);
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+		return dataSource;
+	}
 
+	@Bean
+	NamedParameterJdbcTemplate createNamedParameterJdbcTemplate()
+	{
+		return new NamedParameterJdbcTemplate(dataSource);
+	}
 
-        return dataSource;
-    }
-
-    @Bean
-    NamedParameterJdbcTemplate createNamedParameterJdbcTemplate() {
-        return new NamedParameterJdbcTemplate(dataSource);
-    }
-
-    @Bean
-    BCryptPasswordEncoder passwordEncoder() {return new BCryptPasswordEncoder();}
-
+	@Bean
+	BCryptPasswordEncoder passwordEncoder()
+	{
+		return new BCryptPasswordEncoder();
+	}
 }

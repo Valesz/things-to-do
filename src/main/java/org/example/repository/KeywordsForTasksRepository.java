@@ -8,10 +8,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository("keywordsForTasksRepository")
-public interface KeywordsForTasksRepository extends CrudRepository<KeywordsForTasks, Long> {
+public interface KeywordsForTasksRepository extends CrudRepository<KeywordsForTasks, Long>
+{
 
-    @Modifying
-    @Query("DELETE FROM \"keywordsForTasks\" WHERE keyword = :keyword")
-    int deleteKeyword(@Param("keyword") String keyword);
-
+	@Modifying
+	@Query("DELETE FROM \"keywordsForTasks\" WHERE KEYWORD = :KEYWORD")
+	int deleteKeyword(@Param("keyword") String keyword);
 }

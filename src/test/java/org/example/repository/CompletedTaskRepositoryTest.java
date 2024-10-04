@@ -16,158 +16,168 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
+public class CompletedTaskRepositoryTest extends AbstractTest
+{
 
-public class CompletedTaskRepositoryTest extends AbstractTest {
+	@Autowired
+	private UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+	@Autowired
+	private TaskRepository taskRepository;
 
-    @Autowired
-    private TaskRepository taskRepository;
+	@Autowired
+	private CompletedTasksRepository completedTasksRepository;
 
-    @Autowired
-    private CompletedTasksRepository completedTasksRepository;
+	private final User user = User.builder()
+		.username("teszt elek")
+		.email("teszt@teszt.teszt")
+		.timeofcreation(LocalDate.now())
+		.status(UserStatusEnum.AKTIV)
+		.password("teszt")
+		.classification(0.5)
+		.precisionofanswers(0.8)
+		.build();
 
-    private final User user = User.builder()
-            .username("teszt elek")
-            .email("teszt@teszt.teszt")
-            .timeofcreation(LocalDate.now())
-            .status(UserStatusEnum.AKTIV)
-            .password("teszt")
-            .classification(0.5)
-            .precisionofanswers(0.8)
-            .build();
+	private final Task task = Task.builder()
+		.name("Pelda Task")
+		.description("Leiras")
+		.timeofcreation(LocalDate.now())
+		.build();
 
-    private final Task task = Task.builder()
-            .name("Pelda Task")
-            .description("Leiras")
-            .timeofcreation(LocalDate.now())
-            .build();
+	@Before
+	public void setUp()
+	{
+		userRepository.save(this.user);
+		this.task.setOwnerid(user.getId());
+		taskRepository.save(this.task);
+	}
 
-    @Before
-    public void setUp() {
-        userRepository.save(this.user);
-        this.task.setOwnerid(user.getId());
-        taskRepository.save(this.task);
-    }
+	@After
+	public void tearDown()
+	{
+		completedTasksRepository.deleteAll();
+		taskRepository.deleteAll();
+		userRepository.deleteAll();
+	}
 
-    @After
-    public void tearDown() {
-        completedTasksRepository.deleteAll();
-        taskRepository.deleteAll();
-        userRepository.deleteAll();
-    }
+	@Test
+	public void addValidCompletedTaskTest()
+	{
+		CompletedTask completedTask = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(this.user.getId())
+			.build();
 
-    @Test
-    public void addValidCompletedTaskTest() {
-        CompletedTask completedTask = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(this.user.getId())
-                .build();
+		CompletedTask savedCompletedTask = completedTasksRepository.save(completedTask);
 
-        CompletedTask savedCompletedTask = completedTasksRepository.save(completedTask);
+		Assert.assertEquals(completedTask, savedCompletedTask);
+	}
 
-        Assert.assertEquals(completedTask, savedCompletedTask);
-    }
+	@Test
+	public void addInvalidTaskIdCompletedTaskTest()
+	{
+		CompletedTask completedTask = CompletedTask.builder()
+			.taskid(Long.MAX_VALUE)
+			.userid(this.user.getId())
+			.build();
 
-    @Test
-    public void addInvalidTaskIdCompletedTaskTest() {
-        CompletedTask completedTask = CompletedTask.builder()
-                .taskid(Long.MAX_VALUE)
-                .userid(this.user.getId())
-                .build();
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
+	}
 
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
-    }
+	@Test
+	public void addInvalidUserIdCompletedTaskTest()
+	{
+		CompletedTask completedTask = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(Long.MAX_VALUE)
+			.build();
 
-    @Test
-    public void addInvalidUserIdCompletedTaskTest() {
-        CompletedTask completedTask = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(Long.MAX_VALUE)
-                .build();
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
+	}
 
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
-    }
+	@Test
+	public void addCompletedTaskWithMissingDataTest()
+	{
+		CompletedTask completedTask1 = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.build();
 
-    @Test
-    public void addCompletedTaskWithMissingDataTest() {
-        CompletedTask completedTask1 = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .build();
+		CompletedTask completedTask2 = CompletedTask.builder()
+			.build();
 
-        CompletedTask completedTask2 = CompletedTask.builder()
-                .build();
+		CompletedTask completedTask3 = CompletedTask.builder()
+			.userid(this.user.getId())
+			.build();
 
-        CompletedTask completedTask3 = CompletedTask.builder()
-                .userid(this.user.getId())
-                .build();
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask1));
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask2));
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask3));
+	}
 
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask1));
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask2));
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask3));
-    }
+	@Test
+	public void addEmptyCompletedTaskTest()
+	{
+		CompletedTask completedTask = new CompletedTask();
 
-    @Test
-    public void addEmptyCompletedTaskTest() {
-        CompletedTask completedTask = new CompletedTask();
+		Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
+	}
 
-        Assert.assertThrows(DbActionExecutionException.class, () -> completedTasksRepository.save(completedTask));
-    }
+	@Test
+	public void getCompletedTaskFromDbTest()
+	{
+		CompletedTask completedTask = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(this.user.getId())
+			.build();
 
-    @Test
-    public void getCompletedTaskFromDbTest() {
-        CompletedTask completedTask = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(this.user.getId())
-                .build();
+		completedTasksRepository.save(completedTask);
 
-        completedTasksRepository.save(completedTask);
+		Assert.assertEquals(completedTask, completedTasksRepository.findById(completedTask.getId()).orElse(null));
+	}
 
-        Assert.assertEquals(completedTask, completedTasksRepository.findById(completedTask.getId()).orElse(null));
-    }
+	@Test
+	public void getMultipleCompletedTasksFromDbTest()
+	{
+		CompletedTask completedTask1 = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(this.user.getId())
+			.build();
 
-    @Test
-    public void getMultipleCompletedTasksFromDbTest() {
-        CompletedTask completedTask1 = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(this.user.getId())
-                .build();
+		CompletedTask completedTask2 = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(this.user.getId())
+			.build();
 
-        CompletedTask completedTask2 = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(this.user.getId())
-                .build();
+		completedTasksRepository.save(completedTask1);
+		completedTasksRepository.save(completedTask2);
 
-        completedTasksRepository.save(completedTask1);
-        completedTasksRepository.save(completedTask2);
+		List<CompletedTask> completedTaskList = StreamSupport.stream(completedTasksRepository.findAll().spliterator(), false).toList();
 
-        List<CompletedTask> completedTaskList = StreamSupport.stream(completedTasksRepository.findAll().spliterator(), false).toList();
+		Assert.assertEquals(2, completedTaskList.size());
+	}
 
-        Assert.assertEquals(2, completedTaskList.size());
-    }
+	@Test
+	public void getNonExistingCompletedTaskTest()
+	{
+		Assert.assertNull(completedTasksRepository.findById(Long.MAX_VALUE).orElse(null));
+		Assert.assertNull(completedTasksRepository.findById(-1L).orElse(null));
+		Assert.assertNull(completedTasksRepository.findById(1L).orElse(null));
+	}
 
-    @Test
-    public void getNonExistingCompletedTaskTest() {
-        Assert.assertNull(completedTasksRepository.findById(Long.MAX_VALUE).orElse(null));
-        Assert.assertNull(completedTasksRepository.findById(-1L).orElse(null));
-        Assert.assertNull(completedTasksRepository.findById(1L).orElse(null));
-    }
+	@Test
+	public void deleteCompletedTaskTest()
+	{
+		CompletedTask completedTask = CompletedTask.builder()
+			.taskid(this.task.getId())
+			.userid(this.user.getId())
+			.build();
 
-    @Test
-    public void deleteCompletedTaskTest() {
-        CompletedTask completedTask = CompletedTask.builder()
-                .taskid(this.task.getId())
-                .userid(this.user.getId())
-                .build();
+		completedTasksRepository.save(completedTask);
 
-        completedTasksRepository.save(completedTask);
+		Assert.assertNotNull(completedTasksRepository.findById(completedTask.getId()).orElse(null));
 
-        Assert.assertNotNull(completedTasksRepository.findById(completedTask.getId()).orElse(null));
+		completedTasksRepository.delete(completedTask);
 
-        completedTasksRepository.delete(completedTask);
-
-        Assert.assertNull(completedTasksRepository.findById(completedTask.getId()).orElse(null));
-    }
-
+		Assert.assertNull(completedTasksRepository.findById(completedTask.getId()).orElse(null));
+	}
 }

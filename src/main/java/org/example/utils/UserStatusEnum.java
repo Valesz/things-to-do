@@ -1,6 +1,7 @@
 package org.example.utils;
 
-public enum UserStatusEnum {
-    AKTIV,
-    INAKTIV
+public enum UserStatusEnum
+{
+	AKTIV,
+	INAKTIV
 }

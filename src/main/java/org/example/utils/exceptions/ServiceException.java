@@ -5,19 +5,21 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class ServiceException extends RuntimeException {
+public class ServiceException extends RuntimeException
+{
 
-    private ServiceExceptionType serviceExceptionTypeEnum;
+	private ServiceExceptionType serviceExceptionTypeEnum;
 
-    private String message;
+	private String message;
 
-    public ServiceException(ServiceExceptionType serviceExceptionTypeEnum, String message) {
-        setServiceExceptionTypeEnum(serviceExceptionTypeEnum);
-        setMessage(message);
-    }
+	public ServiceException(ServiceExceptionType serviceExceptionTypeEnum, String message)
+	{
+		setServiceExceptionTypeEnum(serviceExceptionTypeEnum);
+		setMessage(message);
+	}
 
-    public ServiceException(String message) {
-        super(message);
-    }
-
+	public ServiceException(String message)
+	{
+		super(message);
+	}
 }
