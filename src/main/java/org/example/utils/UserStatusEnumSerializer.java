@@ -21,9 +21,6 @@ public class UserStatusEnumSerializer extends StdSerializer<UserStatusEnum>
 	@Override
 	public void serialize(UserStatusEnum userStatusEnum, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException
 	{
-		jsonGenerator.writeStartObject();
-		jsonGenerator.writeFieldName("status");
 		jsonGenerator.writeString(userStatusEnum.getStatus());
-		jsonGenerator.writeEndObject();
 	}
 }

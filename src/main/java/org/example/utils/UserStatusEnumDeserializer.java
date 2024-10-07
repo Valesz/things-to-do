@@ -24,12 +24,12 @@ public class UserStatusEnumDeserializer extends StdDeserializer<UserStatusEnum>
 	{
 		JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 
-		if (node.get("status") == null)
+		if (node.textValue() == null)
 		{
 			return null;
 		}
 
-		String status = node.get("status").asText();
+		String status = node.asText();
 
 		for (UserStatusEnum userStatusEnum : UserStatusEnum.values())
 		{

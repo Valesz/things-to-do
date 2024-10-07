@@ -29,7 +29,7 @@ public class UserController
 		try
 		{
 			User savedUser = userService.saveUser(user);
-			savedUser.setPassword("");
+			savedUser.setPassword(null);
 			return savedUser;
 		}
 		catch (ServiceException e)

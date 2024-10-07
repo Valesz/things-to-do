@@ -54,7 +54,11 @@ dependencies {
 	implementation("org.springframework:spring-web:5.3.25")
 	implementation("org.springframework:spring-webmvc:5.3.25")
 	implementation("org.springframework.data:spring-data-jdbc:2.4.9")
-	implementation group: 'org.springframework.security', name: 'spring-security-core', version: '5.7.5'
+//	implementation group: 'org.springframework.security', name: 'spring-security-core', version: '5.7.5'
+	implementation 'org.springframework.boot:spring-boot-starter-security:2.3.12.RELEASE'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 //    implementation("ch.qos.logback:logback-classic:1.2.11")
 //    implementation("ch.qos.logback:logback-core:1.2.11")
 //    implementation("org.slf4j:slf4j-api:1.7.36")
