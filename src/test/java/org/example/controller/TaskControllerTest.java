@@ -43,6 +43,8 @@ public class TaskControllerTest extends AbstractTest
 	@Autowired
 	private TestRestTemplate restTemplate;
 
+	private String jwtToken;
+
 	private final String baseEndpoint = "/api/task/";
 
 	private final String keywordsEndpoint = baseEndpoint + "keyword/";
@@ -106,6 +108,22 @@ public class TaskControllerTest extends AbstractTest
 	CompletedTask completedTask2 = new CompletedTask();
 	CompletedTask completedTask3 = new CompletedTask();
 
+	private void login()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		User loginUser = User.builder()
+			.username(this.user1.getUsername())
+			.password("teszt")
+			.build();
+		HttpEntity<User> entity = new HttpEntity<>(loginUser, headers);
+
+		ResponseEntity<String> response = this.restTemplate.postForEntity("/api/auth/login", entity, String.class);
+		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+		this.jwtToken = response.getBody();
+		Assert.assertNotNull(this.jwtToken);
+	}
+
 	@Before
 	public void setUp()
 	{
@@ -140,6 +158,11 @@ public class TaskControllerTest extends AbstractTest
 		completedTasksRepository.save(completedTask1);
 		completedTasksRepository.save(completedTask2);
 		completedTasksRepository.save(completedTask3);
+
+		if (this.jwtToken == null)
+		{
+			login();
+		}
 	}
 
 	@After
@@ -162,11 +185,12 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headersPost = new HttpHeaders();
 		headersPost.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headersPost.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headersPost.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headersPost);
 		ResponseEntity<Task> responseEntity = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, Task.class);
 
-		Task[] tasksInDb = this.restTemplate.getForEntity(baseEndpoint, Task[].class).getBody();
+		Task[] tasksInDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headersPost), Task[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksInDb);
@@ -188,6 +212,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -209,6 +234,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -225,6 +251,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(null, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -248,6 +275,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -270,6 +298,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -288,6 +317,7 @@ public class TaskControllerTest extends AbstractTest
 			.build();
 
 		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		String paramsURI = "?id={id}" +
 			"&name={name}" +
@@ -324,6 +354,7 @@ public class TaskControllerTest extends AbstractTest
 			.build();
 
 		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		String paramsURI = "?timeofcreation={timeofcreation}";
 
@@ -347,6 +378,7 @@ public class TaskControllerTest extends AbstractTest
 	public void getAllTasksTest()
 	{
 		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint,
 			HttpMethod.GET,
@@ -391,6 +423,7 @@ public class TaskControllerTest extends AbstractTest
 			.build();
 
 		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		String paramsURI = "?name={name}" +
 			"&keywords={keyword1}" +
@@ -429,10 +462,13 @@ public class TaskControllerTest extends AbstractTest
 			.ownerid(this.user1.getId())
 			.build();
 
-		ResponseEntity<Task> responseEntity = restTemplate.exchange(baseEndpoint, HttpMethod.PUT, new HttpEntity<>(propertiesToUpdate), Task.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<Task> responseEntity = restTemplate.exchange(baseEndpoint, HttpMethod.PUT, new HttpEntity<>(propertiesToUpdate, headers), Task.class);
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-		ResponseEntity<Task[]> responseFromDb = this.restTemplate.getForEntity(baseEndpoint + "?id={id}", Task[].class, this.task1.getId());
+		ResponseEntity<Task[]> responseFromDb = this.restTemplate.exchange(baseEndpoint + "?id={id}", HttpMethod.GET, new HttpEntity<>(headers), Task[].class, this.task1.getId());
 		Assert.assertEquals(HttpStatus.OK, responseFromDb.getStatusCode());
 		Assert.assertNotNull(responseFromDb.getBody());
 		Task taskFromDb = responseFromDb.getBody()[0];
@@ -450,6 +486,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -471,6 +508,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -493,6 +531,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -506,9 +545,12 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteTaskTest()
 	{
-		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(baseEndpoint + this.task1.getId(), HttpMethod.DELETE, new HttpEntity<>(null), Void.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Task[]> responseEntity = this.restTemplate.getForEntity(baseEndpoint, Task[].class);
+		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(baseEndpoint + this.task1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+
+		ResponseEntity<Task[]> responseEntity = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Task[].class);
 
 		Task[] tasksFromDb = responseEntity.getBody();
 
@@ -524,7 +566,10 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteTaskWithNonExistingIdTest()
 	{
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -544,11 +589,12 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
 		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, KeywordsForTasks[].class);
 
-		KeywordsForTasks[] keywordsInDb = this.restTemplate.getForEntity(keywordsEndpoint, KeywordsForTasks[].class).getBody();
+		KeywordsForTasks[] keywordsInDb = this.restTemplate.exchange(keywordsEndpoint, HttpMethod.GET, new HttpEntity<>(headers), KeywordsForTasks[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
@@ -575,6 +621,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -595,6 +642,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -611,6 +659,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(null, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -626,7 +675,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?id={id}";
 
-		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.getForEntity(keywordsEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.exchange(keywordsEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			KeywordsForTasks[].class,
 			this.keyword1.getId()
 		);
@@ -644,7 +698,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?&keyword={keyword}";
 
-		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.getForEntity(keywordsEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.exchange(keywordsEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			KeywordsForTasks[].class,
 			"ABC"
 		);
@@ -663,7 +722,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?&taskid={taskid}";
 
-		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.getForEntity(keywordsEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<KeywordsForTasks[]> responseEntity = this.restTemplate.exchange(keywordsEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			KeywordsForTasks[].class,
 			this.task1.getId()
 		);
@@ -680,9 +744,12 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteKeywordTest()
 	{
-		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(keywordsEndpoint + this.keyword1.getId(), HttpMethod.DELETE, new HttpEntity<>(null), Void.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		KeywordsForTasks[] keywordsFromDb = this.restTemplate.getForEntity(keywordsEndpoint, KeywordsForTasks[].class).getBody();
+		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(keywordsEndpoint + this.keyword1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+
+		KeywordsForTasks[] keywordsFromDb = this.restTemplate.exchange(keywordsEndpoint, HttpMethod.GET, new HttpEntity<>(headers), KeywordsForTasks[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
 		Assert.assertNotNull(keywordsFromDb);
@@ -694,7 +761,10 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteKeywordWithNonExistingIdTest()
 	{
-		ResponseEntity<HttpErrorResponseForTests> deleteResponse = this.restTemplate.exchange(keywordsEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<HttpErrorResponseForTests> deleteResponse = this.restTemplate.exchange(keywordsEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, deleteResponse.getStatusCode());
 		Assert.assertNotNull(deleteResponse.getBody());
@@ -710,12 +780,13 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
 		ResponseEntity<CompletedTask> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, CompletedTask.class);
 		CompletedTask completedTaskFromResponse = response.getBody();
 
-		CompletedTask[] completedTasksFromDb = this.restTemplate.getForEntity(completedTaskEndpoint, CompletedTask[].class).getBody();
+		CompletedTask[] completedTasksFromDb = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, response.getStatusCode());
 		Assert.assertNotNull(completedTaskFromResponse);
@@ -733,6 +804,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -751,6 +823,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -767,6 +840,7 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(null, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
@@ -782,7 +856,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?id={id}";
 
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.getForEntity(completedTaskEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			CompletedTask[].class,
 			this.completedTask1.getId()
 		);
@@ -800,7 +879,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?&taskid={taskid}";
 
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.getForEntity(completedTaskEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			CompletedTask[].class,
 			this.task1.getId()
 		);
@@ -819,7 +903,12 @@ public class TaskControllerTest extends AbstractTest
 	{
 		String paramsURI = "?&userid={userid}";
 
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.getForEntity(completedTaskEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			CompletedTask[].class,
 			this.user1.getId()
 		);
@@ -836,7 +925,10 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void getAllCompletedTasksTest()
 	{
-		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.getForEntity(completedTaskEndpoint, CompletedTask[].class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class);
 
 		CompletedTask[] completedTasksFromDb = getAllResponse.getBody();
 
@@ -851,9 +943,12 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteCompletedTaskTest()
 	{
-		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(completedTaskEndpoint + this.completedTask1.getId(), HttpMethod.DELETE, new HttpEntity<>(null), Void.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.getForEntity(completedTaskEndpoint, CompletedTask[].class);
+		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(completedTaskEndpoint + this.completedTask1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+
+		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class);
 
 		CompletedTask[] completedTasksFromDb = getAllResponse.getBody();
 
@@ -867,7 +962,10 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void deleteCompletedTaskWithNonExistingIdTest()
 	{
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(completedTaskEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(completedTaskEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());

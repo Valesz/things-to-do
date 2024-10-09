@@ -49,7 +49,8 @@ public class User implements UserDetails
 	private Double precisionofanswers;
 
 	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
+	public Collection<? extends GrantedAuthority> getAuthorities()
+	{
 		return List.of();
 	}
 

@@ -16,7 +16,8 @@ public class AuthenticationServiceImpl
 	@Autowired
 	private AuthenticationManager authenticationManager;
 
-	public User authenticate(String username, String password) {
+	public User authenticate(String username, String password)
+	{
 		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
 		return userRepository.findByUsername(username).orElseThrow();

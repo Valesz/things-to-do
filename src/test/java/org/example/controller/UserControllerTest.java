@@ -24,6 +24,8 @@ public class UserControllerTest extends AbstractTest
 	@Autowired
 	private UserService userService;
 
+	private String jwtToken;
+
 	private final User user1 = User.builder()
 		.username("teszt elek")
 		.email("teszt@teszt.teszt")
@@ -35,7 +37,7 @@ public class UserControllerTest extends AbstractTest
 		.build();
 
 	private final User user2 = User.builder()
-		.username("teszt elek")
+		.username("teszt elek2")
 		.email("tesz@vesz.teszt")
 		.timeofcreation(LocalDate.EPOCH)
 		.status(UserStatusEnum.INAKTIV)
@@ -66,6 +68,22 @@ public class UserControllerTest extends AbstractTest
 
 	String baseURI = "/api/user/";
 
+	private void login()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		User loginUser = User.builder()
+			.username(this.user1.getUsername())
+			.password("teszt")
+			.build();
+		HttpEntity<User> entity = new HttpEntity<>(loginUser, headers);
+
+		ResponseEntity<String> response = this.restTemplate.postForEntity("/api/auth/login", entity, String.class);
+		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+		this.jwtToken = response.getBody();
+		Assert.assertNotNull(this.jwtToken);
+	}
+
 	@Before
 	public void setUp()
 	{
@@ -73,6 +91,11 @@ public class UserControllerTest extends AbstractTest
 		userService.saveUser(user2);
 		userService.saveUser(user3);
 		userService.saveUser(user4);
+
+		if (this.jwtToken == null)
+		{
+			login();
+		}
 	}
 
 	@After
@@ -97,11 +120,13 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headersPost = new HttpHeaders();
 		headersPost.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headersPost.add(HttpHeaders.ACCEPT, "application/json");
+		headersPost.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headersPost);
 		ResponseEntity<User> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, User.class);
 
-		User[] usersInDb = this.restTemplate.getForEntity("/api/user/", User[].class).getBody();
+		HttpEntity<Void> headersForGet = new HttpEntity<>(headersPost);
+		User[] usersInDb = this.restTemplate.exchange("/api/user/", HttpMethod.GET, headersForGet, User[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 		Assert.assertNotNull(usersInDb);
@@ -128,6 +153,7 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -149,6 +175,7 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -165,6 +192,7 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Object> requestBodyWithHeaders = new HttpEntity<>(null, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -190,6 +218,7 @@ public class UserControllerTest extends AbstractTest
 			.build();
 
 		HttpHeaders headersPost = new HttpHeaders();
+		headersPost.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		String paramsURI = "?id={id}" +
 			"&username={username}" +
@@ -224,12 +253,13 @@ public class UserControllerTest extends AbstractTest
 	public void getMultipleUsersTest()
 	{
 		User queryUser = User.builder()
-			.username("teszt elek")
+			.email("tesz@vesz.teszt")
 			.build();
 
 		HttpHeaders headersPost = new HttpHeaders();
 		headersPost.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headersPost.add(HttpHeaders.ACCEPT, "application/json");
+		headersPost.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		String paramsURI = "?id={id}" +
 			"&username={username}" +
@@ -257,14 +287,16 @@ public class UserControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(usersAccordingToQuery);
 		Assert.assertEquals(2, usersAccordingToQuery.length);
-		Assert.assertEquals(user1, usersAccordingToQuery[0]);
-		Assert.assertEquals(user2, usersAccordingToQuery[1]);
+		Assert.assertEquals(user2, usersAccordingToQuery[0]);
+		Assert.assertEquals(user4, usersAccordingToQuery[1]);
 	}
 
 	@Test
 	public void getAllUsersTest()
 	{
-		ResponseEntity<User[]> response = this.restTemplate.getForEntity("/api/user/", User[].class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+		ResponseEntity<User[]> response = this.restTemplate.exchange("/api/user/", HttpMethod.GET, new HttpEntity<>(headers), User[].class);
 		User[] usersArray = response.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -280,7 +312,7 @@ public class UserControllerTest extends AbstractTest
 	public void updateUserTest()
 	{
 		User propertiesToUpgrade = User.builder()
-			.id(user1.getId())
+			.id(user2.getId())
 			.username("Csin Csilla")
 			.email("csinos@csilla.hu")
 			.timeofcreation(LocalDate.EPOCH)
@@ -290,10 +322,13 @@ public class UserControllerTest extends AbstractTest
 			.precisionofanswers(1.0)
 			.build();
 
-		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(baseURI, HttpMethod.PUT, new HttpEntity<>(propertiesToUpgrade), User.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(baseURI, HttpMethod.PUT, new HttpEntity<>(propertiesToUpgrade, headers), User.class);
 		Assert.assertEquals(HttpStatus.OK, responseFromUpdate.getStatusCode());
 
-		ResponseEntity<User[]> responseFromDb = this.restTemplate.getForEntity("/api/user/?id={id}", User[].class, propertiesToUpgrade.getId());
+		ResponseEntity<User[]> responseFromDb = this.restTemplate.exchange("/api/user/?id={id}", HttpMethod.GET, new HttpEntity<>(headers), User[].class, propertiesToUpgrade.getId());
 		Assert.assertNotNull(responseFromDb.getBody());
 		User userFromDb = responseFromDb.getBody()[0];
 
@@ -315,6 +350,7 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -336,6 +372,7 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
 		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
@@ -349,9 +386,12 @@ public class UserControllerTest extends AbstractTest
 	@Test
 	public void deleteUserTest()
 	{
-		this.restTemplate.exchange(baseURI + user1.getId(), HttpMethod.DELETE, new HttpEntity<>(user1), Void.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<User[]> response = this.restTemplate.getForEntity("/api/user/", User[].class);
+		this.restTemplate.exchange(baseURI + user1.getId(), HttpMethod.DELETE, new HttpEntity<>(user1, headers), Void.class);
+
+		ResponseEntity<User[]> response = this.restTemplate.exchange("/api/user/", HttpMethod.GET, new HttpEntity<>(headers), User[].class);
 		Assert.assertNotNull(response.getBody());
 
 		User[] usersArray = Arrays.stream(response.getBody())
@@ -365,7 +405,10 @@ public class UserControllerTest extends AbstractTest
 	@Test
 	public void deleteUserWithNonExistingIdTest()
 	{
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseURI + "-1", HttpMethod.DELETE, new HttpEntity<>(null), HttpErrorResponseForTests.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseURI + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());

@@ -29,7 +29,7 @@ public class UserStatusEnumDeserializer extends StdDeserializer<UserStatusEnum>
 			return null;
 		}
 
-		String status = node.asText();
+		String status = node.textValue();
 
 		for (UserStatusEnum userStatusEnum : UserStatusEnum.values())
 		{

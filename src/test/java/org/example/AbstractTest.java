@@ -1,6 +1,7 @@
 package org.example;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.example.configs.SecurityConfiguration;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +22,7 @@ import java.sql.SQLException;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@Import(MyConfiguration.class)
+@Import({MyConfiguration.class, SecurityConfiguration.class})
 @TestPropertySource(value = "classpath:test.application.properties")
 public class AbstractTest
 {

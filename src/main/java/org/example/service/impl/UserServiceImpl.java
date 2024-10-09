@@ -140,6 +140,13 @@ public class UserServiceImpl implements UserService
 			);
 		}
 
+		if (userRepository.findByUsername(user.getUsername()).isPresent())
+		{
+			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION,
+				"User with given username already exists."
+			);
+		}
+
 		validateUserProperties(user);
 
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));

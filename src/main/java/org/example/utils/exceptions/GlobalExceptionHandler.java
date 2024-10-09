@@ -13,27 +13,38 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler
 {
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<String> handleSecurityException(Exception ex) {
+	@ExceptionHandler({
+		BadCredentialsException.class,
+		AccountStatusException.class,
+		AccessDeniedException.class,
+		SignatureException.class,
+		ExpiredJwtException.class,
+	})
+	public ResponseEntity<String> handleSecurityException(Exception ex)
+	{
 
-
-		if (ex instanceof BadCredentialsException) {
+		if (ex instanceof BadCredentialsException)
+		{
 			return new ResponseEntity<>("The username or password is incorrect", HttpStatus.UNAUTHORIZED);
 		}
 
-		if (ex instanceof AccountStatusException) {
+		if (ex instanceof AccountStatusException)
+		{
 			return new ResponseEntity<>("The account is locked", HttpStatus.UNAUTHORIZED);
 		}
 
-		if (ex instanceof AccessDeniedException) {
+		if (ex instanceof AccessDeniedException)
+		{
 			return new ResponseEntity<>("You are not authorized to access this", HttpStatus.FORBIDDEN);
 		}
 
-		if (ex instanceof SignatureException) {
+		if (ex instanceof SignatureException)
+		{
 			return new ResponseEntity<>("The signature is invalid", HttpStatus.UNAUTHORIZED);
 		}
 
-		if (ex instanceof ExpiredJwtException) {
+		if (ex instanceof ExpiredJwtException)
+		{
 			return new ResponseEntity<>("The JWT token has expired", HttpStatus.UNAUTHORIZED);
 		}
 

@@ -57,7 +57,8 @@ public class MyConfiguration extends AbstractJdbcConfiguration
 	}
 
 	@Bean
-	UserDetailsService userDetailsService(UserRepository userRepository) {
+	UserDetailsService userDetailsService(UserRepository userRepository)
+	{
 		return username -> userRepository.findByUsername(username)
 			.orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 	}

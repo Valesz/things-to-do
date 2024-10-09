@@ -50,7 +50,8 @@ public class JwtServiceImpl
 		Map<String, Object> extraClaims,
 		UserDetails userDetails,
 		long expiration
-	) {
+	)
+	{
 		return Jwts.builder()
 			.setClaims(extraClaims)
 			.setSubject(userDetails.getUsername())
@@ -60,7 +61,8 @@ public class JwtServiceImpl
 			.compact();
 	}
 
-	public boolean isTokenValid(String token, UserDetails userDetails) {
+	public boolean isTokenValid(String token, UserDetails userDetails)
+	{
 		final String username = extractUsername(token);
 		return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
 	}
@@ -70,7 +72,8 @@ public class JwtServiceImpl
 		return extractExpiration(token).before(new Date());
 	}
 
-	private Date extractExpiration(String token) {
+	private Date extractExpiration(String token)
+	{
 		return extractClaim(token, Claims::getExpiration);
 	}
 

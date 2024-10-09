@@ -5,8 +5,8 @@ import org.example.model.Submission;
 import org.example.model.Task;
 import org.example.model.User;
 import org.example.repository.TaskRepository;
-import org.example.repository.UserRepository;
 import org.example.service.SubmissionService;
+import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
 import org.example.utils.UserStatusEnum;
 import org.junit.After;
@@ -31,12 +31,14 @@ public class SubmissionControllerTest extends AbstractTest
 	private TestRestTemplate restTemplate;
 
 	@Autowired
-	private UserRepository userRepository;
+	private UserService userService;
 
 	@Autowired
 	private TaskRepository taskRepository;
 
 	private final String baseEndpoint = "/api/submission/";
+
+	private String jwtToken;
 
 	private final User user1 = User.builder()
 		.username("Teszt Elek")
@@ -104,11 +106,28 @@ public class SubmissionControllerTest extends AbstractTest
 		.submitterid(null)
 		.build();
 
+	private void login()
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		User loginUser = User.builder()
+			.username(this.user1.getUsername())
+			.password("teszt")
+			.build();
+
+		HttpEntity<User> entity = new HttpEntity<>(loginUser, headers);
+		ResponseEntity<String> response = this.restTemplate.postForEntity("/api/auth/login", entity, String.class);
+
+		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+		this.jwtToken = response.getBody();
+		Assert.assertNotNull(this.jwtToken);
+	}
+
 	@Before
 	public void setup()
 	{
-		this.userRepository.save(user1);
-		this.userRepository.save(user2);
+		this.userService.saveUser(user1);
+		this.userService.saveUser(user2);
 
 		this.task1.setOwnerid(user1.getId());
 		this.task2.setOwnerid(user2.getId());
@@ -129,6 +148,11 @@ public class SubmissionControllerTest extends AbstractTest
 		this.submissionService.saveSubmission(submission2);
 		this.submissionService.saveSubmission(submission3);
 		this.submissionService.saveSubmission(submission4);
+
+		if (this.jwtToken == null)
+		{
+			login();
+		}
 	}
 
 	@After
@@ -136,7 +160,7 @@ public class SubmissionControllerTest extends AbstractTest
 	{
 		this.submissionService.deleteAll();
 		this.taskRepository.deleteAll();
-		this.userRepository.deleteAll();
+		this.userService.deleteAll();
 	}
 
 	@Test
@@ -153,12 +177,13 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<Submission> response = this.restTemplate.postForEntity(baseEndpoint, request, Submission.class);
 		Submission submissionFromResponse = response.getBody();
 
-		Submission[] submissionsFromDb = this.restTemplate.getForObject(baseEndpoint, Submission[].class);
+		Submission[] submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, response.getStatusCode());
 		Assert.assertNotNull(submissionFromResponse);
@@ -181,6 +206,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(submission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -206,6 +232,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -222,6 +249,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(null, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -246,6 +274,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -270,6 +299,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -294,6 +324,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -318,6 +349,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
@@ -342,7 +374,12 @@ public class SubmissionControllerTest extends AbstractTest
 			"&acceptance={acceptance}" +
 			"&submitterid={submitterid}";
 
-		ResponseEntity<Submission[]> response = this.restTemplate.getForEntity(baseEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			Submission[].class,
 			querySubmission.getId(),
 			querySubmission.getTaskid(),
@@ -369,7 +406,12 @@ public class SubmissionControllerTest extends AbstractTest
 
 		String paramsURI = "?acceptance={acceptance}";
 
-		ResponseEntity<Submission[]> response = this.restTemplate.getForEntity(baseEndpoint + paramsURI,
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint + paramsURI,
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
 			Submission[].class,
 			querySubmission.getAcceptance()
 		);
@@ -386,7 +428,10 @@ public class SubmissionControllerTest extends AbstractTest
 	@Test
 	public void getAllSubmissionsTest()
 	{
-		ResponseEntity<Submission[]> response = this.restTemplate.getForEntity(baseEndpoint, Submission[].class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class);
 
 		Submission[] submissionsInDb = response.getBody();
 
@@ -414,12 +459,13 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<Submission> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, Submission.class);
 		Submission submissionFromResponse = response.getBody();
 
-		Submission[] submissionsFromDb = this.restTemplate.getForObject(baseEndpoint, Submission[].class);
+		Submission[] submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class).getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(submissionFromResponse);
@@ -442,6 +488,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
@@ -463,6 +510,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
@@ -484,6 +532,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
@@ -505,6 +554,7 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
@@ -518,9 +568,12 @@ public class SubmissionControllerTest extends AbstractTest
 	@Test
 	public void deleteSubmissionTest()
 	{
-		ResponseEntity<Void> response = this.restTemplate.exchange(baseEndpoint + this.submission1.getId(), HttpMethod.DELETE, null, Void.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Submission[]> submissionsFromDb = this.restTemplate.getForEntity(baseEndpoint, Submission[].class);
+		ResponseEntity<Void> response = this.restTemplate.exchange(baseEndpoint + this.submission1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+
+		ResponseEntity<Submission[]> submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class);
 		Submission[] submissionsAccordingToQuery = submissionsFromDb.getBody();
 
 		Assert.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -534,7 +587,10 @@ public class SubmissionControllerTest extends AbstractTest
 	@Test
 	public void deleteSubmissionWithNonExistingIdTest()
 	{
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, null, HttpErrorResponseForTests.class);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
