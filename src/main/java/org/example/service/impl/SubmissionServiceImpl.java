@@ -33,8 +33,21 @@ public class SubmissionServiceImpl implements SubmissionService
 	private UserRepository userRepository;
 
 	@Override
-	public boolean setAcceptance(Long id, Boolean accepted)
+	public Integer setAcceptance(Long id, Boolean accepted)
 	{
+		if (id == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!submissionRepository.existsById(id))
+		{
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
+				"Submission with id " + id + " doesn't exist. Please use save to save this instance."
+			);
+		}
+
 		return submissionRepository.setAcceptance(id, accepted);
 	}
 
@@ -139,7 +152,7 @@ public class SubmissionServiceImpl implements SubmissionService
 	{
 		if (submission.getId() != null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_GIVEN,
 				"Remove id property, or use Update instead of Save."
 			);
 		}
@@ -152,9 +165,15 @@ public class SubmissionServiceImpl implements SubmissionService
 	@Override
 	public Submission updateSubmission(Submission submission) throws ServiceException
 	{
-		if (submission.getId() == null || !submissionRepository.existsById(submission.getId()))
+		if (submission.getId() == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!submissionRepository.existsById(submission.getId()))
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Submission with id " + submission.getId() + " doesn't exist. Please use save to save this instance."
 			);
 		}
@@ -176,7 +195,6 @@ public class SubmissionServiceImpl implements SubmissionService
 
 		submission.setTimeofsubmission(submission.getTimeofsubmission() == null ? submissionInDb.getTimeofsubmission() : submission.getTimeofsubmission());
 
-		//TODO: fix 2 -> null-ra állítás
 		submission.setAcceptance(submission.getAcceptance() == null ? submissionInDb.getAcceptance() : submission.getAcceptance());
 
 		submission.setSubmitterid(submission.getSubmitterid() == null ? submissionInDb.getSubmitterid() : submission.getSubmitterid());
@@ -250,7 +268,7 @@ public class SubmissionServiceImpl implements SubmissionService
 		Submission found = getSubmissionById(id);
 		if (found == null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Submission with id " + id + " doesn't exist."
 			);
 		}

@@ -62,7 +62,7 @@ public class UserServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> userService.saveUser(user1));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.NULL_ARGUMENT);
+		Assert.assertEquals(ServiceExceptionType.NULL_ARGUMENT, exception.getServiceExceptionTypeEnum());
 
 		User user2 = User.builder()
 			.timeofcreation(LocalDate.now())
@@ -73,7 +73,7 @@ public class UserServiceImplTest extends AbstractTest
 			.build();
 
 		exception = Assert.assertThrows(ServiceException.class, () -> userService.saveUser(user2));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.NULL_ARGUMENT);
+		Assert.assertEquals(ServiceExceptionType.NULL_ARGUMENT, exception.getServiceExceptionTypeEnum());
 
 		User user3 = User.builder()
 			.id(1L)
@@ -86,7 +86,7 @@ public class UserServiceImplTest extends AbstractTest
 			.precisionofanswers(0.8)
 			.build();
 		exception = Assert.assertThrows(ServiceException.class, () -> userService.saveUser(user3));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ILLEGAL_ID_ARGUMENT);
+		Assert.assertEquals(ServiceExceptionType.ID_GIVEN, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class UserServiceImplTest extends AbstractTest
 			.build();
 
 		User user2 = User.builder()
-			.username("teszt elek")
+			.username("teszt elek2")
 			.email("tesz@vesz.teszt")
 			.timeofcreation(LocalDate.EPOCH)
 			.status(UserStatusEnum.INAKTIV)
@@ -213,6 +213,7 @@ public class UserServiceImplTest extends AbstractTest
 		Assert.assertEquals(user, userService.getUserById(user.getId()));
 
 		user.setId(null);
+		user.setUsername(user.getUsername() + "2");
 		userService.saveUser(user);
 		Assert.assertEquals(user, userService.getUserById(user.getId()));
 
@@ -290,7 +291,7 @@ public class UserServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> userService.updateUser(user));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ILLEGAL_ID_ARGUMENT);
+		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ID_NOT_GIVEN);
 	}
 
 	@Test
@@ -308,7 +309,7 @@ public class UserServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> userService.updateUser(user));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ILLEGAL_ID_ARGUMENT);
+		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ID_NOT_FOUND);
 	}
 
 	@Test
@@ -357,6 +358,7 @@ public class UserServiceImplTest extends AbstractTest
 		long oldUserId = user.getId();
 
 		user.setId(null);
+		user.setUsername(user.getUsername() + "2");
 		userService.saveUser(user);
 		Assert.assertNotNull(userService.getUserById(user.getId()));
 

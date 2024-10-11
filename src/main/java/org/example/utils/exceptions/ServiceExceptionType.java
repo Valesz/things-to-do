@@ -2,7 +2,9 @@ package org.example.utils.exceptions;
 
 public enum ServiceExceptionType
 {
-	ILLEGAL_ID_ARGUMENT,
+	ID_NOT_GIVEN,
+	ID_GIVEN,
+	ID_NOT_FOUND,
 	CONSTRAINT_VIOLATION,
 	NULL_ARGUMENT,
 }

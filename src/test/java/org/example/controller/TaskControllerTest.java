@@ -1,13 +1,11 @@
 package org.example.controller;
 
 import org.example.AbstractTest;
-import org.example.model.CompletedTask;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
 import org.example.model.User;
-import org.example.repository.CompletedTasksRepository;
 import org.example.repository.KeywordsForTasksRepository;
-import org.example.service.Filter;
+import org.example.model.TaskListingFilter;
 import org.example.service.TaskService;
 import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
@@ -38,9 +36,6 @@ public class TaskControllerTest extends AbstractTest
 	private KeywordsForTasksRepository keywordsForTasksRepository;
 
 	@Autowired
-	private CompletedTasksRepository completedTasksRepository;
-
-	@Autowired
 	private TestRestTemplate restTemplate;
 
 	private String jwtToken;
@@ -48,7 +43,6 @@ public class TaskControllerTest extends AbstractTest
 	private final String baseEndpoint = "/api/task/";
 
 	private final String keywordsEndpoint = baseEndpoint + "keyword/";
-	private final String completedTaskEndpoint = baseEndpoint + "completed/";
 
 	private final User user1 = User.builder()
 		.username("Teszt Elek")
@@ -104,10 +98,6 @@ public class TaskControllerTest extends AbstractTest
 	private final KeywordsForTasks keyword2 = KeywordsForTasks.builder().taskid(null).keyword("DEF").build();
 	private final KeywordsForTasks keyword3 = KeywordsForTasks.builder().taskid(null).keyword("ABC").build();
 
-	CompletedTask completedTask1 = new CompletedTask();
-	CompletedTask completedTask2 = new CompletedTask();
-	CompletedTask completedTask3 = new CompletedTask();
-
 	private void login()
 	{
 		HttpHeaders headers = new HttpHeaders();
@@ -147,17 +137,6 @@ public class TaskControllerTest extends AbstractTest
 		keywordsForTasksRepository.save(keyword1);
 		keywordsForTasksRepository.save(keyword2);
 		keywordsForTasksRepository.save(keyword3);
-
-		completedTask1.setTaskid(task1.getId());
-		completedTask1.setUserid(user1.getId());
-		completedTask2.setTaskid(task1.getId());
-		completedTask2.setUserid(user2.getId());
-		completedTask3.setTaskid(task2.getId());
-		completedTask3.setUserid(user1.getId());
-
-		completedTasksRepository.save(completedTask1);
-		completedTasksRepository.save(completedTask2);
-		completedTasksRepository.save(completedTask3);
 
 		if (this.jwtToken == null)
 		{
@@ -239,9 +218,9 @@ public class TaskControllerTest extends AbstractTest
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -280,9 +259,9 @@ public class TaskControllerTest extends AbstractTest
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Not Found", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -322,7 +301,6 @@ public class TaskControllerTest extends AbstractTest
 		String paramsURI = "?id={id}" +
 			"&name={name}" +
 			"&description={description}" +
-			"&timeofcreation={timeofcreation}" +
 			"&maintaskid={maintaskid}" +
 			"&ownerid={ownerid}";
 
@@ -333,7 +311,6 @@ public class TaskControllerTest extends AbstractTest
 			queryTask.getId(),
 			queryTask.getName(),
 			queryTask.getDescription(),
-			queryTask.getTimeofcreation(),
 			queryTask.getMaintaskid(),
 			queryTask.getOwnerid()
 		);
@@ -356,22 +333,33 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		String paramsURI = "?timeofcreation={timeofcreation}";
+		String paramsURI = "?createdafter={timeofcreation}&createdbefore={timeofcreation}";
 
-		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
+		ResponseEntity<TaskListingFilter[]> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Task[].class,
+			TaskListingFilter[].class,
+			queryTask.getTimeofcreation(),
 			queryTask.getTimeofcreation()
 		);
 
-		Task[] tasksAccordingToQuery = responseEntity.getBody();
+		TaskListingFilter[] tasksAccordingToQuery = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
 		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertEquals(task2, tasksAccordingToQuery[0]);
-		Assert.assertEquals(task3, tasksAccordingToQuery[1]);
+		Assert.assertEquals(task2.getId(), tasksAccordingToQuery[0].getId());
+		Assert.assertEquals(task2.getName(), tasksAccordingToQuery[0].getName());
+		Assert.assertEquals(task2.getDescription(), tasksAccordingToQuery[0].getDescription());
+		Assert.assertEquals(task2.getTimeofcreation(), tasksAccordingToQuery[0].getTimeofcreation());
+		Assert.assertEquals(task2.getMaintaskid(), tasksAccordingToQuery[1].getMaintaskid());
+		Assert.assertEquals(task2.getOwnerid(), tasksAccordingToQuery[1].getOwnerid());
+		Assert.assertEquals(task3.getId(), tasksAccordingToQuery[1].getId());
+		Assert.assertEquals(task3.getName(), tasksAccordingToQuery[1].getName());
+		Assert.assertEquals(task3.getDescription(), tasksAccordingToQuery[1].getDescription());
+		Assert.assertEquals(task3.getTimeofcreation(), tasksAccordingToQuery[1].getTimeofcreation());
+		Assert.assertEquals(task3.getMaintaskid(), tasksAccordingToQuery[1].getMaintaskid());
+		Assert.assertEquals(task3.getOwnerid(), tasksAccordingToQuery[1].getOwnerid());
 	}
 
 	@Test
@@ -406,19 +394,10 @@ public class TaskControllerTest extends AbstractTest
 
 		keywordsForTasksRepository.saveAll(List.of(keyword4, keyword5, keyword6));
 
-		CompletedTask completedTask1 = CompletedTask.builder().taskid(task1.getId()).userid(this.user1.getId()).build();
-		CompletedTask completedTask2 = CompletedTask.builder().taskid(task1.getId()).userid(this.user2.getId()).build();
-		CompletedTask completedTask3 = CompletedTask.builder().taskid(task2.getId()).userid(this.user1.getId()).build();
-		CompletedTask completedTask4 = CompletedTask.builder().taskid(task3.getId()).userid(this.user2.getId()).build();
-		CompletedTask completedTask5 = CompletedTask.builder().taskid(task4.getId()).userid(this.user1.getId()).build();
-		CompletedTask completedTask6 = CompletedTask.builder().taskid(task4.getId()).userid(this.user2.getId()).build();
-
-		completedTasksRepository.saveAll(List.of(completedTask1, completedTask2, completedTask3, completedTask4, completedTask5, completedTask6));
-
-		Filter queryFilter = Filter.builder()
+		TaskListingFilter queryFilter = TaskListingFilter.builder()
 			.name("Example Task")
 			.keywords(List.of("ABC", "GHI"))
-			.ownerId(this.user2.getId())
+			.ownerid(this.user2.getId())
 			.completedUserId(this.user1.getId())
 			.build();
 
@@ -428,18 +407,16 @@ public class TaskControllerTest extends AbstractTest
 		String paramsURI = "?name={name}" +
 			"&keywords={keyword1}" +
 			"&keywords={keyword2}" +
-			"&ownerid={ownerid}" +
-			"&completeduserId={completedUserId}";
+			"&ownerid={ownerid}";
 
-		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint + "/filter" + paramsURI,
+		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint + "/" + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
 			Task[].class,
 			queryFilter.getName(),
 			queryFilter.getKeywords().toArray()[0],
 			queryFilter.getKeywords().toArray()[1],
-			queryFilter.getOwnerId(),
-			queryFilter.getCompletedUserId()
+			queryFilter.getOwnerid()
 		);
 
 		Task[] tasksAccordingToQuery = responseEntity.getBody();
@@ -536,9 +513,9 @@ public class TaskControllerTest extends AbstractTest
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Bad Request", response.getBody().getError());
+		Assert.assertEquals("Not Found", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -647,9 +624,9 @@ public class TaskControllerTest extends AbstractTest
 		HttpEntity<Iterable<KeywordsForTasks>> requestEntity = new HttpEntity<>(keywordList, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(keywordsEndpoint, requestEntity, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -770,206 +747,5 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertNotNull(deleteResponse.getBody());
 		Assert.assertEquals("Not Found", deleteResponse.getBody().getError());
 		Assert.assertNotNull(deleteResponse.getBody().getMessage());
-	}
-
-	@Test
-	public void addCompletedTasksTest()
-	{
-		CompletedTask testCompletedTask = CompletedTask.builder().taskid(task3.getId()).userid(this.user2.getId()).build();
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
-		ResponseEntity<CompletedTask> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, CompletedTask.class);
-		CompletedTask completedTaskFromResponse = response.getBody();
-
-		CompletedTask[] completedTasksFromDb = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class).getBody();
-
-		Assert.assertEquals(HttpStatus.CREATED, response.getStatusCode());
-		Assert.assertNotNull(completedTaskFromResponse);
-		Assert.assertNotNull(completedTasksFromDb);
-		Assert.assertEquals(completedTaskFromResponse, completedTasksFromDb[3]);
-		Assert.assertEquals(testCompletedTask.getTaskid(), completedTaskFromResponse.getTaskid());
-		Assert.assertEquals(testCompletedTask.getUserid(), completedTaskFromResponse.getUserid());
-	}
-
-	@Test
-	public void addCompletedTaskWithNulLValuesTest()
-	{
-		CompletedTask testCompletedTask = CompletedTask.builder().userid(this.user2.getId()).build();
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
-
-		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Bad Request", response.getBody().getError());
-		Assert.assertNotNull(response.getBody().getMessage());
-	}
-
-	@Test
-	public void addCompletedTaskWithIdTest()
-	{
-		CompletedTask testCompletedTask = CompletedTask.builder().id(1L).taskid(this.task1.getId()).userid(this.user2.getId()).build();
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(testCompletedTask, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
-
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
-		Assert.assertNotNull(response.getBody().getMessage());
-	}
-
-	@Test
-	public void addNullCompletedTaskTest()
-	{
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		HttpEntity<CompletedTask> requestEntity = new HttpEntity<>(null, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(completedTaskEndpoint, requestEntity, HttpErrorResponseForTests.class);
-
-		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Bad Request", response.getBody().getError());
-		Assert.assertNotNull(response.getBody().getMessage());
-	}
-
-	@Test
-	public void getSingleCompletedTaskTest()
-	{
-		String paramsURI = "?id={id}";
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
-			HttpMethod.GET,
-			new HttpEntity<>(headers),
-			CompletedTask[].class,
-			this.completedTask1.getId()
-		);
-
-		Assert.assertNotNull(responseEntity.getBody());
-		CompletedTask completedTaskFromDb = responseEntity.getBody()[0];
-
-		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		Assert.assertNotNull(completedTaskFromDb);
-		Assert.assertEquals(this.completedTask1, completedTaskFromDb);
-	}
-
-	@Test
-	public void getMultipleCompletedTasksByTaskIdTest()
-	{
-		String paramsURI = "?&taskid={taskid}";
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
-			HttpMethod.GET,
-			new HttpEntity<>(headers),
-			CompletedTask[].class,
-			this.task1.getId()
-		);
-
-		CompletedTask[] completedTasksFromDb = responseEntity.getBody();
-
-		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		Assert.assertNotNull(completedTasksFromDb);
-		Assert.assertEquals(2, completedTasksFromDb.length);
-		Assert.assertEquals(this.completedTask1, completedTasksFromDb[0]);
-		Assert.assertEquals(this.completedTask2, completedTasksFromDb[1]);
-	}
-
-	@Test
-	public void getMultipleCompletedTasksByUserIdTest()
-	{
-		String paramsURI = "?&userid={userid}";
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<CompletedTask[]> responseEntity = this.restTemplate.exchange(completedTaskEndpoint + paramsURI,
-			HttpMethod.GET,
-			new HttpEntity<>(headers),
-			CompletedTask[].class,
-			this.user1.getId()
-		);
-
-		CompletedTask[] completedTasksFromDb = responseEntity.getBody();
-
-		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		Assert.assertNotNull(completedTasksFromDb);
-		Assert.assertEquals(2, completedTasksFromDb.length);
-		Assert.assertEquals(this.completedTask1, completedTasksFromDb[0]);
-		Assert.assertEquals(this.completedTask3, completedTasksFromDb[1]);
-	}
-
-	@Test
-	public void getAllCompletedTasksTest()
-	{
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class);
-
-		CompletedTask[] completedTasksFromDb = getAllResponse.getBody();
-
-		Assert.assertEquals(HttpStatus.OK, getAllResponse.getStatusCode());
-		Assert.assertNotNull(completedTasksFromDb);
-		Assert.assertEquals(3, completedTasksFromDb.length);
-		Assert.assertEquals(this.completedTask1, completedTasksFromDb[0]);
-		Assert.assertEquals(this.completedTask2, completedTasksFromDb[1]);
-		Assert.assertEquals(this.completedTask3, completedTasksFromDb[2]);
-	}
-
-	@Test
-	public void deleteCompletedTaskTest()
-	{
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(completedTaskEndpoint + this.completedTask1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
-
-		ResponseEntity<CompletedTask[]> getAllResponse = this.restTemplate.exchange(completedTaskEndpoint, HttpMethod.GET, new HttpEntity<>(headers), CompletedTask[].class);
-
-		CompletedTask[] completedTasksFromDb = getAllResponse.getBody();
-
-		Assert.assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
-		Assert.assertNotNull(completedTasksFromDb);
-		Assert.assertEquals(2, completedTasksFromDb.length);
-		Assert.assertEquals(this.completedTask2, completedTasksFromDb[0]);
-		Assert.assertEquals(this.completedTask3, completedTasksFromDb[1]);
-	}
-
-	@Test
-	public void deleteCompletedTaskWithNonExistingIdTest()
-	{
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(completedTaskEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
-
-		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Not Found", response.getBody().getError());
-		Assert.assertNotNull(response.getBody().getMessage());
 	}
 }

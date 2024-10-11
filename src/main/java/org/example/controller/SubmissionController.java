@@ -33,12 +33,12 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
+				case ID_GIVEN:
 				case NULL_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:
-				case ILLEGAL_ID_ARGUMENT:
-					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -50,7 +50,6 @@ public class SubmissionController
 		}
 	}
 
-	//TODO: Figure out how to handle 2 -> null value change.
 	@RequestMapping(value = "/", method = RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
 	public Submission updateSubmission(@RequestBody Submission submission)
@@ -63,8 +62,11 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
+				case ID_NOT_GIVEN:
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+
 				case CONSTRAINT_VIOLATION:
-				case ILLEGAL_ID_ARGUMENT:
+				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
@@ -75,6 +77,13 @@ public class SubmissionController
 		{
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
+	}
+
+	@RequestMapping(value = "/acceptance", method = RequestMethod.PUT)
+	@ResponseStatus(HttpStatus.OK)
+	public Integer updateAcceptanceOfSubmission(@RequestBody Submission submission)
+	{
+		return submissionService.setAcceptance(submission.getId(), submission.getAcceptance());
 	}
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
@@ -109,7 +118,7 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ILLEGAL_ID_ARGUMENT:
+				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());

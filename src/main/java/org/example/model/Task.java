@@ -1,5 +1,6 @@
 package org.example.model;
 
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,4 +37,14 @@ public class Task
 
 	@Column(value = "OWNERID")
 	private Long ownerid;
+
+	public boolean listingFilterEquals(TaskListingFilter filter)
+	{
+		return Objects.equals(this.getId(), filter.getId())
+			&& Objects.equals(this.getName(), filter.getName())
+			&& Objects.equals(this.getDescription(), filter.getDescription())
+			&& Objects.equals(this.getTimeofcreation(), filter.getTimeofcreation())
+			&& Objects.equals(this.getMaintaskid(), filter.getMaintaskid())
+			&& Objects.equals(this.getOwnerid(), filter.getOwnerid());
+	}
 }

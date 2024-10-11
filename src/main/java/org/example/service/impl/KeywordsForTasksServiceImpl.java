@@ -101,7 +101,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	{
 		if (keywordForTask.getId() != null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_GIVEN,
 				"Remove id property, or use Update instead of Save."
 			);
 		}
@@ -118,7 +118,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 		{
 			if (item.getId() != null)
 			{
-				throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+				throw new ServiceException(ServiceExceptionType.ID_GIVEN,
 					"Remove id property, or use Update instead of Save."
 				);
 			}
@@ -132,9 +132,15 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	@Override
 	public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException
 	{
-		if (keywordForTask.getId() == null || !keywordsForTasksRepository.existsById(keywordForTask.getId()))
+		if (keywordForTask.getId() == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!keywordsForTasksRepository.existsById(keywordForTask.getId()))
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Keyword for task with id " + keywordForTask.getId() + " doesn't exist. Please use save to save this instance."
 			);
 		}
@@ -208,7 +214,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 		KeywordsForTasks found = getKeywordForTaskById(id);
 		if (found == null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Keyword with id " + id + " doesn't exist."
 			);
 		}

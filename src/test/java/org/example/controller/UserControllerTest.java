@@ -180,9 +180,9 @@ public class UserControllerTest extends AbstractTest
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headers);
 		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
-		Assert.assertEquals("Unprocessable Entity", responseEntity.getBody().getError());
+		Assert.assertEquals("Bad Request", responseEntity.getBody().getError());
 		Assert.assertNotNull(responseEntity.getBody().getMessage());
 	}
 
@@ -223,7 +223,6 @@ public class UserControllerTest extends AbstractTest
 		String paramsURI = "?id={id}" +
 			"&username={username}" +
 			"&email={email}" +
-			"&timeofcreation={timeofcreation}" +
 			"&status={status}" +
 			"&classification={classification}" +
 			"&precisionofanswers={precisionofanswers}";
@@ -235,7 +234,6 @@ public class UserControllerTest extends AbstractTest
 			queryUser.getId(),
 			queryUser.getUsername(),
 			queryUser.getEmail(),
-			queryUser.getTimeofcreation(),
 			queryUser.getStatus(),
 			queryUser.getClassification(),
 			queryUser.getPrecisionofanswers()
@@ -264,7 +262,6 @@ public class UserControllerTest extends AbstractTest
 		String paramsURI = "?id={id}" +
 			"&username={username}" +
 			"&email={email}" +
-			"&timeofcreation={timeofcreation}" +
 			"&status={status}" +
 			"&classification={classification}" +
 			"&precisionofanswers={precisionofanswers}";
@@ -276,7 +273,6 @@ public class UserControllerTest extends AbstractTest
 			queryUser.getId(),
 			queryUser.getUsername(),
 			queryUser.getEmail(),
-			queryUser.getTimeofcreation(),
 			queryUser.getStatus(),
 			queryUser.getClassification(),
 			queryUser.getPrecisionofanswers()

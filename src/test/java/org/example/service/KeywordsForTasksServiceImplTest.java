@@ -87,7 +87,7 @@ public class KeywordsForTasksServiceImplTest extends AbstractTest
 			.keyword("ABC")
 			.build();
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> keywordsForTasksService.saveKeywordForTask(keyword1));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_GIVEN, exception.getServiceExceptionTypeEnum());
 
 		KeywordsForTasks keyword2 = KeywordsForTasks.builder()
 			.taskid(Long.MAX_VALUE)
@@ -267,7 +267,7 @@ public class KeywordsForTasksServiceImplTest extends AbstractTest
 			.keyword("ABC")
 			.build();
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> keywordsForTasksService.updateKeywordForTask(keyword1));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_GIVEN, exception.getServiceExceptionTypeEnum());
 
 		KeywordsForTasks keyword2 = KeywordsForTasks.builder()
 			.id(Long.MAX_VALUE)
@@ -275,7 +275,7 @@ public class KeywordsForTasksServiceImplTest extends AbstractTest
 			.keyword("ABC")
 			.build();
 		exception = Assert.assertThrows(ServiceException.class, () -> keywordsForTasksService.updateKeywordForTask(keyword2));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_FOUND, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test

@@ -36,12 +36,12 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
+				case ID_GIVEN:
 				case NULL_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:
-				case ILLEGAL_ID_ARGUMENT:
-					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -67,7 +67,10 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ILLEGAL_ID_ARGUMENT:
+				case ID_NOT_GIVEN:
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+
+				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
@@ -113,7 +116,7 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ILLEGAL_ID_ARGUMENT:
+				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());

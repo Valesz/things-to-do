@@ -136,7 +136,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.build();
 
 		exception = Assert.assertThrows(ServiceException.class, () -> submissionService.saveSubmission(submission5));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_GIVEN, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test
@@ -377,7 +377,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> submissionService.updateSubmission(submission));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_FOUND, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test

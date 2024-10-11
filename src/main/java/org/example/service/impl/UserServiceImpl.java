@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService
 	{
 		if (user.getId() != null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_GIVEN,
 				"Remove id property, or use Update instead of Save."
 			);
 		}
@@ -157,10 +157,15 @@ public class UserServiceImpl implements UserService
 	@Override
 	public User updateUser(User user) throws ServiceException
 	{
-		//TODO: Separate null, because that would be a Bad Request not a Not Found
-		if (user.getId() == null || !userRepository.existsById(user.getId()))
+		if (user.getId() == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!userRepository.existsById(user.getId()))
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"User with id " + user.getId() + " doesn't exist. Please use save to save this instance."
 			);
 		}

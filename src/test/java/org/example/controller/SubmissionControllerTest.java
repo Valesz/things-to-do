@@ -237,9 +237,9 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Bad Request", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -279,9 +279,9 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Not Found", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 
@@ -329,9 +329,9 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
 		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
 
-		Assert.assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
-		Assert.assertEquals("Unprocessable Entity", response.getBody().getError());
+		Assert.assertEquals("Not Found", response.getBody().getError());
 		Assert.assertNotNull(response.getBody().getMessage());
 	}
 

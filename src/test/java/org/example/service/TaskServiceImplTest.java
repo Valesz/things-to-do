@@ -1,12 +1,13 @@
 package org.example.service;
 
 import org.example.AbstractTest;
-import org.example.model.CompletedTask;
 import org.example.model.KeywordsForTasks;
+import org.example.model.Submission;
 import org.example.model.Task;
+import org.example.model.TaskListingFilter;
 import org.example.model.User;
-import org.example.repository.CompletedTasksRepository;
 import org.example.repository.KeywordsForTasksRepository;
+import org.example.repository.SubmissionRepository;
 import org.example.utils.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.example.utils.exceptions.ServiceExceptionType;
@@ -32,7 +33,7 @@ public class TaskServiceImplTest extends AbstractTest
 	private UserService userService;
 
 	@Autowired
-	private CompletedTasksRepository completedTasksRepository;
+	private SubmissionRepository submissionRepository;
 
 	@Autowired
 	private KeywordsForTasksRepository keywordsForTasksRepository;
@@ -58,7 +59,7 @@ public class TaskServiceImplTest extends AbstractTest
 	{
 		taskService.deleteAll();
 		userService.deleteAll();
-		completedTasksRepository.deleteAll();
+		submissionRepository.deleteAll();
 		keywordsForTasksRepository.deleteAll();
 	}
 
@@ -104,7 +105,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.ownerid(this.user.getId())
 			.build();
 		exception = Assert.assertThrows(ServiceException.class, () -> taskService.saveTask(task3));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_GIVEN, exception.getServiceExceptionTypeEnum());
 
 		Task task4 = Task.builder()
 			.name("Pelda Task")
@@ -134,6 +135,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 
 		this.user.setId(null);
+		this.user.setUsername("Teszt Elek2");
 		userService.saveUser(this.user);
 
 		taskService.saveTask(task1);
@@ -158,43 +160,44 @@ public class TaskServiceImplTest extends AbstractTest
 		taskService.saveTask(task3);
 		taskService.saveTask(task4);
 
-		Iterable<Task> taskIterable = taskService.getByTasksObject(Task.builder()
+		Iterable<TaskListingFilter> taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.id(task1.getId())
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task1::equals));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task1::listingFilterEquals));
 
-		taskIterable = taskService.getByTasksObject(Task.builder()
+		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.name("Example Task")
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task2.equals(task) || task4.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
-		taskIterable = taskService.getByTasksObject(Task.builder()
+		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.description("Leiras")
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.equals(task) || task3.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 
-		taskIterable = taskService.getByTasksObject(Task.builder()
-			.timeofcreation(LocalDate.now())
+		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
+			.createdAfter(LocalDate.now())
+			.createdBefore(LocalDate.now())
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.equals(task) || task4.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
-		taskIterable = taskService.getByTasksObject(Task.builder()
+		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.ownerid(this.user.getId())
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task3.equals(task) || task4.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task3.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
-		taskIterable = taskService.getByTasksObject(Task.builder()
+		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.maintaskid(task1.getId())
 			.build()
 		);
-		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task3::equals));
+		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task3::listingFilterEquals));
 
-		taskIterable = taskService.getByTasksObject(null);
+		taskIterable = taskService.getTasksByFilter(null);
 		Assert.assertEquals(4, StreamSupport.stream(taskIterable.spliterator(), false).count());
 	}
 
@@ -218,6 +221,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 
 		this.user.setId(null);
+		this.user.setUsername("test");
 		userService.saveUser(this.user);
 
 		taskService.saveTask(task1);
@@ -233,16 +237,16 @@ public class TaskServiceImplTest extends AbstractTest
 
 		taskService.saveTask(task3);
 
-		Iterable<Task> taskIterable = taskService.getByTasksObject(Task.builder()
+		Iterable<TaskListingFilter> taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.maintaskid(null)
 			.build()
 		);
 
-		Iterator<Task> taskIterator = taskIterable.iterator();
+		Iterator<TaskListingFilter> taskIterator = taskIterable.iterator();
 
 		Assert.assertEquals(2, StreamSupport.stream(taskIterable.spliterator(), false).count());
-		Assert.assertEquals(task1, taskIterator.next());
-		Assert.assertEquals(task2, taskIterator.next());
+		Assert.assertTrue(task1.listingFilterEquals(taskIterator.next()));
+		Assert.assertTrue(task1.listingFilterEquals(taskIterator.next()));
 	}
 
 	@Test
@@ -265,6 +269,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 
 		this.user.setId(null);
+		this.user.setUsername(this.user.getUsername() + "2");
 		userService.saveUser(this.user);
 
 		Task task3 = Task.builder()
@@ -295,45 +300,79 @@ public class TaskServiceImplTest extends AbstractTest
 
 		keywordsForTasksRepository.saveAll(List.of(keyword1, keyword2, keyword3, keyword4, keyword5, keyword6));
 
-		CompletedTask completedTask1 = CompletedTask.builder().taskid(task1.getId()).userid(this.user.getId()).build();
-		CompletedTask completedTask2 = CompletedTask.builder().taskid(task1.getId()).userid(oldUserId).build();
-		CompletedTask completedTask3 = CompletedTask.builder().taskid(task2.getId()).userid(this.user.getId()).build();
-		CompletedTask completedTask4 = CompletedTask.builder().taskid(task3.getId()).userid(oldUserId).build();
-		CompletedTask completedTask5 = CompletedTask.builder().taskid(task4.getId()).userid(this.user.getId()).build();
-		CompletedTask completedTask6 = CompletedTask.builder().taskid(task4.getId()).userid(oldUserId).build();
+		Submission submission1 = Submission.builder()
+			.taskid(task1.getId())
+			.description("Good description")
+			.timeofsubmission(LocalDate.EPOCH)
+			.acceptance(false)
+			.submitterid(this.user.getId())
+			.build();
 
-		completedTasksRepository.saveAll(List.of(completedTask1, completedTask2, completedTask3, completedTask4, completedTask5, completedTask6));
+		Submission submission2 = Submission.builder()
+			.taskid(task1.getId())
+			.description("Cool description")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(oldUserId)
+			.build();
 
-		Filter filter = Filter.builder().name("Example Task").build();
+		Submission submission3 = Submission.builder()
+			.taskid(task2.getId())
+			.description("Good description")
+			.timeofsubmission(LocalDate.now())
+			.acceptance(true)
+			.submitterid(this.user.getId())
+			.build();
 
-		Spliterator<Task> taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
-		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task2.equals(task) || task4.equals(task)));
+		Submission submission4 = Submission.builder()
+			.taskid(task3.getId())
+			.description("Cool description")
+			.timeofsubmission(LocalDate.EPOCH)
+			.acceptance(null)
+			.submitterid(oldUserId)
+			.build();
+
+		Submission submission5 = Submission.builder()
+			.taskid(task4.getId())
+			.description("Cool description")
+			.timeofsubmission(LocalDate.EPOCH)
+			.acceptance(null)
+			.submitterid(this.user.getId())
+			.build();
+
+		Submission submission6 = Submission.builder()
+			.taskid(task4.getId())
+			.description("Cool description")
+			.timeofsubmission(LocalDate.EPOCH)
+			.acceptance(null)
+			.submitterid(oldUserId)
+			.build();
+
+		submissionRepository.saveAll(List.of(submission1, submission2, submission3, submission4, submission5, submission6));
+
+		TaskListingFilter filter = TaskListingFilter.builder().name("Example Task").build();
+
+		Spliterator<TaskListingFilter> taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setName(null);
 		filter.setKeywords(List.of("ABC", "GHI"));
 		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
-		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.equals(task) || task2.equals(task) || task3.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 
 		filter.setKeywords(null);
 		filter.setCompletedUserId(this.user.getId());
 		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
-		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.equals(task) || task2.equals(task) || task4.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setCompletedUserId(null);
-		filter.setOwnerId(this.user.getId());
+		filter.setOwnerid(this.user.getId());
 		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
-		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task3.equals(task) || task4.equals(task)));
+		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task3.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setName("Example Task");
 		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
-		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task4::equals));
-	}
-
-	@Test
-	public void getByNullFilterTest()
-	{
-		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> taskService.getTasksByFilter(null));
-		Assert.assertEquals(ServiceExceptionType.NULL_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task4::listingFilterEquals));
 	}
 
 	@Test
@@ -392,6 +431,7 @@ public class TaskServiceImplTest extends AbstractTest
 		Assert.assertEquals(updateTaskProperties.getMaintaskid(), taskService.getTaskById(task.getId()).getMaintaskid());
 
 		this.user.setId(null);
+		this.user.setUsername(this.user.getUsername() + "2");
 		userService.saveUser(user);
 		updateTaskProperties.setOwnerid(this.user.getId());
 		taskService.updateTask(updateTaskProperties);
@@ -409,7 +449,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> taskService.updateTask(task));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_GIVEN, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test
@@ -424,7 +464,7 @@ public class TaskServiceImplTest extends AbstractTest
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> taskService.updateTask(task));
-		Assert.assertEquals(ServiceExceptionType.ILLEGAL_ID_ARGUMENT, exception.getServiceExceptionTypeEnum());
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_FOUND, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test

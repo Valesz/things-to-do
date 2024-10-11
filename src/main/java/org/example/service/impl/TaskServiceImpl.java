@@ -1,24 +1,24 @@
 package org.example.service.impl;
 
+import java.time.LocalDate;
+import java.util.Iterator;
+import java.util.Objects;
 import org.example.repository.TaskRepository;
 import org.example.model.Task;
 import org.example.repository.UserRepository;
-import org.example.service.Filter;
+import org.example.model.TaskListingFilter;
 import org.example.service.TaskService;
 import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO: Add setMainTaskId() method
 @Service
 @PropertySource("classpath:application.properties")
 public class TaskServiceImpl implements TaskService
@@ -40,127 +40,61 @@ public class TaskServiceImpl implements TaskService
 	}
 
 	@Override
+	public Iterable<TaskListingFilter> getAllTasksAsListingFilter()
+	{
+		return taskRepository.getAllTasksAsListingFilter();
+	}
+
+	@Override
 	public Task getTaskById(Long id)
 	{
 		return taskRepository.findById(id).orElse(null);
 	}
 
 	@Override
-	public Iterable<Task> getByTasksObject(Task task)
-	{
-
-		if (task == null)
-		{
-			return getAllTasks();
-		}
-
-		SqlParameterSource namedParams = new MapSqlParameterSource()
-			.addValue("id", task.getId())
-			.addValue("name", task.getName())
-			.addValue("description", task.getDescription())
-			.addValue("timeofcreation", task.getTimeofcreation() == null ? null : task.getTimeofcreation().toString())
-			.addValue("maintaskid", task.getMaintaskid())
-			.addValue("ownerid", task.getOwnerid());
-
-		String query = contructQueryForGetByTaskObject(task);
-
-		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
-		{
-			List<Task> taskList = new ArrayList<>();
-
-			while (rs.next())
-			{
-				taskList.add(Task.builder()
-					.id(rs.getLong("id"))
-					.name(rs.getString("name"))
-					.description(rs.getString("description"))
-					.timeofcreation(LocalDate.parse(rs.getString("timeofcreation")))
-					.maintaskid(rs.getLong("maintaskid") == 0 ? null : rs.getLong("maintaskid"))
-					.ownerid(rs.getLong("ownerid"))
-					.build()
-				);
-			}
-
-			return taskList;
-		});
-	}
-
-	private String contructQueryForGetByTaskObject(Task task)
-	{
-		StringBuilder query = new StringBuilder(" SELECT * FROM \"task\" ");
-
-		//TODO: Ask because of Iterable<(Task, User)> return
-//        if (task.getOwnerid() != null) {
-//            query.append(" INNER JOIN \"user\" ON \"user\".id = \"task\".ownerid ");
-//        }
-
-		query.append(" WHERE 1 = 1 ");
-
-		if (task.getId() != null)
-		{
-			query.append(" AND id = :id ");
-		}
-
-		if (task.getName() != null)
-		{
-			query.append(" AND name = :name ");
-		}
-
-		if (task.getDescription() != null)
-		{
-			query.append(" AND description = :description ");
-		}
-
-		if (task.getTimeofcreation() != null)
-		{
-			query.append(" AND timeofcreation = :timeofcreation ");
-		}
-
-		if (task.getMaintaskid() != null)
-		{
-			query.append(" AND maintaskid = :maintaskid ");
-		}
-
-		if (task.getOwnerid() != null)
-		{
-			query.append(" AND ownerid = :ownerid ");
-		}
-
-		return query.toString();
-	}
-
-	@Override
-	public Iterable<Task> getTasksByFilter(Filter filter) throws ServiceException
+	public Iterable<TaskListingFilter> getTasksByFilter(TaskListingFilter filter) throws ServiceException
 	{
 
 		if (filter == null)
 		{
-			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT,
-				"filter cannot be null"
-			);
+			return getAllTasksAsListingFilter();
 		}
 
-		SqlParameterSource params = new MapSqlParameterSource()
-			.addValue("name", filter.getName())
-			.addValue("ownerid", filter.getOwnerId())
-			.addValue("keywords", filter.getKeywords())
+		MapSqlParameterSource params = new MapSqlParameterSource()
+			.addValue("id", filter.getId())
+			.addValue("name", "%" + filter.getName() + "%")
+			.addValue("description", filter.getDescription())
+			.addValue("createdafter", filter.getCreatedAfter() == null ? LocalDate.EPOCH : filter.getCreatedAfter().toString())
+			.addValue("createdbefore", filter.getCreatedBefore() == null ? LocalDate.MAX : filter.getCreatedBefore().toString())
+			.addValue("maintaskid", filter.getMaintaskid())
+			.addValue("ownerid", filter.getOwnerid())
 			.addValue("userid", filter.getCompletedUserId());
+
+		if (filter.getKeywords() != null)
+		{
+			Iterator<String> keywordsIterator = filter.getKeywords().iterator();
+			for (int i = 0; keywordsIterator.hasNext(); i++)
+			{
+				params.addValue(String.format("keywords%d", i), "%" + keywordsIterator.next() + "%");
+			}
+		}
 
 		String query = constructQueryByFilter(filter);
 
 		return namedParameterJdbcTemplate.query(query, params, rs ->
 		{
-			List<Task> tasks = new ArrayList<>();
+			List<TaskListingFilter> tasks = new ArrayList<>();
 
 			while (rs.next())
 			{
-				tasks.add(Task.builder()
+				tasks.add(TaskListingFilter.builder()
 					.id(rs.getLong("id"))
 					.name(rs.getString("name"))
 					.description(rs.getString("description"))
 					.timeofcreation(rs.getDate("timeofcreation").toLocalDate())
 					.maintaskid(rs.getLong("maintaskid") == 0 ? null : rs.getLong("maintaskId"))
 					.ownerid(rs.getLong("ownerId"))
+					.keywordsMatching(rs.getLong("keywordsmatching"))
 					.build());
 			}
 
@@ -168,45 +102,92 @@ public class TaskServiceImpl implements TaskService
 		});
 	}
 
-	private String constructQueryByFilter(Filter filter)
+	private String constructQueryByFilter(TaskListingFilter filter)
 	{
 		StringBuilder sb = new StringBuilder(" SELECT " +
-			"\"task\".id, \"task\".name, \"task\".description, \"task\".timeOfCreation, \"task\".mainTaskId, \"task\".ownerId " +
-			"FROM \"task\" ");
+			"TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, COUNT(*) AS KEYWORDSMATCHING " +
+			"FROM \"task\" TASK");
 
 		if (filter.getKeywords() != null)
 		{
-			sb.append(" INNER JOIN \"keywordsForTasks\" ON \"task\".id = \"keywordsForTasks\".taskId ");
+			sb.append(" INNER JOIN \"keywordsForTasks\" ON TASK.id = \"keywordsForTasks\".taskId ");
 		}
 
 		if (filter.getCompletedUserId() != null)
 		{
-			sb.append(" INNER JOIN \"completedTasks\" ON \"task\".id = \"completedTasks\".taskId ");
+			sb.append(" LEFT JOIN \"submission\" ON TASK.id = \"submission\".taskId ");
+		}
+
+		if (Boolean.FALSE.equals(filter.getCompleted())) {
+			sb.append(" AND SUBMITTERID = :userid ");
 		}
 
 		sb.append(" WHERE 1 = 1 ");
+
+		if (filter.getId() != null)
+		{
+			sb.append(" AND id = :id ");
+		}
 
 		if (filter.getName() != null)
 		{
 			sb.append(" AND name LIKE :name ");
 		}
 
-		if (filter.getOwnerId() != null)
+		if (filter.getDescription() != null)
 		{
-			sb.append(" AND ownerId = :ownerid ");
+			sb.append(" AND description = :description ");
+		}
+
+		if (filter.getCreatedAfter() != null || filter.getCreatedBefore() != null)
+		{
+			sb.append(" AND TASK.timeofcreation BETWEEN :createdafter AND :createdbefore ");
+		}
+
+		//TODO: add null searchability
+		if (filter.getMaintaskid() != null)
+		{
+			sb.append(" AND maintaskid = :maintaskid ");
+		}
+
+		if (filter.getOwnerid() != null)
+		{
+			sb.append(" AND ownerid = :ownerid ");
 		}
 
 		if (filter.getKeywords() != null)
 		{
-			sb.append(" AND keyword IN ( :keywords )");
+			sb.append(" AND ( ");
+			for (int i = 0; i < filter.getKeywords().size(); i++)
+			{
+				if (i != 0)
+				{
+					sb.append(" OR keyword LIKE :keywords");
+				}
+				else
+				{
+					sb.append(" keyword LIKE :keywords");
+				}
+				sb.append(i).append(" ");
+			}
+			sb.append(" ) ");
 		}
 
 		if (filter.getCompletedUserId() != null)
 		{
-			sb.append(" AND \"completedTasks\".userId = :userid ");
+			if (Boolean.TRUE.equals(filter.getCompleted())) {
+				sb.append(" AND \"submission\".submitterId = :userid ");
+			} else {
+				sb.append(" AND SUBMITTERID IS NULL ");
+			}
 		}
 
-		sb.append(" GROUP BY \"task\".id ORDER BY \"task\".id ASC ");
+		sb.append(" GROUP BY TASK.id ");
+
+		if (filter.getKeywords() != null)
+		{
+			sb.append(" ORDER BY KEYWORDSMATCHING DESC ");
+		}
 
 		return sb.toString();
 	}
@@ -216,7 +197,7 @@ public class TaskServiceImpl implements TaskService
 	{
 		if (task.getId() != null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_GIVEN,
 				"Remove id property, or use Update instead of Save."
 			);
 		}
@@ -229,9 +210,15 @@ public class TaskServiceImpl implements TaskService
 	@Override
 	public Task updateTask(Task task) throws ServiceException
 	{
-		if (task.getId() == null || !taskRepository.existsById(task.getId()))
+		if (task.getId() == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!taskRepository.existsById(task.getId()))
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Task with id " + task.getId() + " doesn't exist. Please use save to save this instance."
 			);
 		}
@@ -253,7 +240,6 @@ public class TaskServiceImpl implements TaskService
 
 		task.setTimeofcreation(task.getTimeofcreation() == null ? taskInDb.getTimeofcreation() : task.getTimeofcreation());
 
-		//TODO: fix 2 -> null-ra állítás
 		task.setMaintaskid(task.getMaintaskid() == null ? taskInDb.getMaintaskid() : task.getMaintaskid());
 
 		task.setOwnerid(task.getOwnerid() == null ? taskInDb.getOwnerid() : task.getOwnerid());
@@ -320,8 +306,35 @@ public class TaskServiceImpl implements TaskService
 	}
 
 	@Override
-	public boolean setMainTaskId(Long id, Long mainTaskId)
+	public Integer setMainTaskId(Long id, Long mainTaskId)
 	{
+		if (id == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
+				"Id field must not be null"
+			);
+		}
+
+		if (!taskRepository.existsById(id))
+		{
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
+				"Task with id " + id + " doesn't exist. Please use save to save this instance."
+			);
+		}
+
+		if (mainTaskId != null && !taskRepository.existsById(mainTaskId))
+		{
+			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION,
+				"MainTaskId is not a valid task's ID"
+			);
+		}
+
+		if (Objects.equals(id, mainTaskId))
+		{
+			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION,
+				"Id and mainTaskId should not be the same!"
+			);
+		}
+
 		return taskRepository.setMainTaskId(id, mainTaskId);
 	}
 
@@ -331,7 +344,7 @@ public class TaskServiceImpl implements TaskService
 		Task found = getTaskById(id);
 		if (found == null)
 		{
-			throw new ServiceException(ServiceExceptionType.ILLEGAL_ID_ARGUMENT,
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Task with given ID does not exist"
 			);
 		}
