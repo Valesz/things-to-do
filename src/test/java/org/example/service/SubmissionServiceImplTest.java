@@ -6,7 +6,8 @@ import org.example.model.Task;
 import org.example.model.User;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.example.utils.exceptions.ServiceExceptionType;
 import org.junit.After;
@@ -71,7 +72,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -79,7 +80,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 		Assert.assertEquals(submission, submissionService.getSubmissionById(submission.getId()));
 
 		submission.setId(null);
-		submission.setAcceptance(null);
+		submission.setAcceptance(SubmissionAcceptanceEnum.IN_PROGRESS);
 		submissionService.saveSubmission(submission);
 		Assert.assertEquals(submission, submissionService.getSubmissionById(submission.getId()));
 	}
@@ -97,7 +98,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 
 		Submission submission2 = Submission.builder()
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -108,7 +109,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(Long.MAX_VALUE)
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -119,7 +120,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(Long.MAX_VALUE)
 			.build();
 
@@ -131,7 +132,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -146,7 +147,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -168,7 +169,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -176,7 +177,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(oldTaskId)
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -184,7 +185,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(oldUserId)
 			.build();
 
@@ -192,7 +193,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(oldTaskId)
 			.description("Cool description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(null)
+			.acceptance(SubmissionAcceptanceEnum.IN_PROGRESS)
 			.submitterid(oldUserId)
 			.build();
 
@@ -226,7 +227,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission1.equals(submission) || submission4.equals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.build()
 		).spliterator();
 		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission2.equals(submission) || submission3.equals(submission)));
@@ -248,7 +249,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -256,7 +257,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -264,7 +265,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Cool description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(null)
+			.acceptance(SubmissionAcceptanceEnum.IN_PROGRESS)
 			.submitterid(this.user.getId())
 			.build();
 		submissionService.saveSubmission(submission1);
@@ -272,13 +273,13 @@ public class SubmissionServiceImplTest extends AbstractTest
 		submissionService.saveSubmission(submission3);
 
 		Iterable<Submission> submissionIterable = submissionService.getBySubmissionsObject(Submission.builder()
-			.acceptance(null)
+			.acceptance(SubmissionAcceptanceEnum.IN_PROGRESS)
 			.build()
 		);
 		Iterator<Submission> submissionIterator = submissionIterable.iterator();
 
 		Assert.assertEquals(1, StreamSupport.stream(submissionIterable.spliterator(), false).count());
-		Assert.assertEquals(submission1, submissionIterator.next());
+		Assert.assertEquals(submission3, submissionIterator.next());
 		Assert.assertFalse(submissionIterator.hasNext());
 	}
 
@@ -289,7 +290,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 		submissionService.saveSubmission(submission1);
@@ -315,7 +316,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 		submissionService.saveSubmission(submission);
@@ -351,7 +352,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 
 		updateSubmissionProperties = Submission.builder()
 			.id(submission.getId())
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.build();
 		submissionService.updateSubmission(updateSubmissionProperties);
 		Assert.assertEquals(updateSubmissionProperties.getAcceptance(), submissionService.getSubmissionById(submission.getId()).getAcceptance());
@@ -372,7 +373,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -387,7 +388,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 		submissionService.saveSubmission(submission);
@@ -404,7 +405,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -429,15 +430,15 @@ public class SubmissionServiceImplTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("Good description")
 			.timeofsubmission(LocalDate.EPOCH)
-			.acceptance(false)
+			.acceptance(SubmissionAcceptanceEnum.REJECTED)
 			.submitterid(this.user.getId())
 			.build();
 		submissionService.saveSubmission(submission);
 
-		submissionService.setAcceptance(submission.getId(), true);
-		Assert.assertTrue(submissionService.getSubmissionById(submission.getId()).getAcceptance());
+		submissionService.setAcceptance(submission.getId(), SubmissionAcceptanceEnum.ACCEPTED);
+		Assert.assertEquals(SubmissionAcceptanceEnum.ACCEPTED, submissionService.getSubmissionById(submission.getId()).getAcceptance());
 
-		submissionService.setAcceptance(submission.getId(), null);
-		Assert.assertNull(submissionService.getSubmissionById(submission.getId()).getAcceptance());
+		submissionService.setAcceptance(submission.getId(), SubmissionAcceptanceEnum.IN_PROGRESS);
+		Assert.assertEquals(SubmissionAcceptanceEnum.IN_PROGRESS, submissionService.getSubmissionById(submission.getId()).getAcceptance());
 	}
 }

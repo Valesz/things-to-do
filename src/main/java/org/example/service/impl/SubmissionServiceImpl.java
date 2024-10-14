@@ -5,6 +5,7 @@ import org.example.repository.SubmissionRepository;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
 import org.example.service.SubmissionService;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -33,9 +34,10 @@ public class SubmissionServiceImpl implements SubmissionService
 	private UserRepository userRepository;
 
 	@Override
-	public Integer setAcceptance(Long id, Boolean accepted)
+	public Integer setAcceptance(Long id, SubmissionAcceptanceEnum accepted)
 	{
-		if (id == null) {
+		if (id == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);
@@ -76,7 +78,7 @@ public class SubmissionServiceImpl implements SubmissionService
 			.addValue("taskid", submission.getTaskid())
 			.addValue("description", submission.getDescription())
 			.addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
-			.addValue("acceptance", submission.getAcceptance())
+			.addValue("acceptance", submission.getAcceptance() == null ? null : submission.getAcceptance().toString())
 			.addValue("submitterid", submission.getSubmitterid());
 
 		String query = constructQueryByOwnObject(submission);
@@ -95,7 +97,7 @@ public class SubmissionServiceImpl implements SubmissionService
 					.submitterid(rs.getLong("submitterid"))
 					.build();
 
-				tmpSubmission.setAcceptance(rs.getBoolean("acceptance"));
+				tmpSubmission.setAcceptance(SubmissionAcceptanceEnum.valueOf(rs.getString("acceptance")));
 				if (rs.wasNull())
 				{
 					tmpSubmission.setAcceptance(null);
@@ -165,7 +167,8 @@ public class SubmissionServiceImpl implements SubmissionService
 	@Override
 	public Submission updateSubmission(Submission submission) throws ServiceException
 	{
-		if (submission.getId() == null) {
+		if (submission.getId() == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);

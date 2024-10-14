@@ -2,7 +2,7 @@ package org.example.repository;
 
 import org.example.AbstractTest;
 import org.example.model.User;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
 

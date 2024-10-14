@@ -24,7 +24,7 @@ import java.sql.SQLException;
 @RunWith(SpringRunner.class)
 @Import({MyConfiguration.class, SecurityConfiguration.class})
 @TestPropertySource(value = "classpath:test.application.properties")
-public class AbstractTest
+public abstract class AbstractTest
 {
 
 	@Autowired

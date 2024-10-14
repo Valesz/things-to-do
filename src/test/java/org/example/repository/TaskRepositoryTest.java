@@ -3,7 +3,7 @@ package org.example.repository;
 import org.example.AbstractTest;
 import org.example.model.Task;
 import org.example.model.User;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.relational.core.conversion.DbActionExecutionException;

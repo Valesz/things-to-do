@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.example.utils.enums;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

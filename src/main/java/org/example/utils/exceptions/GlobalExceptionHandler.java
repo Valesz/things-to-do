@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler
@@ -19,6 +20,7 @@ public class GlobalExceptionHandler
 		AccessDeniedException.class,
 		SignatureException.class,
 		ExpiredJwtException.class,
+		Exception.class
 	})
 	public ResponseEntity<String> handleSecurityException(Exception ex)
 	{
@@ -49,12 +51,6 @@ public class GlobalExceptionHandler
 		}
 
 		ex.printStackTrace();
-		return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
 	}
-
-//	@ExceptionHandler({Exception.class})
-//	public void handleUniversalException(Exception ex)
-//	{
-//		throw new RuntimeException(ex);
-//	}
 }

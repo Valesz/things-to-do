@@ -8,7 +8,8 @@ import org.example.repository.TaskRepository;
 import org.example.service.SubmissionService;
 import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -78,7 +79,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.taskid(null)
 		.description("Good description")
 		.timeofsubmission(LocalDate.EPOCH)
-		.acceptance(false)
+		.acceptance(SubmissionAcceptanceEnum.REJECTED)
 		.submitterid(null)
 		.build();
 
@@ -86,7 +87,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.taskid(null)
 		.description("Cool description")
 		.timeofsubmission(LocalDate.now())
-		.acceptance(true)
+		.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 		.submitterid(null)
 		.build();
 
@@ -94,7 +95,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.taskid(null)
 		.description("Good description")
 		.timeofsubmission(LocalDate.now())
-		.acceptance(true)
+		.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 		.submitterid(null)
 		.build();
 
@@ -102,7 +103,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.taskid(null)
 		.description("Cool description")
 		.timeofsubmission(LocalDate.EPOCH)
-		.acceptance(null)
+		.acceptance(SubmissionAcceptanceEnum.IN_PROGRESS)
 		.submitterid(null)
 		.build();
 
@@ -170,7 +171,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(this.task1.getId())
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user1.getId())
 			.build();
 
@@ -225,7 +226,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(this.task1.getId())
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user1.getId())
 			.build();
 
@@ -267,7 +268,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(Long.MAX_VALUE)
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user1.getId())
 			.build();
 
@@ -292,7 +293,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(null)
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user1.getId())
 			.build();
 
@@ -317,7 +318,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(this.task1.getId())
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(Long.MAX_VALUE)
 			.build();
 
@@ -342,7 +343,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(null)
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(null)
 			.build();
 
@@ -401,7 +402,7 @@ public class SubmissionControllerTest extends AbstractTest
 	public void getMultipleSubmissionsTest()
 	{
 		Submission querySubmission = Submission.builder()
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.build();
 
 		String paramsURI = "?acceptance={acceptance}";
@@ -452,7 +453,7 @@ public class SubmissionControllerTest extends AbstractTest
 			.taskid(this.task2.getId())
 			.description("buena descripción")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user2.getId())
 			.build();
 

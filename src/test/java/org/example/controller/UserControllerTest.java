@@ -4,7 +4,7 @@ import org.example.AbstractTest;
 import org.example.model.User;
 import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

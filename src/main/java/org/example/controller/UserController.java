@@ -3,7 +3,7 @@ package org.example.controller;
 import org.example.MyConfiguration;
 import org.example.model.User;
 import org.example.service.UserService;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;

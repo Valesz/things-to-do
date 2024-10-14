@@ -3,6 +3,7 @@ package org.example.controller;
 import org.example.MyConfiguration;
 import org.example.model.Submission;
 import org.example.service.SubmissionService;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -92,7 +93,7 @@ public class SubmissionController
 		@RequestParam(required = false, value = "taskid") Long taskid,
 		@RequestParam(required = false, value = "description") String description,
 		@RequestParam(required = false, value = "timeofsubmission") String timeofsubmission,
-		@RequestParam(required = false, value = "acceptance") Boolean acceptance,
+		@RequestParam(required = false, value = "acceptance") SubmissionAcceptanceEnum acceptance,
 		@RequestParam(required = false, value = "submitterid") Long submitterid)
 	{
 		return submissionService.getBySubmissionsObject(Submission.builder()

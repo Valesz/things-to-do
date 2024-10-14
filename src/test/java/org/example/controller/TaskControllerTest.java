@@ -9,7 +9,7 @@ import org.example.model.TaskListingFilter;
 import org.example.service.TaskService;
 import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

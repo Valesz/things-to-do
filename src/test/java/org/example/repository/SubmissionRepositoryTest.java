@@ -4,7 +4,8 @@ import org.example.AbstractTest;
 import org.example.model.Submission;
 import org.example.model.Task;
 import org.example.model.User;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.relational.core.conversion.DbActionExecutionException;
@@ -64,7 +65,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -80,7 +81,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(Long.MAX_VALUE)
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -94,7 +95,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(Long.MAX_VALUE)
 			.build();
 
@@ -116,7 +117,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -132,7 +133,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -140,7 +141,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description number 2")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -167,7 +168,7 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
@@ -187,18 +188,18 @@ public class SubmissionRepositoryTest extends AbstractTest
 			.taskid(this.task.getId())
 			.description("cool description number 2")
 			.timeofsubmission(LocalDate.now())
-			.acceptance(true)
+			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.submitterid(this.user.getId())
 			.build();
 
 		submissionRepository.save(submission);
 
-		submissionRepository.setAcceptance(submission.getId(), false);
+		submissionRepository.setAcceptance(submission.getId(), SubmissionAcceptanceEnum.REJECTED);
 
 		Submission savedSubmission = submissionRepository.findById(submission.getId()).orElse(null);
 
 		Assert.assertNotNull(savedSubmission);
 
-		Assert.assertFalse(savedSubmission.getAcceptance());
+		Assert.assertEquals(SubmissionAcceptanceEnum.REJECTED, savedSubmission.getAcceptance());
 	}
 }

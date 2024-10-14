@@ -132,7 +132,8 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	@Override
 	public KeywordsForTasks updateKeywordForTask(KeywordsForTasks keywordForTask) throws ServiceException
 	{
-		if (keywordForTask.getId() == null) {
+		if (keywordForTask.getId() == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);

@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.example.utils.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;

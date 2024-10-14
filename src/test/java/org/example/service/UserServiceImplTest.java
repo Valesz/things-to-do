@@ -3,7 +3,7 @@ package org.example.service;
 import org.example.AbstractTest;
 import org.example.model.User;
 import org.example.repository.UserRepository;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.example.utils.exceptions.ServiceExceptionType;
 import org.junit.After;

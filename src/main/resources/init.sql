@@ -29,7 +29,7 @@ CREATE TABLE "submission" (
 	TASKID           INTEGER                NOT NULL,
 	DESCRIPTION      VARCHAR(400)           NOT NULL,
 	TIMEOFSUBMISSION DATE                   NOT NULL,
-	ACCEPTANCE       BOOLEAN,
+	ACCEPTANCE       VARCHAR(30)            NOT NULL,
 	SUBMITTERID      INTEGER                NOT NULL
 );
 

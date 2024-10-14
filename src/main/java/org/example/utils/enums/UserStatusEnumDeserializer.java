@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.example.utils.enums;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;

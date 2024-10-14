@@ -118,7 +118,8 @@ public class TaskServiceImpl implements TaskService
 			sb.append(" LEFT JOIN \"submission\" ON TASK.id = \"submission\".taskId ");
 		}
 
-		if (Boolean.FALSE.equals(filter.getCompleted())) {
+		if (Boolean.FALSE.equals(filter.getCompleted()))
+		{
 			sb.append(" AND SUBMITTERID = :userid ");
 		}
 
@@ -147,7 +148,14 @@ public class TaskServiceImpl implements TaskService
 		//TODO: add null searchability
 		if (filter.getMaintaskid() != null)
 		{
-			sb.append(" AND maintaskid = :maintaskid ");
+			if (filter.getMaintaskid() <= 0)
+			{
+				sb.append(" AND maintaskid IS NULL ");
+			}
+			else
+			{
+				sb.append(" AND maintaskid = :maintaskid ");
+			}
 		}
 
 		if (filter.getOwnerid() != null)
@@ -175,9 +183,12 @@ public class TaskServiceImpl implements TaskService
 
 		if (filter.getCompletedUserId() != null)
 		{
-			if (Boolean.TRUE.equals(filter.getCompleted())) {
+			if (Boolean.TRUE.equals(filter.getCompleted()))
+			{
 				sb.append(" AND \"submission\".submitterId = :userid ");
-			} else {
+			}
+			else
+			{
 				sb.append(" AND SUBMITTERID IS NULL ");
 			}
 		}
@@ -210,7 +221,8 @@ public class TaskServiceImpl implements TaskService
 	@Override
 	public Task updateTask(Task task) throws ServiceException
 	{
-		if (task.getId() == null) {
+		if (task.getId() == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);
@@ -308,7 +320,8 @@ public class TaskServiceImpl implements TaskService
 	@Override
 	public Integer setMainTaskId(Long id, Long mainTaskId)
 	{
-		if (id == null) {
+		if (id == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);

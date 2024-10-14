@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -32,7 +33,7 @@ public class Submission
 	private LocalDate timeofsubmission;
 
 	@Column(value = "ACCEPTANCE")
-	private Boolean acceptance;
+	private SubmissionAcceptanceEnum acceptance;
 
 	@Column(value = "SUBMITTERID")
 	private Long submitterid;

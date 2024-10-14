@@ -3,7 +3,7 @@ package org.example.service.impl;
 import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.service.UserService;
-import org.example.utils.UserStatusEnum;
+import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.example.utils.exceptions.ServiceExceptionType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -157,7 +157,8 @@ public class UserServiceImpl implements UserService
 	@Override
 	public User updateUser(User user) throws ServiceException
 	{
-		if (user.getId() == null) {
+		if (user.getId() == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_GIVEN,
 				"Id field must not be null"
 			);
