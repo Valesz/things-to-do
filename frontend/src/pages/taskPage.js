@@ -1,20 +1,17 @@
 import {Button} from 'primereact/button';
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {useCookies} from 'react-cookie';
-import {serverEndpoint} from '../../config/server-properties'
 import {DataView} from 'primereact/dataview';
-import TaskFilterSidebarComponent from '../shared/task/taskFilterSidebar'
+import TaskFilterSidebarComponent from '../components/task/taskFilterSidebar'
 import {classNames} from 'primereact/utils'
 import {InputText} from 'primereact/inputtext'
 import {FloatLabel} from 'primereact/floatlabel'
-import {SpeedDial} from 'primereact/speeddial'
 import {Tooltip} from 'primereact/tooltip'
 import {Toast} from 'primereact/toast'
 import {Fieldset} from 'primereact/fieldset'
-import TaskFilterComponent from '../shared/task/taskFilterComponent'
-import AddTaskComponent from '../shared/task/addTaskComponent'
-import {Chip} from 'primereact/chip'
+import TaskFilterComponent from '../components/task/taskFilterComponent'
+import AddTaskComponent from '../components/task/addTaskComponent'
 import {Tag} from 'primereact/tag'
+import {fetchTasks} from '../services/taskService'
 
 const TaskPage = () => {
 	const [tasks, setTasks] = useState([]);
@@ -25,40 +22,19 @@ const TaskPage = () => {
 
 	const [filterTaskName, setFilterTaskName] = useState("");
 
-	const requestOptions = {
-		method: "GET",
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	};
-
-	const fetchTasks = async () => {
-		const params = filterTaskName !== "" ? "?&name=" + filterTaskName : "";
-
-		await fetch(serverEndpoint + "/api/task/" + params,
-			requestOptions
-		)
-		.then(async response => {
-			const isJson = response.headers.get("content-type")?.includes("application/json");
-			const data = isJson && await response.json();
-
-			if (!response.ok) {
-				const error = (data && data.message) || response.status;
-				return Promise.reject(error);
-			}
-
-			if (data) {
-				setTasks(data);
-			}
+	const fetchTasksCallback = useCallback(async (name) => {
+		await fetchTasks(name)
+			.then((tasks) => {
+				setTasks(tasks);
 			})
-		.catch(error => {
-			toastRef.current.show({severity: "error", detail: "Task fetching error", description: error});
-		})
-	}
+			.catch((error) => {
+				toastRef.current.show({severity: 'error', detail: "Listing error", description: error})
+			})
+	}, [])
 
 	useEffect(() => {
-		fetchTasks();
-	}, [tasks])
+		fetchTasksCallback();
+	}, [fetchTasksCallback])
 
 	if (tasks === undefined) {
 
@@ -106,7 +82,7 @@ const TaskPage = () => {
 		<div className={'flex flex-column justify-content-start align-items-center h-screen w-full gap-3 mt-6'}>
 			<div className={'flex flex-row gap-3 w-full justify-content-center lg:hidden'}>
 				<FloatLabel>
-					<InputText onBlur={fetchTasks} className="p-inputtext md:p-inputtext-lg" id="taskName" value={filterTaskName} onChange={(e) => setFilterTaskName(e.target.value)} />
+					<InputText onBlur={() => fetchTasksCallback(filterTaskName)} className="p-inputtext md:p-inputtext-lg" id="taskName" value={filterTaskName} onChange={(e) => setFilterTaskName(e.target.value)} />
 					<label htmlFor="taskName" className={"p-component"}>Task Name</label>
 				</FloatLabel>
 				<Button label={"Filter"} outlined className={"hidden md:block"} icon={"pi pi-filter"} onClick={() => setToggleFilter(!toggleFilter)} />

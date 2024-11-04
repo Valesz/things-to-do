@@ -2,11 +2,13 @@ import {Dialog} from 'primereact/dialog'
 import {FloatLabel} from 'primereact/floatlabel'
 import {InputText} from 'primereact/inputtext'
 import {Chips} from 'primereact/chips'
-import {useState} from 'react'
+import {useCallback, useState} from 'react'
 import {InputTextarea} from 'primereact/inputtextarea'
 import {Button} from 'primereact/button'
 import {useCookies} from 'react-cookie'
-import {serverEndpoint} from '../../../config/server-properties'
+import {addTasks} from '../../services/taskService'
+import {addKeywords} from '../../services/keywordService'
+import {formatDate} from '../../utils/utilityService'
 
 const AddTaskComponent = ({ visible, setVisible, toastRef, setTasks}) => {
 
@@ -17,82 +19,26 @@ const AddTaskComponent = ({ visible, setVisible, toastRef, setTasks}) => {
 
 	const [cookies] = useCookies(['authToken']);
 
-	const requestOptionsTask = {
-		method: "POST",
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': "Bearer " + cookies.authToken,
-		},
-		body: JSON.stringify({
-			name: name,
-			description: description,
-			mainTaskId: mainTaskId,
-			timeofcreation: new Date().toLocaleDateString("hu-HU", {year: "numeric", month: "numeric", day: "numeric"})
-				.replaceAll(". ", "-")
-				.replace(".", ""),
-
-		})
-	}
-
-	const addTask = async () => {
-
-		let task;
-		await fetch(serverEndpoint + "/api/task/", requestOptionsTask)
-			.then(async (response) => {
-				const isJson = response.headers.get("content-type")?.includes("application/json");
-				task = isJson && await response.json();
-
-				if (response.status !== 201) {
-					const error = (task && task.message) || response.status;
-					await Promise.reject(error);
-				}
-
-				if (task) {
-					await Promise.resolve();
-				}
-			})
-			.catch((error) => {
-				console.log(error);
-				toastRef.current.show({severity: 'error', detail: 'Task creation error', description: error});
-			})
-
-		if (task) {
-			const requestOptionsKeywords = {
-				method: "POST",
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': "Bearer " + cookies.authToken,
-				},
-				body: JSON.stringify(keywords.map((keyword) => {
+	const addTaskCallback = useCallback(async () => {
+		await addTasks(cookies.authToken, name, description, mainTaskId, new Date())
+			.then(async (task) => {
+				await addKeywords(cookies.authToken, keywords.map((keyword) => {
 					return {
 						keyword: keyword,
 						taskid: task.id,
-					}
-				}))
-			}
-
-			await fetch(serverEndpoint + "/api/task/keyword/", requestOptionsKeywords)
-				.then(async (response) => {
-					const isJson = response.headers.get("content-type")?.includes("application/json");
-					const data = isJson && await response.json();
-
-					if (response.status !== 201) {
-						const error = (data && data.message) || response.status;
-						await Promise.reject(error);
-					}
-
-					if (data) {
-						task.keywords = data.map((keyword) => keyword.keyword);
-						setTasks((prev) => [task, ...prev]);
-						setVisible(false);
-						await Promise.resolve();
-					}
+					};
+				})).then((keyword) => {
+					task.keywords = keyword.map((keyword) => keyword.keyword);
+					setTasks((prev) => [task, ...prev])
+					setVisible(false);
 				})
-				.catch((error) => {
-					console.log(error);
-				})
-		}
-	}
+					.catch((keywordError) => {
+						toastRef.current.show({severity: 'error', summary: "Keyword addition error", detail: keywordError.message})
+					})
+			}).catch((taskAdditionError) => {
+				toastRef.current.show({severity: "error", summary: "Task addition error", detail: taskAdditionError.message})
+			})
+	}, [name, keywords, description]);
 
 	const header = (
 		<span className={"text-2xl"}>Create your task!</span>
@@ -111,9 +57,7 @@ const AddTaskComponent = ({ visible, setVisible, toastRef, setTasks}) => {
 								</FloatLabel>
 							</span>
 							<span className={'text-400 text-right hidden md:block'}>
-								{new Date().toLocaleDateString("hu-HU", {year: "numeric", month: "numeric", day: "numeric"})
-									.replaceAll(". ", "-")
-									.replace(".", "")}
+								{formatDate(new Date())}
 							</span>
 						</div>
 						<span>
@@ -149,7 +93,7 @@ const AddTaskComponent = ({ visible, setVisible, toastRef, setTasks}) => {
 							</FloatLabel>
 						</span>
 						<div className={'flex flex-row gap-2 flex-grow-1 lg:h-3rem'}>
-							<Button onClick={addTask} label={"Create Task"}/>
+							<Button onClick={addTaskCallback} label={"Create Task"}/>
 						</div>
 					</div>
 				</div>

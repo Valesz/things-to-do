@@ -12,7 +12,6 @@ import 'primereact/resources/themes/lara-dark-teal/theme.css';
 const NavbarComponent = () => {
 	const navigate = useNavigate();
 	const [openSidebar, setOpenSidebar] = useState(false);
-	const [theme, setTheme] = useState(false);
 
 	const [cookies, setCookies] = useCookies(['authToken'])
 
@@ -64,10 +63,6 @@ const NavbarComponent = () => {
 			}
 		}
 	]
-
-	const changeTheme = (theme) => {
-
-	}
 
 	const start = (
 		<>

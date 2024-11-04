@@ -1,12 +1,12 @@
 import {FloatLabel} from 'primereact/floatlabel'
 import {InputText} from 'primereact/inputtext'
 import {Card} from 'primereact/card'
-import {useState, useRef} from 'react'
+import {useState, useRef, useCallback} from 'react'
 import {Button} from 'primereact/button'
 import {Toast} from 'primereact/toast'
-import {serverEndpoint} from '../../../config/server-properties'
 import {useCookies} from 'react-cookie'
 import {useNavigate} from 'react-router-dom'
+import {login} from '../../services/authService'
 
 const LoginComponent = () => {
 	const [usernameInput, setUsernameInput] = useState('');
@@ -15,56 +15,34 @@ const LoginComponent = () => {
 	const [loginError, setLoginError] = useState('');
 	const toastRef = useRef(null);
 
-	const [cookies, setCookie] = useCookies(['authToken']);
+	const [_, setCookie] = useCookies(['authToken']);
 	const navigate = useNavigate();
 
-	const handleLogin = async () => {
-		const requestOptions = {
-			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				username: usernameInput,
-				password: passwordInput
+	const loginCallback = useCallback(async () => {
+		await login(usernameInput, passwordInput)
+			.then((token) => {
+				setCookie('authToken', token, {path: "/", sameSite: 'strict'});
+				setLoginError('');
+				navigate("/profile");
 			})
-		};
-
-		await fetch(serverEndpoint + "/api/auth/login", requestOptions)
-			.then(async response => {
-				const isText = response.headers.get('content-type')?.includes('text/plain');
-				const data = isText && await response.text();
-
-				if (!response.ok) {
-					const error = (data && data.message) || response.status;
-					return Promise.reject(error);
-				}
-
-				if (data) {
-					setCookie('authToken', data, {path: "/", sameSite: 'strict'})
-					setLoginError('')
-					navigate("/profile")
-				}
-
-			})
-			.catch(error => {
+			.catch((error) => {
 				setLoginError(error);
 				toastRef.current.show({
-					severity: 'error',
+					severity: "error",
 					summary: "Login Error",
 					detail: error === 401 ?
-						"Invalid username or password" :
-						"Unknown error"
+						"invalid username or password" :
+						"Unknown error",
 				})
 			})
-	};
+	}, [usernameInput, passwordInput]);
 
 	const header = (
 		<h1 className={"border-x-3 border-primary text-center"}>Login</h1>
 	);
 
 	const footer = (
-		<Button icon={"pi pi-user"} label={"Login"} onClick={handleLogin}/>
+		<Button icon={"pi pi-user"} label={"Login"} onClick={loginCallback}/>
 	);
 
 	return (

@@ -4,9 +4,9 @@ import {Chips} from 'primereact/chips'
 import {Calendar} from 'primereact/calendar'
 import {TriStateCheckbox} from 'primereact/tristatecheckbox'
 import {Button} from 'primereact/button'
-import {useEffect, useState} from 'react'
-import {serverEndpoint} from '../../../config/server-properties'
+import {useCallback, useState} from 'react'
 import {useCookies} from 'react-cookie'
+import {fetchTasks} from '../../services/taskService'
 
 const TaskFilterComponent = ({setTasks, toastRef}) => {
 	const [filterTaskName, setFilterTaskName] = useState("");
@@ -17,49 +17,15 @@ const TaskFilterComponent = ({setTasks, toastRef}) => {
 
 	const [cookies] = useCookies(['authToken']);
 
-	const handleSearch = async () => {
-
-		const requestOptions = {
-			method: "GET",
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization' : cookies.authToken ? "Bearer " + cookies.authToken : "",
-			},
-		};
-
-		const dateFormat = { year: "numeric", month: "numeric", day: "numeric" };
-
-		const params = "?1=1" +
-			(filterTaskName !== "" ? "&name=" + filterTaskName : "") +
-			(filterKeywords.length > 0 ? "&keywords=" + filterKeywords.join("&keywords=") : "") +
-			(filterDate !== null ?
-				(filterDate[0] !== null ? "&createdafter=" + filterDate[0].toLocaleDateString("hu-HU", dateFormat).replaceAll(". ", "-").replace(".", "") : "") +
-				(filterDate[1] !== null ? "&createdbefore=" + filterDate[1].toLocaleDateString("hu-HU", dateFormat).replaceAll(". ", "-").replace(".", "") : "")
-				: "") +
-			(filterCompleted !== "" ? "&completed=" + filterCompleted : "") +
-			(filterCreatorName !== "" ? "&ownername=" + filterCreatorName : "");
-
-
-		await fetch(serverEndpoint + "/api/task/" + params, requestOptions)
-			.then(async (response) => {
-				const isJson = response.headers.get("content-type")?.includes("application/json");
-				const data = isJson && await response.json();
-
-				if (!response.ok) {
-					const error = (data && data.message) || response.status;
-					await Promise.reject(error);
-				}
-
-				if (data) {
-					setTasks(data);
-				}
-
+	const fetchTasksCallback = useCallback(async () => {
+		fetchTasks(filterTaskName, filterKeywords, filterDate, filterCompleted, filterCreatorName)
+			.then((tasks) => {
+				setTasks(tasks);
 			})
 			.catch((error) => {
-				toastRef.current.show({severity: 'error', detail: 'Failed to get tasks', description: error})
+				toastRef.current.show({severity: 'error', summary: "Listing error", detail: error});
 			})
-
-	}
+	}, [filterTaskName, filterKeywords, filterDate, filterCompleted, filterCreatorName])
 
 	return (
 		<>
@@ -81,7 +47,7 @@ const TaskFilterComponent = ({setTasks, toastRef}) => {
 							(e) =>
 								e.value.length < 23
 									? setFilterKeywords([...filterKeywords, e.value])
-									: toastRef.current.show({severity: 'error', detail: 'Too Long keyword'})
+									: toastRef.current.show({severity: 'error', summary: 'Too Long keyword'})
 						}
 						onRemove={(e) => {
 							setFilterKeywords((prevState) => {
@@ -113,7 +79,11 @@ const TaskFilterComponent = ({setTasks, toastRef}) => {
 					</label>
 				</div>
 			</div>
-			<Button label={"Search"} className={"w-full mt-4"} onClick={handleSearch} />
+			<Button
+				label={"Search"}
+				className={"w-full mt-4"}
+				onClick={fetchTasksCallback}
+			/>
 		</>
 	);
 }

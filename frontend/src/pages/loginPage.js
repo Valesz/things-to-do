@@ -1,6 +1,6 @@
-import LoginComponent from '../shared/login-register/loginComponent'
+import LoginComponent from '../components/login-register/loginComponent'
 import {Divider} from 'primereact/divider'
-import RegisterComponent from '../shared/login-register/registerComponent'
+import RegisterComponent from '../components/login-register/registerComponent'
 
 const LoginPage = () => {
 	return (

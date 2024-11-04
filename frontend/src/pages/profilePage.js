@@ -4,7 +4,7 @@ import {Card} from 'primereact/card';
 import {Button} from 'primereact/button'
 import {useEffect, useState} from 'react'
 import {useCookies} from 'react-cookie'
-import {serverEndpoint} from '../../config/server-properties'
+import {serverEndpoint} from '../config/server-properties'
 import {Ripple} from 'primereact/ripple'
 
 function ProfilePage() {

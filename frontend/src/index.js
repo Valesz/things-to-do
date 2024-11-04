@@ -4,13 +4,13 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {PrimeReactProvider} from 'primereact/api';
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
-import HomePage from './components/pages/homePage'
-import ProfilePage from './components/pages/profilePage'
+import HomePage from './pages/homePage'
+import ProfilePage from './pages/profilePage'
 import './index.css';
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
-import LoginPage from './components/pages/loginPage'
-import TaskPage from './components/pages/taskPage'
+import LoginPage from './pages/loginPage'
+import TaskPage from './pages/taskPage'
 
 const routes = [
     {

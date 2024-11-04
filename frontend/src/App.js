@@ -1,4 +1,4 @@
-import Navbar from './components/shared/navbar'
+import Navbar from './components/navbar/navbar'
 import {Outlet} from 'react-router-dom'
 import {CookiesProvider} from 'react-cookie'
 
