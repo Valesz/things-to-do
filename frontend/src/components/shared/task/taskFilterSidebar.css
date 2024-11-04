@@ -1,0 +1,11 @@
+.sidebarHeight {
+	max-height: 37rem;
+	min-height: 34rem;
+	height: max-content;
+}
+
+@media (max-height: 576px) {
+	.sidebarHeight {
+		min-height: 100vh;
+	}
+}

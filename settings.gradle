@@ -1,2 +1,3 @@
 rootProject.name = 'Betanulo_feladat'
+include 'backend'
 
