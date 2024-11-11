@@ -21,11 +21,11 @@ const SideNavbarComponent = (props) => {
 							{props.items.map(item => (
 								item.show &&
 								<li key={item.id}>
-									<a onClick={() => {item.command(); props.setVisible(false);}} className={"p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-100 transition-duration-150 transition-colors w-full"}>
+									<p onClick={() => {item.command(); props.setVisible(false);}} className={"p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-100 transition-duration-150 transition-colors w-full"}>
 										<i className={item.icon}></i>
 										<span className={"font-medium ml-2"}>{item.label}</span>
 										<Ripple />
-									</a>
+									</p>
 								</li>
 							))}
 						</ul>

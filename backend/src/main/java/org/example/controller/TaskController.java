@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.example.MyConfiguration;
 import org.example.model.KeywordsForTasks;
@@ -42,8 +43,7 @@ public class TaskController
 	{
 		try
 		{
-			User user = userService.getUserByToken(token.substring(7));
-			task.setOwnerid(user.getId());
+			//TODO: Validate ownerID with token
 			return taskService.saveTask(task);
 		}
 		catch (ServiceException e)
@@ -149,7 +149,8 @@ public class TaskController
 		{
 			Iterable<TaskListingFilter> tasks = taskService.getAllTasksAsListingFilter();
 
-			for (TaskListingFilter task : tasks) {
+			for (TaskListingFilter task : tasks)
+			{
 				Iterable<KeywordsForTasks> keywordsForTask = keywordsForTasksService.getByKeywordsForTasksObject(
 					KeywordsForTasks.builder()
 						.taskid(task.getId())
@@ -157,7 +158,8 @@ public class TaskController
 				);
 				List<String> keywordsList = new ArrayList<>();
 
-				for (KeywordsForTasks keyword : keywordsForTask) {
+				for (KeywordsForTasks keyword : keywordsForTask)
+				{
 					keywordsList.add(keyword.getKeyword());
 				}
 
@@ -167,15 +169,16 @@ public class TaskController
 			return tasks;
 		}
 
-		if (completed != null && completeduserid == null)
+		if (ownerid == null && ownername != null)
 		{
-			completeduserid = userService.getUserByToken(token.substring(7)).getId();
-		}
-
-		if (ownerid == null && ownername != null) {
-			ownerid = userService.getByUsersObject(User.builder()
+			Iterator<User> userIterator = userService.getByUsersObject(User.builder()
 				.username(ownername).build()
-			).iterator().next().getId();
+			).iterator();
+
+			if (userIterator.hasNext())
+			{
+				ownerid = userIterator.next().getId();
+			}
 		}
 
 		Iterable<TaskListingFilter> tasks = taskService.getTasksByFilter(TaskListingFilter.builder()
@@ -192,7 +195,8 @@ public class TaskController
 			.build()
 		);
 
-		for (TaskListingFilter task : tasks) {
+		for (TaskListingFilter task : tasks)
+		{
 			Iterable<KeywordsForTasks> keywordsForTask = keywordsForTasksService.getByKeywordsForTasksObject(
 				KeywordsForTasks.builder()
 					.taskid(task.getId())
@@ -200,7 +204,8 @@ public class TaskController
 			);
 			List<String> keywordsList = new ArrayList<>();
 
-			for (KeywordsForTasks keyword : keywordsForTask) {
+			for (KeywordsForTasks keyword : keywordsForTask)
+			{
 				keywordsList.add(keyword.getKeyword());
 			}
 
@@ -284,6 +289,30 @@ public class TaskController
 		try
 		{
 			keywordsForTasksService.deleteKeywordForTask(id);
+		}
+		catch (ServiceException e)
+		{
+			switch (e.getServiceExceptionTypeEnum())
+			{
+				case ID_NOT_FOUND:
+					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+				default:
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+			}
+		}
+		catch (Exception e)
+		{
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+	}
+
+	@RequestMapping(value = "{id}/keyword", method = RequestMethod.DELETE)
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteKeywordsByTaskid(@PathVariable(value = "id") Long taskId)
+	{
+		try
+		{
+			keywordsForTasksService.deleteKeywordsByTaskId(taskId);
 		}
 		catch (ServiceException e)
 		{

@@ -1,13 +1,16 @@
 import Navbar from './components/navbar/navbar'
 import {Outlet} from 'react-router-dom'
 import {CookiesProvider} from 'react-cookie'
+import AuthProvider from './contexts/AuthContext'
 
 function App() {
     return (
         <>
-            <Navbar />
             <CookiesProvider>
-                <Outlet />
+                <AuthProvider>
+                    <Navbar />
+                    <Outlet />
+                </AuthProvider>
             </CookiesProvider>
         </>
     );

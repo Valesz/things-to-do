@@ -1,9 +1,10 @@
-import {serverEndpoint} from '../config/server-properties'
-import {formatDate} from '../utils/utilityService'
+import {formatDate, makeKeywordObjectForBackEnd} from '../utils/utilityService'
+import {fetchJson, fetchText} from './fetchService'
+import {addKeywords, deleteKeywords} from './keywordService'
 
 const baseEndpoint = "/api/task/";
 
-export async function fetchTasks(name, keywords, date, completed, creatorName) {
+export async function fetchTasks({id, name, keywords, date, completed, ownerId, creatorName} = {}) {
 
 	const requestOptions = {
 		method: "GET",
@@ -13,38 +14,27 @@ export async function fetchTasks(name, keywords, date, completed, creatorName) {
 	};
 
 	const params = "?1=1" +
+		(id ? "&id=" + id : "") +
 		(name && name !== "" ? "&name=" + name : "") +
 		(keywords && keywords.length > 0 ? "&keywords=" + keywords.join("&keywords=") : "") +
 		(date ?
 			(date[0] !== null ? "&createdafter=" + formatDate(date[0]) : "") +
 			(date[1] !== null ? "&createdbefore=" + formatDate(date[1]) : "")
 			: "") +
-		(completed ? "&completed=" + completed : "") +
-		(creatorName ? "&ownername=" + creatorName : "");
+		(completed !== undefined ? "&completed=" + completed : "") +
+		(creatorName ? "&ownername=" + creatorName : "") +
+		(ownerId ? "&ownerid=" + ownerId : "");
 
-	return await fetch(serverEndpoint + baseEndpoint + params, requestOptions)
-		.then(async (response) => {
-			const isJson = response.headers.get("content-type")?.includes("application/json");
-			const data = isJson && await response.json();
-
-			if (!response.ok) {
-				const error = (data && data.message) || response.status;
-				return await Promise.reject(error);
-			}
-
-			if (data) {
-				return await Promise.resolve(data);
-			}
-		});
+	return await fetchJson(baseEndpoint + params, requestOptions);
 }
 
-export async function addTasks(authToken, name, description, mainTaskId = null, timeofcreation) {
+export async function addTasks({authToken, name, description, mainTaskId = null, ownerId, timeofcreation, keywords} = {}) {
 
 	if (authToken === undefined) {
 		return undefined;
 	}
 
-	const requestOptionsTask = {
+	const requestOptions = {
 		method: "POST",
 		headers: {
 			'Content-Type': 'application/json',
@@ -54,22 +44,87 @@ export async function addTasks(authToken, name, description, mainTaskId = null, 
 			name: name,
 			description: description,
 			mainTaskId: mainTaskId,
+			ownerid: ownerId,
 			timeofcreation: formatDate(timeofcreation),
 		})
 	};
 
-	return await fetch(serverEndpoint + baseEndpoint, requestOptionsTask)
-		.then(async (response) => {
-			const isJson = response.headers.get("content-type")?.includes("application/json");
-			const task = isJson && await response.json();
-
-			if (response.status !== 201) {
-				const error = (task && task.message) || response.status;
-				return await Promise.reject(error);
+	return await fetchJson(baseEndpoint, requestOptions)
+		.then (async task => {
+			if (keywords) {
+				await addKeywords(authToken, makeKeywordObjectForBackEnd(keywords, task.id))
+					.then(keywords => {
+						task.keywords = keywords.map(keyword => keyword.keyword);
+					})
+					.catch(async error => {
+						console.log(error);
+						return await Promise.reject(error);
+					});
 			}
 
-			if (task) {
-				return await Promise.resolve(task);
+			return await Promise.resolve(task);
+		})
+}
+
+export async function updateTask({authToken, id, name, description, mainTaskId, ownerId, timeofcreation, keywords}) {
+	if (!authToken || !id) {
+		return undefined;
+	}
+
+	const requestOptions = {
+		method: "PUT",
+		headers: {
+			'content-type': 'application/json',
+			'Authorization': "Bearer " + authToken,
+		},
+		body: JSON.stringify({
+			id: id,
+			name: name,
+			description: description,
+			mainTaskId: mainTaskId,
+			ownerId: ownerId,
+			timeofcreation: timeofcreation,
+		})
+	};
+
+	return await fetchJson(baseEndpoint, requestOptions)
+		.then(async task => {
+			if (keywords) {
+				const res = await deleteKeywords(authToken, id)
+					.catch(async error => {
+						console.log(error);
+						return await Promise.reject(error);
+					});
+
+				if (res) {
+					return await Promise.reject(res);
+				}
+
+				await addKeywords(authToken, makeKeywordObjectForBackEnd(keywords, task.id))
+					.then(keywords => {
+						task.keywords = keywords.map(keyword => keyword.keyword);
+					})
+					.catch(async error => {
+						console.log(error);
+						return await Promise.reject(error);
+					});
 			}
+
+			return await Promise.resolve(task);
 		});
+}
+
+export async function deleteTask({authToken, id} = {}) {
+	if (authToken === undefined) {
+		return undefined;
+	}
+
+	const requestOptions = {
+		method: "DELETE",
+		headers: {
+			'Authorization': "Bearer " + authToken
+		}
+	}
+
+	return await fetchText(baseEndpoint + `${id}`, requestOptions);
 }

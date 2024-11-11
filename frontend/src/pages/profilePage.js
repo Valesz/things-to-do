@@ -1,117 +1,155 @@
 import {useParams} from 'react-router-dom'
 
-import {Card} from 'primereact/card';
-import {Button} from 'primereact/button'
-import {useEffect, useState} from 'react'
-import {useCookies} from 'react-cookie'
-import {serverEndpoint} from '../config/server-properties'
-import {Ripple} from 'primereact/ripple'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {fetchUser} from '../services/userService'
+import {useAuth} from '../contexts/AuthContext'
+import ProfileBlock from '../components/profile/profileBlock'
+import {Toast} from 'primereact/toast'
+import TaskListing from '../components/task/list/taskListing'
+import {deleteTask, fetchTasks} from '../services/taskService'
+import {TabPanel, TabView} from 'primereact/tabview'
+import {confirmDialog, ConfirmDialog} from 'primereact/confirmdialog'
+import ModifyTaskComponent from '../components/task/modify/modifyTaskComponent'
 
 function ProfilePage() {
-	const [authCookie] = useCookies(["authToken"])
-	const [user, setUser] = useState();
+	const [user, token] = useAuth();
+	const [localUser, setLocalUser] = useState(null);
 	const { id } = useParams();
+	const toastRef = useRef(null);
+	const [tasks, setTasks] = useState([]);
+	const [modifyVisible, setModifyVisible] = useState(false);
+	const [modifyTask, setModifyTask] = useState({
+		name: "",
+		keywords: [],
+		description: "",
+	});
 
-	const requestOptions = {
-		method: "GET",
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': "Bearer " + authCookie.authToken,
-		},
-	};
+	const getUserCallback = useCallback(async () => {
+		if (id === undefined) {
+			setLocalUser(user);
+			return;
+		}
 
-	useEffect(  () => {
-
-		const fetchUserById = async () => await fetch(
-			id !== undefined ?
-				serverEndpoint + "/api/user/?id=" + id :
-				serverEndpoint + "/api/user/token?token=" + authCookie.authToken,
-			requestOptions
-		);
-
-		fetchUserById()
-			.then(async response => {
-				const isJson = response.headers.get("content-type")?.includes("application/json");
-				const data = isJson && await response.json();
-
-				if (!response.ok) {
-					const error = (data && data.message) || response.status;
-					return Promise.reject(error);
-				}
-
-				if (data) {
-					if (data.length === 0) {
-						return;
-					}
-
-					setUser(data[0] || data);
-					console.log(data[0] || data);
-				}
+		await fetchUser({id: id})
+			.then(userData => {
+				setLocalUser(userData[0]);
 			})
 			.catch(error => {
-				console.log(error)
-			})
-	}, [])
+				toastRef.current.show({severity: 'error', summary: "Couldn't load user", detail: error})
+			});
 
-	if (user === undefined) {
-		return (
-			<Card title={"User not found"}>
-				<p className={""}>
-					User not found
-				</p>
-				<Button label={"User not Found"} rounded />
-			</Card>
-		)
+	}, [id, user]);
+
+	useEffect(() => {
+		getUserCallback();
+	}, [getUserCallback])
+
+	const getTasksOfUser = useCallback(async () => {
+		if (!localUser) {
+			return;
+		}
+
+		console.log("Fetching tasks")
+
+		await fetchTasks({ownerId: localUser.id})
+			.then((tasks) => {
+				setTasks(tasks);
+			})
+			.catch(error => {
+				toastRef.current.show({severity: 'error', summary: "Failed to get tasks", detail: error});
+			});
+		// eslint-disable-next-line
+	}, [localUser]);
+
+	useEffect(() => {
+		getTasksOfUser();
+	}, [getTasksOfUser]);
+
+	const deleteTaskCallback = useCallback(async (id) => {
+		if (!id) {
+			return;
+		}
+
+		await deleteTask({authToken: token, id: id})
+			.then(async () => {
+				console.log(tasks);
+				await setTasks(() => {
+					const index = tasks.findIndex((task) => task.id === id);
+					if (index > -1) {
+						return tasks.toSpliced(index, 1);
+					}
+					return tasks;
+				})
+				toastRef.current.show({severity: 'success', summary: `Deletion successful`});
+			})
+			.catch(error => {
+				toastRef.current.show({severity: 'error', summary: 'Deletion failed', detail: error});
+			});
+	}, [token, tasks])
+
+	const confirmDelete = (id) => {
+		confirmDialog({
+			message: "Are you sure you want to delete this task?",
+			header: <span className={"text-red-400 bold"}>Delete Confirmation</span>,
+			icon: "pi pi-times-circle text-red-400",
+			defaultFocus: "reject",
+			acceptClassName: "p-button-danger",
+			accept: () => deleteTaskCallback(id),
+		});
+	};
+
+	const openModify = (task) => {
+		setModifyTask(task);
+		setModifyVisible(true);
 	}
 
-	const header = (
-		<h1 className={'border-x-3 border-primary text-center'}>{user.username}'s Profile</h1>
-	);
+	const ownButtons = [
+		{
+			label: "Modify Task",
+			onClick: openModify,
+			param: "all",
+		},
+		{
+			label: "Delete Task",
+			severity: "danger",
+			onClick: confirmDelete,
+			param: "id",
+		}
+	]
 
-	const footer = (
-		<div className={"flex flex-column w-full sm:w-5 gap-2 justify-content-center mx-auto"}>
-			<Button label={'Modify profile'} rounded/>
-			<Button label={'Delete profile'} severity={"danger"} rounded/>
-			<Ripple />
-		</div>
-	);
+	const viewButtons = [
+		{
+			label: "Submit Solution",
+			className: "bg-green-500"
+		},
+		{
+			label: "View Solutions",
+		}
+	]
 
 	return (
-		<div className={'px-5 flex align-items-center justify-content-center h-screen'}>
-			<Card className={"w-full md:w-full lg:w-5"} header={header} footer={footer}>
-				<div className={'grid'}>
-					<div className={'col-6 text-right'}>
-						Username:
-					</div>
-					<div className={'col-6'}>
-						{user.username}
-					</div>
-					<div className={'col-6 text-right'}>
-						Email:
-					</div>
-					<div className={'col-6'}>
-						{user.email}
-					</div>
-					<div className={'col-6 text-right'}>
-						Joined on:
-					</div>
-					<div className={'col-6'}>
-						{user.timeofcreation}
-					</div>
-					<div className={'col-6 text-right'}>
-						Classification:
-					</div>
-					<div className={'col-6'}>
-						{user.classification ? user.classification > 0.5 ? "Group 1" : "Group 2" : "Unidentifiable"}
-					</div>
-					<div className={'col-6 text-right'}>
-						Precision:
-					</div>
-					<div className={'col-6'}>
-						{user.precisionofanswers ? user.precisionofanswers * 100 + "%" : "Unidentifiable"}
-					</div>
-				</div>
-			</Card>
+		<div>
+			<ProfileBlock user={localUser} />
+			{ localUser &&
+				<TabView className={"px-2 lg:px-8"} pt={{panelContainer: {className: "p-0"}}}>
+					<TabPanel header={"Tasks created"}>
+						<TaskListing
+							taskList={tasks}
+							buttons={(user && user.id === localUser.id && ownButtons) || viewButtons}
+							className={"col-12 mx-auto"}
+						/>
+					</TabPanel>
+				</TabView>
+			}
+			<ConfirmDialog />
+			<ModifyTaskComponent
+				visible={modifyVisible}
+				setVisible={setModifyVisible}
+				toastRef={toastRef}
+				setTasks={setTasks}
+				task={modifyTask}
+			/>
+			<Toast ref={toastRef} />
 		</div>
 	);
 }

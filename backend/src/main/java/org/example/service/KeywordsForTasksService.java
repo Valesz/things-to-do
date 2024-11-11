@@ -22,5 +22,7 @@ public interface KeywordsForTasksService
 
 	void deleteKeyword(String keyword);
 
+	void deleteKeywordsByTaskId(long taskId);
+
 	void deleteAllKeywordsForAllTasks();
 }

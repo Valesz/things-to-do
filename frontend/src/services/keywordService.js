@@ -1,9 +1,9 @@
-import {serverEndpoint} from '../config/server-properties'
+import {fetchJson, fetchText} from './fetchService'
 
 const baseEndpoint = "/api/task/keyword/";
 
 export async function addKeywords(authToken, keywordsList) {
-	const requestOptionsKeywords = {
+	const requestOptions = {
 		method: "POST",
 		headers: {
 			'Content-Type': 'application/json',
@@ -12,18 +12,17 @@ export async function addKeywords(authToken, keywordsList) {
 		body: JSON.stringify(keywordsList)
 	}
 
-	return await fetch(serverEndpoint + baseEndpoint, requestOptionsKeywords)
-		.then(async (response) => {
-			const isJson = response.headers.get("content-type")?.includes("application/json");
-			const data = isJson && await response.json();
+	return await fetchJson(baseEndpoint, requestOptions)
+}
 
-			if (response.status !== 201) {
-				const error = (data && data.message) || response.status;
-				return await Promise.reject(error);
-			}
+export async function deleteKeywords(authToken, taskId) {
+	const requestOptions = {
+		method: "DELETE",
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': "Bearer " + authToken,
+		},
+	}
 
-			if (data) {
-				return await Promise.resolve(data);
-			}
-		})
+	return await fetchText(`/api/task/${taskId}/keyword`, requestOptions);
 }

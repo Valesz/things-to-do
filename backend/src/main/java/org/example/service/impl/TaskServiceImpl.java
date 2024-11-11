@@ -113,12 +113,12 @@ public class TaskServiceImpl implements TaskService
 			sb.append(" INNER JOIN \"keywordsForTasks\" ON TASK.id = \"keywordsForTasks\".taskId ");
 		}
 
-		if (filter.getCompletedUserId() != null)
+		if (filter.getCompletedUserId() != null || filter.getCompleted() != null)
 		{
 			sb.append(" LEFT JOIN \"submission\" ON TASK.id = \"submission\".taskId ");
 		}
 
-		if (Boolean.FALSE.equals(filter.getCompleted()))
+		if (Boolean.FALSE.equals(filter.getCompleted()) && filter.getCompletedUserId() != null)
 		{
 			sb.append(" AND SUBMITTERID = :userid ");
 		}
@@ -181,15 +181,16 @@ public class TaskServiceImpl implements TaskService
 			sb.append(" ) ");
 		}
 
-		if (filter.getCompletedUserId() != null)
+		if (filter.getCompleted() != null)
 		{
-			if (Boolean.TRUE.equals(filter.getCompleted()))
+			if (filter.getCompleted() && filter.getCompletedUserId() != null)
 			{
-				sb.append(" AND \"submission\".submitterId = :userid ");
+				sb.append(" AND SUBMITTERID = :userid ");
 			}
 			else
 			{
-				sb.append(" AND SUBMITTERID IS NULL ");
+				sb.append(" AND SUBMITTERID IS ");
+				sb.append(filter.getCompleted() ? " NOT NULL " : " NULL ");
 			}
 		}
 
@@ -199,7 +200,7 @@ public class TaskServiceImpl implements TaskService
 		{
 			sb.append(" ORDER BY KEYWORDSMATCHING DESC ");
 		} else {
-			sb.append(" ORDER BY TASK.TIMEOFCREATION ASC ");
+			sb.append(" ORDER BY TASK.TIMEOFCREATION DESC ");
 		}
 
 		return sb.toString();

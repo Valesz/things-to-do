@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.model.KeywordsForTasks;
+import org.example.model.Task;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.repository.TaskRepository;
 import org.example.service.KeywordsForTasksService;
@@ -226,6 +227,20 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	public void deleteKeyword(String keyword)
 	{
 		keywordsForTasksRepository.deleteKeyword(keyword);
+	}
+
+	@Override
+	public void deleteKeywordsByTaskId(long taskId)
+	{
+		Task found = taskRepository.findById(taskId).orElse(null);
+
+		if (found == null) {
+			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
+				"Task with id " + taskId + " doesn't exist."
+			);
+		}
+
+		keywordsForTasksRepository.deleteKeywordsByTaskId(taskId);
 	}
 
 	@Override

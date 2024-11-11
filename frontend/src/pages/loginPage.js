@@ -1,11 +1,15 @@
-import LoginComponent from '../components/login-register/loginComponent'
+import LoginComponent from '../components/login-register/login/loginComponent'
 import {Divider} from 'primereact/divider'
-import RegisterComponent from '../components/login-register/registerComponent'
+import RegisterComponent from '../components/login-register/register/registerComponent'
+import {useRef} from 'react'
+import {Toast} from 'primereact/toast'
 
 const LoginPage = () => {
+	const toastRef = useRef();
+
 	return (
-		<div className={"flex justify-content-center align-items-center h-screen flex-column md:flex-row"}>
-			<LoginComponent />
+		<div className={"flex justify-content-center align-items-center h-screen flex-column md:flex-row mt-6"}>
+			<LoginComponent toastRef={toastRef} />
 			<div className={"h-2 md:h-full w-full md:w-2"}>
 				<Divider layout="vertical" className="hidden md:flex">
 					<b>OR</b>
@@ -14,7 +18,8 @@ const LoginPage = () => {
 					<b>OR</b>
 				</Divider>
 			</div>
-			<RegisterComponent />
+			<RegisterComponent toastRef={toastRef} />
+			<Toast ref={toastRef} />
 		</div>
 	);
 }

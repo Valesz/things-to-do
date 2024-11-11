@@ -2,36 +2,37 @@ import {Button} from 'primereact/button'
 import {Toolbar} from 'primereact/toolbar';
 
 import {useNavigate} from 'react-router-dom'
-import {useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import SideNavbarComponent from './sideNavbar'
 import {ButtonGroup} from 'primereact/buttongroup'
-import {useCookies} from 'react-cookie'
 
 import 'primereact/resources/themes/lara-dark-teal/theme.css';
+import {useAuth} from '../../contexts/AuthContext'
 
 const NavbarComponent = () => {
 	const navigate = useNavigate();
 	const [openSidebar, setOpenSidebar] = useState(false);
+	const [navItems, setNavItems] = useState([]);
 
-	const [cookies, setCookies] = useCookies(['authToken'])
+	const [user,,, logoutAction] = useAuth();
 
-	const items = [
+	const items = useMemo( () => [
 		{
 			id: 'text-home',
 			label: "Home",
 			icon: "pi pi-home",
 			show: true,
 			command: () => {
-				navigate("/")
+				navigate("/");
 			},
 		},
 		{
 			id: 'text-profile',
 			label: "Profile",
 			icon: "pi pi-user",
-			show: cookies.authToken !== undefined,
+			show: user,
 			command: () => {
-				navigate("/profile")
+				navigate("/profile");
 			},
 		},
 		{
@@ -40,29 +41,37 @@ const NavbarComponent = () => {
 			icon: "pi pi-list-check",
 			show: true,
 			command: () => {
-				navigate("/task")
+				navigate("/task");
 			}
 		},
 		{
 			id: "login",
 			label: "Login",
 			icon: "pi pi-user",
-			show: cookies.authToken === undefined,
+			show: !user,
 			command: () => {
-				navigate("/login")
+				navigate("/login");
 			},
 		},
 		{
 			id: 'logout',
 			label: 'Logout',
 			icon: 'pi pi-sign-out',
-			show: cookies.authToken !== undefined,
-			command: () => {
-				navigate("/login")
-				setCookies("authToken", "", {sameSite: 'strict', path: "/", maxAge: 0})
+			show: user,
+			command: async () => {
+				await navigate("/login");
+				await logoutAction();
 			}
 		}
-	]
+	], [user, logoutAction, navigate]);
+
+	useEffect(() => {
+		setNavItems(() => {
+			return items.map((item) => {
+				return item.show ? item : undefined;
+			})
+		});
+	}, [items])
 
 	const start = (
 		<>
@@ -86,8 +95,8 @@ const NavbarComponent = () => {
 	const end = (
 		<>
 			<ButtonGroup className={'align-items-center hidden lg:block'}>
-				{items.map(item => (
-					<Button key={item.id} visible={item.show} label={item.label} icon={item.icon} text={item.id.startsWith('text')} onClick={item.command} />
+				{navItems.map(item => (
+					item && <Button key={item.id} visible={item.show} label={item.label} icon={item.icon} text={item.id.startsWith('text')} onClick={item.command}/>
 				))}
 			</ButtonGroup>
 			<Button className={"flex lg:hidden"} icon={"pi pi-bars"} onClick={() => setOpenSidebar(true)} />

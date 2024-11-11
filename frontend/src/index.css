@@ -6,3 +6,13 @@ html, body {
 .grow-on-hover:hover {
 	scale: 110% 110%;
 }
+
+* {
+	scroll-behavior: smooth;
+}
+
+@-moz-document url-prefix(){
+	* {
+		scroll-behavior: auto;
+	}
+}
