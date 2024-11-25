@@ -6,7 +6,7 @@ import java.util.List;
 import org.example.MyConfiguration;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
-import org.example.model.TaskListingFilter;
+import org.example.model.listing.TaskListingFilter;
 import org.example.model.User;
 import org.example.service.KeywordsForTasksService;
 import org.example.service.TaskService;

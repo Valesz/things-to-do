@@ -1,93 +1,184 @@
-import {Button} from 'primereact/button';
-import {useCallback, useEffect, useRef, useState} from 'react'
-import TaskFilterSidebarComponent from '../components/task/filter/sidebar/taskFilterSidebarVisual'
-import {InputText} from 'primereact/inputtext'
-import {FloatLabel} from 'primereact/floatlabel'
-import {Tooltip} from 'primereact/tooltip'
-import {Toast} from 'primereact/toast'
-import {Fieldset} from 'primereact/fieldset'
-import TaskFilterComponent from '../components/task/filter/taskFilterComponent'
-import AddTaskComponent from '../components/task/add/addTaskComponent'
+import {useNavigate, useParams} from 'react-router-dom'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {fetchTasks} from '../services/taskService'
-import TaskListing from '../components/task/list/taskListing'
+import TaskBlock from '../components/task/list/taskBlock'
+import {Divider} from 'primereact/divider'
+import SubmissionListing from '../components/submission/list/submissionListing'
+import {deleteSubmission, fetchSubmission} from '../services/submissionService'
+import {Toast} from 'primereact/toast'
+import {TabPanel} from 'primereact/tabview'
+import AddSubmissionComponent from '../components/submission/add/addSubmissionComponent'
+import SubmissionBlock from '../components/submission/list/submissionBlock'
+import DynamicTabView from '../components/dynamicTabView'
+import {confirmDeleteDialog, openDialog, updateDeleteButtons} from '../utils/constants/buttons'
 import {useAuth} from '../contexts/AuthContext'
+import {ConfirmDialog} from 'primereact/confirmdialog'
+import ModifySubmissionComponent from '../components/submission/modify/modifySubmissionComponent'
 
 const TaskPage = () => {
-	const [tasks, setTasks] = useState([]);
-	const toastRef = useRef();
+	const [task, setTask] = useState({})
+	const [submissions, setSubmissions] = useState([])
+	const {taskId, solutionId, activeTab} = useParams()
+	const [activeTabIndex, setActiveTabIndex] = useState(0)
+	const [extraSubmissionIds, setExtraSubmissionIds] = useState(solutionId ? [parseInt(solutionId)] : [])
+	const [submissionModifyVisible, setSubmissionModifyVisible] = useState(false)
+	const [modifySubmission, setModifySubmission] = useState({description: ''})
 
-	const [toggleFilter, setToggleFilter] = useState(false);
-	const [toggleAdd, setToggleAdd] = useState(false);
+	const navigate = useNavigate()
 
-	const [filterTaskName, setFilterTaskName] = useState("");
+	const toastRef = useRef()
 
-	const [user] = useAuth();
-
-	const fetchTasksCallback = useCallback(async () => {
-		await fetchTasks({name: filterTaskName})
-			.then((tasks) => {
-				setTasks(tasks);
-			})
-			.catch((error) => {
-				toastRef.current.show({severity: 'error', summary: "Listing error", detail: error})
-			})
-	}, [filterTaskName])
+	const [user, token] = useAuth()
 
 	useEffect(() => {
-		fetchTasksCallback();
-	}, [fetchTasksCallback])
+		!solutionId && setActiveTabIndex(() => {
+			switch (activeTab) {
+				case 'submit':
+					return 0
+				case 'solutions':
+					return 1
+				default:
+					return 0
+			}
+		})
 
-	const buttons = [
-		{
-			label: "Submit Solution",
-			className: "bg-green-500"
-		},
-		{
-			label: "View Solutions",
+		solutionId && setActiveTabIndex(2)
+
+		//eslint-disable-next-line
+	}, [activeTab])
+
+	const getTask = useCallback(async () => {
+		await fetchTasks({id: taskId})
+			.then(task => {
+				setTask(task[0])
+			})
+			.catch(error => {
+				toastRef.current.show({severity: 'error', summary: 'Failed to get task', detail: error})
+			})
+	}, [taskId])
+
+	useEffect(() => {
+		getTask()
+	}, [getTask])
+
+	const getSubmissions = useCallback(async () => {
+		await fetchSubmission({taskId: taskId})
+			.then(submissions => {
+				setSubmissions(submissions)
+			})
+			.catch(error => {
+				toastRef.current.show({severity: 'error', summary: 'Failed to get submissions', detail: error})
+			})
+	}, [taskId])
+
+	useEffect(() => {
+		getSubmissions()
+	}, [getSubmissions])
+
+	const addExtraTabId = useCallback((id) => {
+		if (!extraSubmissionIds.some(_id => _id === id)) {
+			setExtraSubmissionIds(prevState => [...prevState, id])
+			setActiveTabIndex(extraSubmissionIds.length + 2)
+		} else {
+			setActiveTabIndex(extraSubmissionIds.indexOf(id) + 2)
 		}
-	]
+	}, [extraSubmissionIds])
 
-	if (tasks === undefined) {
+	const submissionButtons = useMemo(() => [
+		{
+			label: 'View',
+			onClick: (id) => {
+				addExtraTabId(id)
+				navigate(`/task/${taskId}/solutions/${id}`)
+			},
+			param: 'id'
+		}
+	], [navigate, taskId, addExtraTabId])
 
-		return (
-			<div className={"flex justify-content-center align-items-center h-screen w-full"}>
-				<p>Loading...</p>
-			</div>
-		)
-	}
+	const deleteSubmissionCallback = useCallback(async (id) => {
+		if (!id) {
+			return
+		}
+
+		await deleteSubmission(token, id)
+			.then(() => {
+				setSubmissions(prevState => [...prevState.filter(submission => submission.id !== id)])
+				setExtraSubmissionIds(prevState => [...prevState.filter(_id => _id !== id)])
+				setActiveTabIndex(prevState => prevState - 1)
+				toastRef.current.show({severity: 'success', detail: 'Solution deleted successfully!'})
+			})
+			.catch(error => {
+				toastRef.current.show({severity: 'error', summary: 'Failed to delete solution', detail: error.message})
+			})
+	}, [token])
+
+	const baseTabs = useMemo(() => [
+		<TabPanel header={'Submit solutions'} key={-1}>
+			<AddSubmissionComponent
+				task={task}
+				setSubmissions={setSubmissions}
+				toastRef={toastRef}
+				onAdd={() => setActiveTabIndex(1)}
+			/>
+		</TabPanel>,
+		<TabPanel header={'View solutions'} key={-2}>
+			<SubmissionListing
+				submissionList={submissions}
+				titleShow={'submitter'}
+				buttons={submissionButtons}
+			/>
+		</TabPanel>
+	], [submissions, task, submissionButtons])
 
 	return (
-		<div className={'flex flex-column justify-content-start align-items-center h-screen w-full gap-3 mt-6'}>
-			<div className={'flex flex-row gap-3 w-full justify-content-center lg:hidden'}>
-				<FloatLabel>
-					<InputText onBlur={fetchTasksCallback} className="p-inputtext md:p-inputtext-lg" id="taskName" value={filterTaskName} onChange={(e) => setFilterTaskName(e.target.value)} />
-					<label htmlFor="taskName" className={"p-component"}>Task Name</label>
-				</FloatLabel>
-				<Button label={"Filter"} outlined className={"hidden md:block"} icon={"pi pi-filter"} onClick={() => setToggleFilter(!toggleFilter)} />
-				<Button outlined className={"block md:hidden"} icon={"pi pi-filter"} onClick={() => setToggleFilter(!toggleFilter)} />
-			</div>
-
-			<div className={"grid grid-nogutter w-full"}>
-				<div className={"hidden lg:block"} style={{transform: "translate(0%, -1.5rem)"}}>
-					<Fieldset legend={"Filter"} className={"col-1 xl:ml-3 overflow-y-auto w-20rem"}>
-						<TaskFilterComponent setTasks={setTasks} toastRef={toastRef} />
-					</Fieldset>
+		<div className={'p-component w-full px-3 lg:px-6 mt-4'} style={{height: 'fit-content', maxHeight: '100vh'}}>
+			<div className={'w-full grid grid-nogutter surface-card h-full'}>
+				<div className={'col-12 lg:col-6'}>
+					<TaskBlock task={task} index={0}/>
 				</div>
-				<TaskListing taskList={tasks} buttons={buttons} />
-
+				<Divider layout={'vertical'} className={'hidden lg:block p-0 m-0'}/>
+				<Divider layout={'horizontal'} className={'block lg:hidden p-0 mt-0'}/>
+				<div className={'col-12 lg:col-6 px-0 lg:px-4'}>
+					{
+						submissions &&
+						<DynamicTabView
+							activeTabIndex={activeTabIndex}
+							setActiveTabIndex={setActiveTabIndex}
+							tabTemplate={(id) => (
+								<TabPanel header={`Solution ${id}`} key={id} closable={true}>
+									<SubmissionBlock
+										submission={submissions.find(submission => submission.id === parseInt(id))}
+										buttons={
+											user && submissions.find(submissions => submissions.id === parseInt(id))?.submitterid === user.id ?
+												updateDeleteButtons('Modify Solution', 'Delete submission',
+													(submission) => openDialog(setSubmissionModifyVisible, () => setModifySubmission(submission)),
+													(id) => confirmDeleteDialog(id, 'Are you sure you want to delete this solution?', deleteSubmissionCallback))
+												: undefined
+										}
+										titleShow={'submitter'}
+									/>
+								</TabPanel>
+							)}
+							baseTabs={baseTabs}
+							extraTabValues={extraSubmissionIds}
+							onTabClose={(e) => {
+								setExtraSubmissionIds(prevState => [...prevState.filter((id, index) => index !== e.index - baseTabs.length)])
+							}}
+						/>
+					}
+				</div>
 			</div>
-			{user && (
-				<>
-					<Button className={"hidden lg:flex fixed p-speeddial p-component h-6rem "} onClick={() => setToggleAdd(true)} tooltip={"Add your own task!"} tooltipOptions={{position: 'left'}} icon={"pi pi-plus"} label={"Add Task"} rounded raised style={{bottom: 40, right: 40}} />
-					<Button className={"flex lg:hidden fixed p-speeddial p-component h-5rem w-5rem"} onClick={() => setToggleAdd(true)} icon={"pi pi-plus"} rounded raised style={{bottom: 20, right: 20}} />
-				</>
-			)}
-			<Tooltip target={".p-speeddial-action"} position={"left"} />
-			<Toast ref={toastRef} position={'top-left'} />
-			{user && <AddTaskComponent visible={toggleAdd} setVisible={setToggleAdd} toastRef={toastRef} setTasks={setTasks} />}
-			<TaskFilterSidebarComponent setTasks={setTasks} visible={toggleFilter} onHide={() => setToggleFilter(false)}/>
+			<ConfirmDialog dismissableMask={true}/>
+			<ModifySubmissionComponent
+				setVisible={setSubmissionModifyVisible}
+				visible={submissionModifyVisible}
+				setSubmissions={setSubmissions}
+				toastRef={toastRef}
+				submission={modifySubmission}
+			/>
+			<Toast ref={toastRef}/>
 		</div>
-	);
+	)
 }
 
-export default TaskPage;
+export default TaskPage

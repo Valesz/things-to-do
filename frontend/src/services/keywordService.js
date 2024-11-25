@@ -1,13 +1,13 @@
 import {fetchJson, fetchText} from './fetchService'
 
-const baseEndpoint = "/api/task/keyword/";
+const baseEndpoint = '/api/task/keyword/'
 
 export async function addKeywords(authToken, keywordsList) {
 	const requestOptions = {
-		method: "POST",
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': "Bearer " + authToken,
+			'Authorization': 'Bearer ' + authToken
 		},
 		body: JSON.stringify(keywordsList)
 	}
@@ -17,12 +17,12 @@ export async function addKeywords(authToken, keywordsList) {
 
 export async function deleteKeywords(authToken, taskId) {
 	const requestOptions = {
-		method: "DELETE",
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': "Bearer " + authToken,
-		},
+			'Authorization': 'Bearer ' + authToken
+		}
 	}
 
-	return await fetchText(`/api/task/${taskId}/keyword`, requestOptions);
+	return await fetchText(`/api/task/${taskId}/keyword`, requestOptions)
 }

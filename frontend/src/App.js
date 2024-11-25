@@ -4,16 +4,14 @@ import {CookiesProvider} from 'react-cookie'
 import AuthProvider from './contexts/AuthContext'
 
 function App() {
-    return (
-        <>
-            <CookiesProvider>
-                <AuthProvider>
-                    <Navbar />
-                    <Outlet />
-                </AuthProvider>
-            </CookiesProvider>
-        </>
-    );
+	return (
+		<CookiesProvider>
+			<AuthProvider>
+				<Navbar/>
+				<Outlet/>
+			</AuthProvider>
+		</CookiesProvider>
+	)
 }
 
-export default App;
+export default App

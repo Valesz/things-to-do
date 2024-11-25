@@ -234,7 +234,8 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	{
 		Task found = taskRepository.findById(taskId).orElse(null);
 
-		if (found == null) {
+		if (found == null)
+		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"Task with id " + taskId + " doesn't exist."
 			);

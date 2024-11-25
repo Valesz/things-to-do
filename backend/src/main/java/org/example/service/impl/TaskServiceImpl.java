@@ -3,10 +3,11 @@ package org.example.service.impl;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 import org.example.repository.TaskRepository;
 import org.example.model.Task;
 import org.example.repository.UserRepository;
-import org.example.model.TaskListingFilter;
+import org.example.model.listing.TaskListingFilter;
 import org.example.service.TaskService;
 import org.example.utils.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,7 @@ public class TaskServiceImpl implements TaskService
 					.timeofcreation(rs.getDate("timeofcreation").toLocalDate())
 					.maintaskid(rs.getLong("maintaskid") == 0 ? null : rs.getLong("maintaskId"))
 					.ownerid(rs.getLong("ownerId"))
+					.ownername(rs.getString("username"))
 					.keywordsMatching(rs.getLong("keywordsmatching"))
 					.build());
 			}
@@ -105,8 +107,10 @@ public class TaskServiceImpl implements TaskService
 	private String constructQueryByFilter(TaskListingFilter filter)
 	{
 		StringBuilder sb = new StringBuilder(" SELECT " +
-			"TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, COUNT(*) AS KEYWORDSMATCHING " +
+			"TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, USERNAME, COUNT(*) AS KEYWORDSMATCHING " +
 			"FROM \"task\" TASK");
+
+		sb.append(" INNER JOIN \"user\" USERT on TASK.OWNERID = USERT.ID ");
 
 		if (filter.getKeywords() != null)
 		{
@@ -127,7 +131,7 @@ public class TaskServiceImpl implements TaskService
 
 		if (filter.getId() != null)
 		{
-			sb.append(" AND id = :id ");
+			sb.append(" AND TASK.id = :id ");
 		}
 
 		if (filter.getName() != null)
@@ -145,7 +149,6 @@ public class TaskServiceImpl implements TaskService
 			sb.append(" AND TASK.timeofcreation BETWEEN :createdafter AND :createdbefore ");
 		}
 
-		//TODO: add null searchability
 		if (filter.getMaintaskid() != null)
 		{
 			if (filter.getMaintaskid() <= 0)
@@ -198,9 +201,11 @@ public class TaskServiceImpl implements TaskService
 
 		if (filter.getKeywords() != null)
 		{
-			sb.append(" ORDER BY KEYWORDSMATCHING DESC ");
-		} else {
-			sb.append(" ORDER BY TASK.TIMEOFCREATION DESC ");
+			sb.append(" ORDER BY KEYWORDSMATCHING DESC, ID DESC ");
+		}
+		else
+		{
+			sb.append(" ORDER BY TASK.TIMEOFCREATION DESC, ID DESC ");
 		}
 
 		return sb.toString();
@@ -265,7 +270,7 @@ public class TaskServiceImpl implements TaskService
 	private void validateTaskProperties(Task task) throws ServiceException
 	{
 		String errorMessage = checkForNullProperties(task);
-		if (!errorMessage.isEmpty())
+		if (!StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
 		}
@@ -281,7 +286,7 @@ public class TaskServiceImpl implements TaskService
 	{
 		StringBuilder sb = new StringBuilder();
 
-		if (task.getName() == null)
+		if (StringUtils.isNotBlank(task.getName()))
 		{
 			sb.append("name property not set, ");
 		}

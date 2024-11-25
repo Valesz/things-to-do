@@ -11,7 +11,7 @@ html, body {
 	scroll-behavior: smooth;
 }
 
-@-moz-document url-prefix(){
+@-moz-document url-prefix() {
 	* {
 		scroll-behavior: auto;
 	}

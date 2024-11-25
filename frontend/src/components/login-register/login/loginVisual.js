@@ -1,32 +1,36 @@
 import {Button} from 'primereact/button'
 import {Card} from 'primereact/card'
-import {FloatLabel} from 'primereact/floatlabel'
-import {InputText} from 'primereact/inputtext'
+import FormComponent from '../../form/formComponent'
+import PropTypes from 'prop-types'
 
-const LoginVisual = ({loginCallback, loginError, usernameInput, setUsernameInput, passwordInput, setPasswordInput}) => {
+const LoginVisual = ({formData, setFormData, loginCallback, className, extraButtons}) => {
 	const header = (
-		<h1 className={"border-x-3 border-primary text-center"}>Login</h1>
-	);
-
-	const footer = (
-		<Button icon={"pi pi-user"} label={"Login"} onClick={loginCallback}/>
-	);
+		<h1 className={'border-x-3 border-primary text-center'}>Login</h1>
+	)
 
 	return (
-		<Card header={header} footer={footer} className={"w-10 max-w-max"}>
-			<div className={"flex flex-column gap-4"}>
-				<FloatLabel className={"flex flex-column gap-2"}>
-					<InputText id={'login-username'} invalid={loginError} placeholder={'Enter your username'} value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)}/>
-					<label htmlFor={'login-username'}>Username</label>
-				</FloatLabel>
-
-				<FloatLabel className={"flex flex-column gap-2"}>
-					<InputText id={'login-password'} invalid={loginError} type={"password"} placeholder={'Enter your password'} value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)}/>
-					<label htmlFor={"login-password"}>Password</label>
-				</FloatLabel>
-			</div>
+		<Card header={header} className={className || 'w-10 max-w-max'}>
+			<FormComponent
+				formData={formData}
+				setFormData={setFormData}
+				submitButton={
+					<Button type={'submit'} icon={'pi pi-user'} label={'Login'}/>
+				}
+				extraButtons={extraButtons}
+				className={'flex flex-column gap-4'}
+				buttonsClassName={'flex justify-content-between mt-2'}
+				action={loginCallback}
+			/>
 		</Card>
-	);
+	)
 }
 
-export default LoginVisual;
+export default LoginVisual
+
+LoginVisual.propTypes = {
+	formData: PropTypes.object.isRequired,
+	setFormData: PropTypes.func.isRequired,
+	loginCallback: PropTypes.func.isRequired,
+	className: PropTypes.string,
+	extraButtons: PropTypes.arrayOf(PropTypes.object)
+}

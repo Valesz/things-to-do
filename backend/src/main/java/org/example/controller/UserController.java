@@ -110,7 +110,8 @@ public class UserController
 
 	@RequestMapping(value = "/token", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public User getUserByToken(@RequestHeader(value = "Authorization") String token) {
+	public User getUserByToken(@RequestHeader(value = "Authorization") String token)
+	{
 		return userService.getUserByToken(token.substring(7));
 	}
 

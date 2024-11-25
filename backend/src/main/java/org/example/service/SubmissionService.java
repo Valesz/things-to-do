@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.model.Submission;
+import org.example.model.listing.SubmissionListing;
 import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.springframework.stereotype.Service;
@@ -11,11 +12,11 @@ public interface SubmissionService
 
 	Integer setAcceptance(Long id, SubmissionAcceptanceEnum accepted);
 
-	Iterable<Submission> getAllSubmissions();
+	Iterable<SubmissionListing> getAllSubmissions();
 
 	Submission getSubmissionById(Long id);
 
-	Iterable<Submission> getBySubmissionsObject(Submission submission);
+	Iterable<SubmissionListing> getBySubmissionsObject(Submission submission);
 
 	Submission saveSubmission(Submission submission) throws ServiceException;
 

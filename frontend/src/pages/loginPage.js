@@ -5,12 +5,12 @@ import {useRef} from 'react'
 import {Toast} from 'primereact/toast'
 
 const LoginPage = () => {
-	const toastRef = useRef();
+	const toastRef = useRef()
 
 	return (
-		<div className={"flex justify-content-center align-items-center h-screen flex-column md:flex-row mt-6"}>
-			<LoginComponent toastRef={toastRef} />
-			<div className={"h-2 md:h-full w-full md:w-2"}>
+		<div className={'flex justify-content-center align-items-center h-screen flex-column md:flex-row mt-6 md:mt-0'}>
+			<LoginComponent toastRef={toastRef}/>
+			<div className={'h-2 md:h-full w-full md:w-2'}>
 				<Divider layout="vertical" className="hidden md:flex">
 					<b>OR</b>
 				</Divider>
@@ -18,10 +18,10 @@ const LoginPage = () => {
 					<b>OR</b>
 				</Divider>
 			</div>
-			<RegisterComponent toastRef={toastRef} />
-			<Toast ref={toastRef} />
+			<RegisterComponent toastRef={toastRef}/>
+			<Toast ref={toastRef}/>
 		</div>
-	);
+	)
 }
 
-export default LoginPage;
+export default LoginPage

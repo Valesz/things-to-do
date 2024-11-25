@@ -1,37 +1,35 @@
 import {Button} from 'primereact/button'
 import {Card} from 'primereact/card'
-import {FloatLabel} from 'primereact/floatlabel'
-import {InputText} from 'primereact/inputtext'
+import FormComponent from '../../form/formComponent'
+import PropTypes from 'prop-types'
 
-const RegisterVisual = ({registerCallback, registerError, usernameInput, setUsernameInput, emailInput, setEmailInput, passwordInput, setPasswordInput}) => {
+const RegisterVisual = ({formData, setFormData, registerCallback, extraButtons}) => {
 	const header = (
-		<h1 className={"border-x-3 border-primary text-center"}>Register</h1>
-	);
-
-	const footer = (
-		<Button icon={"pi pi-user-plus"} onClick={registerCallback} label={"Register"} />
-	);
+		<h1 className={'border-x-3 border-primary text-center'}>Register</h1>
+	)
 
 	return (
-		<Card header={header} footer={footer} className={"w-10 max-w-max"}>
-			<div className={"flex flex-column gap-4"}>
-				<FloatLabel>
-					<InputText id={"register-username"} placeholder={"Enter your username"} invalid={registerError} value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
-					<label htmlFor={"register-username"}>Username</label>
-				</FloatLabel>
-
-				<FloatLabel>
-					<InputText id={"register-email"} type={"email"} placeholder={"Enter your email address"} invalid={registerError} value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
-					<label htmlFor={"register-email"}>Email</label>
-				</FloatLabel>
-
-				<FloatLabel>
-					<InputText id={"register-password"} type={"password"} placeholder={"Enter your password"} invalid={registerError} value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
-					<label htmlFor={"register-password"}>Password</label>
-				</FloatLabel>
-			</div>
+		<Card header={header} className={'w-10 max-w-max'}>
+			<FormComponent
+				formData={formData}
+				setFormData={setFormData}
+				className={'flex flex-column gap-4'}
+				buttonsClassName={'flex justify-content-between mt-2'}
+				submitButton={
+					<Button type={'submit'} icon={'pi pi-user-plus'} label={'Register'}/>
+				}
+				extraButtons={extraButtons}
+				action={registerCallback}
+			/>
 		</Card>
-	);
+	)
 }
 
-export default RegisterVisual;
+export default RegisterVisual
+
+RegisterVisual.propTypes = {
+	formData: PropTypes.object.isRequired,
+	setFormData: PropTypes.func.isRequired,
+	registerCallback: PropTypes.func.isRequired,
+	extraButtons: PropTypes.arrayOf(PropTypes.object)
+}

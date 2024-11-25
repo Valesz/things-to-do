@@ -4,7 +4,7 @@ import org.example.AbstractTest;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Submission;
 import org.example.model.Task;
-import org.example.model.TaskListingFilter;
+import org.example.model.listing.TaskListingFilter;
 import org.example.model.User;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.repository.SubmissionRepository;

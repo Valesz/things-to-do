@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.model.Submission;
+import org.example.model.listing.SubmissionListing;
 import org.example.repository.SubmissionRepository;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
@@ -54,9 +55,9 @@ public class SubmissionServiceImpl implements SubmissionService
 	}
 
 	@Override
-	public Iterable<Submission> getAllSubmissions()
+	public Iterable<SubmissionListing> getAllSubmissions()
 	{
-		return submissionRepository.findAll();
+		return submissionRepository.getAllSubmissions();
 	}
 
 	@Override
@@ -66,13 +67,8 @@ public class SubmissionServiceImpl implements SubmissionService
 	}
 
 	@Override
-	public Iterable<Submission> getBySubmissionsObject(Submission submission)
+	public Iterable<SubmissionListing> getBySubmissionsObject(Submission submission)
 	{
-		if (submission == null)
-		{
-			return getAllSubmissions();
-		}
-
 		SqlParameterSource namedParams = new MapSqlParameterSource()
 			.addValue("id", submission.getId())
 			.addValue("taskid", submission.getTaskid())
@@ -85,23 +81,19 @@ public class SubmissionServiceImpl implements SubmissionService
 
 		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
 		{
-			List<Submission> submissionList = new ArrayList<>();
+			List<SubmissionListing> submissionList = new ArrayList<>();
 
 			while (rs.next())
 			{
-				Submission tmpSubmission = Submission.builder()
+				SubmissionListing tmpSubmission = SubmissionListing.builder()
 					.id(rs.getLong("id"))
 					.taskid(rs.getLong("taskid"))
 					.description(rs.getString("description"))
 					.timeofsubmission(LocalDate.parse(rs.getString("timeofsubmission")))
+					.acceptance(SubmissionAcceptanceEnum.valueOf(rs.getString("acceptance")))
 					.submitterid(rs.getLong("submitterid"))
+					.submittername(rs.getString("submittername"))
 					.build();
-
-				tmpSubmission.setAcceptance(SubmissionAcceptanceEnum.valueOf(rs.getString("acceptance")));
-				if (rs.wasNull())
-				{
-					tmpSubmission.setAcceptance(null);
-				}
 
 				submissionList.add(tmpSubmission);
 			}
@@ -112,13 +104,16 @@ public class SubmissionServiceImpl implements SubmissionService
 
 	private String constructQueryByOwnObject(Submission submission)
 	{
-		StringBuilder query = new StringBuilder(" SELECT * FROM \"submission\" ");
+		StringBuilder query =
+			new StringBuilder(" SELECT SUBMISSION.ID, TASKID, DESCRIPTION, SUBMISSION.TIMEOFSUBMISSION, ACCEPTANCE, SUBMITTERID, USERNAME AS SUBMITTERNAME FROM \"submission\" SUBMISSION ");
+
+		query.append(" INNER JOIN \"user\" USERT ON SUBMISSION.submitterid = USERT.id ");
 
 		query.append(" WHERE 1 = 1 ");
 
 		if (submission.getId() != null)
 		{
-			query.append(" AND id = :id ");
+			query.append(" AND SUBMISSION.id = :id ");
 		}
 
 		if (submission.getTaskid() != null)
@@ -145,6 +140,8 @@ public class SubmissionServiceImpl implements SubmissionService
 		{
 			query.append(" AND submitterid = :submitterid ");
 		}
+
+		query.append(" ORDER BY timeofsubmission DESC, ID DESC ");
 
 		return query.toString();
 	}

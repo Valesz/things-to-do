@@ -50,7 +50,8 @@ public class UserServiceImpl implements UserService
 	}
 
 	@Override
-	public User getUserByToken(String token) {
+	public User getUserByToken(String token)
+	{
 		return getByUsersObject(User.builder().username(jwtService.extractUsername(token)).build()).iterator().next();
 	}
 

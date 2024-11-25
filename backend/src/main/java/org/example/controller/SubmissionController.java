@@ -2,6 +2,7 @@ package org.example.controller;
 
 import org.example.MyConfiguration;
 import org.example.model.Submission;
+import org.example.model.listing.SubmissionListing;
 import org.example.service.SubmissionService;
 import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.example.utils.exceptions.ServiceException;
@@ -89,13 +90,19 @@ public class SubmissionController
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public Iterable<Submission> listSubmissions(@RequestParam(required = false, value = "id") Long id,
+	public Iterable<SubmissionListing> listSubmissions(@RequestParam(required = false, value = "id") Long id,
 		@RequestParam(required = false, value = "taskid") Long taskid,
 		@RequestParam(required = false, value = "description") String description,
 		@RequestParam(required = false, value = "timeofsubmission") String timeofsubmission,
 		@RequestParam(required = false, value = "acceptance") SubmissionAcceptanceEnum acceptance,
 		@RequestParam(required = false, value = "submitterid") Long submitterid)
 	{
+		if (id == null && taskid == null && description == null && timeofsubmission == null && acceptance == null
+			&& submitterid == null)
+		{
+			return submissionService.getAllSubmissions();
+		}
+
 		return submissionService.getBySubmissionsObject(Submission.builder()
 			.id(id)
 			.taskid(taskid)

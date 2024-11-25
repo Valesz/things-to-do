@@ -1,61 +1,77 @@
-import {createContext, useCallback, useContext, useEffect, useState} from 'react'
+import {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {useCookies} from 'react-cookie'
 import {fetchUserByAuthToken} from '../services/userService'
 import {fetchJWTToken} from '../services/authService'
+import PropTypes from 'prop-types'
 
-const AuthContext = createContext();
+const AuthContext = createContext()
 
 const AuthProvider = ({children}) => {
-	const [user, setUser] = useState(null);
-	const [cookies, setCookie] = useCookies(['authToken']);
+	const [user, setUser] = useState(null)
+	const [cookies, setCookie] = useCookies(['authToken'])
 
 	const setLoggedInUser = useCallback(async (token) => {
 		await fetchUserByAuthToken(token)
 			.then((userData) => {
-				setUser(userData);
-				setCookie('authToken', token, {path: "/", sameSite: 'strict'});
+				setUser(userData)
+				setCookie('authToken', token, {path: '/', sameSite: 'strict'})
 			})
 			.catch(async error => {
-				return await Promise.reject(error);
-			});
-	}, [setCookie]);
+				return await Promise.reject(new Error(error))
+			})
+	}, [setCookie])
 
-	const loginAction = async (username, password) => {
+	const loginAction = useCallback(async (username, password) => {
 		await fetchJWTToken(username, password)
 			.then(async token => {
 				await setLoggedInUser(token)
 			})
 			.catch(async error => {
-				return await Promise.reject(error);
-			});
-	};
 
-	const logoutAction = useCallback(async () => {
-		await setUser(null);
-		await setCookie("authToken", "", {sameSite: 'strict', path: "/", maxAge: 0});
-	}, [setUser, setCookie]);
+				if (error.message === '401') {
+					throw new Error(error, {cause: error.message})
+				}
+
+				throw new Error('Unknown error', {cause: error})
+			})
+	}, [setLoggedInUser])
+
+	const logoutAction = useCallback(() => {
+		setUser(null)
+		setCookie('authToken', '', {sameSite: 'strict', path: '/', maxAge: 0})
+	}, [setUser, setCookie])
 
 	useEffect(() => {
 		if (cookies.authToken) {
 			setLoggedInUser(cookies.authToken)
 				.catch(error => {
 					if (error === 401) {
-						logoutAction();
+						logoutAction()
 					}
-				});
+				})
 		}
-	}, [cookies.authToken, setLoggedInUser, logoutAction]);
+	}, [cookies.authToken, setLoggedInUser, logoutAction])
+
+	const authVariables = useMemo(() => [
+		user,
+		cookies.authToken,
+		loginAction,
+		logoutAction
+	], [user, cookies.authToken, loginAction, logoutAction])
 
 	return (
-		<AuthContext.Provider value={[user, cookies.authToken, loginAction, logoutAction]}>
+		<AuthContext.Provider value={authVariables}>
 			{children}
 		</AuthContext.Provider>
-	);
+	)
 }
 
-export default AuthProvider;
+export default AuthProvider
 
 export const useAuth = () => {
-	return useContext(AuthContext);
+	return useContext(AuthContext)
 }
 
+AuthProvider.propTypes = {
+	children: PropTypes.any.isRequired
+}
