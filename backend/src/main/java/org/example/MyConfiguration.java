@@ -35,25 +35,25 @@ public class MyConfiguration extends AbstractJdbcConfiguration
 	@Bean
 	DataSource createDataSource()
 	{
-		PoolDataSource dataSource;
+		PoolDataSource poolDataSource;
 
 		try
 		{
-			dataSource = PoolDataSourceFactory.getPoolDataSource();
+			poolDataSource = PoolDataSourceFactory.getPoolDataSource();
 
-			dataSource.setConnectionFactoryClassName(environment.getProperty("datasource.driver"));
-			dataSource.setURL(environment.getProperty("datasource.url"));
-			dataSource.setUser(environment.getProperty("datasource.username"));
-			dataSource.setPassword(environment.getProperty("datasource.password"));
-			dataSource.setMinPoolSize(0);
-			dataSource.setMaxPoolSize(100);
+			poolDataSource.setConnectionFactoryClassName(environment.getProperty("datasource.driver"));
+			poolDataSource.setURL(environment.getProperty("datasource.url"));
+			poolDataSource.setUser(environment.getProperty("datasource.username"));
+			poolDataSource.setPassword(environment.getProperty("datasource.password"));
+			poolDataSource.setMinPoolSize(0);
+			poolDataSource.setMaxPoolSize(100);
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException(e);
 		}
 
-		return dataSource;
+		return poolDataSource;
 	}
 
 	@Bean

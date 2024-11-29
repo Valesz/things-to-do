@@ -42,4 +42,20 @@ public enum SubmissionAcceptanceEnum
 	{
 		return this.acceptance;
 	}
+
+	public static SubmissionAcceptanceEnum findByValue(String status)
+	{
+
+		SubmissionAcceptanceEnum acceptanceEnum = null;
+
+		for (SubmissionAcceptanceEnum e : SubmissionAcceptanceEnum.values())
+		{
+			if (e.acceptance.equals(status))
+			{
+				acceptanceEnum = e;
+				break;
+			}
+		}
+		return acceptanceEnum;
+	}
 }

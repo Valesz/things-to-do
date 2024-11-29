@@ -1,9 +1,11 @@
 package org.example.model;
 
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.model.listing.SubmissionListing;
 import org.example.utils.enums.SubmissionAcceptanceEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -37,4 +39,14 @@ public class Submission
 
 	@Column(value = "SUBMITTERID")
 	private Long submitterid;
+
+	public boolean listingObjEquals(SubmissionListing other)
+	{
+		return Objects.equals(this.id, other.getId())
+			&& Objects.equals(this.taskid, other.getTaskid())
+			&& Objects.equals(this.description, other.getDescription())
+			&& Objects.equals(this.timeofsubmission, other.getTimeofsubmission())
+			&& Objects.equals(this.acceptance, other.getAcceptance())
+			&& Objects.equals(this.submitterid, other.getSubmitterid());
+	}
 }

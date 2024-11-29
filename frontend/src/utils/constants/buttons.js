@@ -36,14 +36,28 @@ export const updateDeleteButtons = (modifyLabel, deleteLabel, modifyCallback, de
 	}
 ]
 
-export const confirmDeleteDialog = (id, message, deleteCallback, rejectCallback) => {
+export const confirmSuccessDialog = ({message, headerMessage, acceptCallback, rejectCallback, icon, className}) => {
 	confirmDialog({
 		message: message,
-		header: <span className={'text-red-400 bold'}>Delete Confirmation</span>,
-		icon: 'pi pi-times-circle text-red-400',
+		header: <span className={'text-green-400 bold'}>{headerMessage}</span>,
+		className: className,
+		icon: icon || 'pi pi-check text-green-400',
+		defaultFocus: 'accept',
+		acceptClassName: 'p-button-success',
+		accept: acceptCallback,
+		reject: rejectCallback
+	})
+}
+
+export const confirmWarnDialog = ({message, headerMessage, acceptCallback, rejectCallback, icon, classname}) => {
+	confirmDialog({
+		message: message,
+		header: <span className={'text-red-400 bold'}>{headerMessage}</span>,
+		className: classname,
+		icon: icon || 'pi pi-times-circle text-red-400',
 		defaultFocus: 'reject',
 		acceptClassName: 'p-button-danger',
-		accept: () => deleteCallback?.(id),
+		accept: acceptCallback,
 		reject: rejectCallback
 	})
 }

@@ -1,5 +1,7 @@
 package org.example.service.impl;
 
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.service.UserService;
@@ -10,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +35,9 @@ public class UserServiceImpl implements UserService
 	@Autowired
 	private JwtServiceImpl jwtService;
 
-	@Autowired
-	private UserDetailsService userDetailsService;
+	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{6,20}$";
+
+	private static final String EMAIL_REGEX = "[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
 
 	@Override
 	public Iterable<User> getAllUsers()
@@ -162,6 +164,11 @@ public class UserServiceImpl implements UserService
 
 		validateUserProperties(user);
 
+		if (!Pattern.matches(PASSWORD_REGEX, user.getPassword()))
+		{
+			throw new ServiceException(ServiceExceptionType.INVALID_ARGUMENT, "Invalid password");
+		}
+
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
 		return userRepository.save(user);
@@ -216,9 +223,14 @@ public class UserServiceImpl implements UserService
 	{
 		String errorMessage = checkForNullProperties(user);
 
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
+		}
+
+		if (!Pattern.matches(EMAIL_REGEX, user.getEmail()))
+		{
+			throw new ServiceException(ServiceExceptionType.INVALID_ARGUMENT, "Invalid email address");
 		}
 	}
 
@@ -226,12 +238,12 @@ public class UserServiceImpl implements UserService
 	{
 		StringBuilder sb = new StringBuilder();
 
-		if (user.getUsername() == null || user.getUsername().isEmpty())
+		if (StringUtils.isBlank(user.getUsername()))
 		{
 			sb.append("Username must not be null, ");
 		}
 
-		if (user.getEmail() == null || user.getEmail().isEmpty())
+		if (StringUtils.isBlank(user.getEmail()))
 		{
 			sb.append("Email must not be null, ");
 		}
@@ -246,7 +258,7 @@ public class UserServiceImpl implements UserService
 			sb.append("Status must not be null, ");
 		}
 
-		if (user.getPassword() == null || user.getPassword().isEmpty())
+		if (StringUtils.isBlank(user.getPassword()))
 		{
 			sb.append("Password must not be null, ");
 		}

@@ -41,4 +41,20 @@ public enum UserStatusEnum
 	{
 		return this.status;
 	}
+
+	public static UserStatusEnum findByValue(String status)
+	{
+
+		UserStatusEnum statusEnum = null;
+
+		for (UserStatusEnum e : UserStatusEnum.values())
+		{
+			if (e.status.equals(status))
+			{
+				statusEnum = e;
+				break;
+			}
+		}
+		return statusEnum;
+	}
 }

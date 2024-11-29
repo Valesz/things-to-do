@@ -1,33 +1,21 @@
-import {useEffect, useReducer, useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {TabView} from 'primereact/tabview'
 import PropTypes from 'prop-types'
 
-//TODO: Remove reducer, make it state
-function reducer(state, action) {
-	if (action.type === 'remove') {
-		return {
-			...state,
-			values: [...state.values.filter((value, index) => index !== action.index - action.baseTabLength)]
-		}
-	} else if (action.type === 'set') {
-		return {
-			values: action.values,
-			maxIndex: state.maxIndex + 1
-		}
-	}
-
-	throw Error('Unknown action called.')
-}
-
-const DynamicTabView = ({activeTabIndex, setActiveTabIndex, tabTemplate, baseTabs, extraTabValues, onTabClose}) => {
-	const [extraTabs, dispatch] = useReducer(reducer, {
+const DynamicTabView = ({activeTabIndex, setActiveTabIndex, tabTemplate, baseTabs = [], extraTabValues = [], extraTabElements = [], onTabClose}) => {
+	const [extraTabs, setExtraTabs] = useState({
 		maxIndex: 0,
 		values: extraTabValues
 	})
 	const viewPanelRef = useRef()
 
 	useEffect(() => {
-		dispatch({type: 'set', values: extraTabValues})
+		setExtraTabs(prevState => {
+			return {
+				maxIndex: prevState.maxIndex + 1,
+				values: extraTabValues
+			}
+		})
 	}, [extraTabValues])
 
 	return (
@@ -42,7 +30,7 @@ const DynamicTabView = ({activeTabIndex, setActiveTabIndex, tabTemplate, baseTab
 			}}
 		>
 			{
-				[...baseTabs, ...extraTabs.values.map(tabTemplate)]
+				[...baseTabs, ...extraTabs.values.map(tabTemplate), ...extraTabElements]
 			}
 		</TabView>
 	)
@@ -56,5 +44,6 @@ DynamicTabView.propTypes = {
 	tabTemplate: PropTypes.func.isRequired,
 	baseTabs: PropTypes.arrayOf(PropTypes.element),
 	extraTabValues: PropTypes.arrayOf(PropTypes.any),
+	extraTabElements: PropTypes.arrayOf(PropTypes.element),
 	onTabClose: PropTypes.func
 }

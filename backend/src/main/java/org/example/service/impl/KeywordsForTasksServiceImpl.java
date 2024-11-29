@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
 import org.example.repository.KeywordsForTasksRepository;
@@ -169,13 +170,13 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 	{
 
 		String errorMessage = checkForNullProperties(keywordsForTasks);
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
 		}
 
 		errorMessage = checkConstraints(keywordsForTasks);
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
 		}
@@ -190,7 +191,7 @@ public class KeywordsForTasksServiceImpl implements KeywordsForTasksService
 			errorMessage.append("taskid property is not set, ");
 		}
 
-		if (keywordsForTasks.getKeyword() == null)
+		if (StringUtils.isBlank(keywordsForTasks.getKeyword()))
 		{
 			errorMessage.append("keyword property is not set, ");
 		}

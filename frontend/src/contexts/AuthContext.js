@@ -1,8 +1,9 @@
 import {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {useCookies} from 'react-cookie'
-import {fetchUserByAuthToken} from '../services/userService'
+import {fetchUserByAuthToken} from '../pages/profile/sevices/userService'
 import {fetchJWTToken} from '../services/authService'
 import PropTypes from 'prop-types'
+import {userStatusEnum} from '../utils/constants/userEnums'
 
 const AuthContext = createContext()
 
@@ -11,34 +12,35 @@ const AuthProvider = ({children}) => {
 	const [cookies, setCookie] = useCookies(['authToken'])
 
 	const setLoggedInUser = useCallback(async (token) => {
-		await fetchUserByAuthToken(token)
-			.then((userData) => {
+		return await fetchUserByAuthToken(token)
+			.then(async (userData) => {
+				if (userData.status !== userStatusEnum.ACTIVE) {
+					throw new Error('Not active profile')
+				}
+
 				setUser(userData)
 				setCookie('authToken', token, {path: '/', sameSite: 'strict'})
+				return await Promise.resolve(userData)
 			})
 			.catch(async error => {
-				return await Promise.reject(new Error(error))
+				throw new Error(error)
 			})
 	}, [setCookie])
 
 	const loginAction = useCallback(async (username, password) => {
-		await fetchJWTToken(username, password)
+		return await fetchJWTToken(username, password)
 			.then(async token => {
-				await setLoggedInUser(token)
+				return await Promise.resolve(setLoggedInUser(token))
 			})
 			.catch(async error => {
-
-				if (error.message === '401') {
-					throw new Error(error, {cause: error.message})
-				}
-
-				throw new Error('Unknown error', {cause: error})
+				throw new Error(error.message, {cause: error})
 			})
 	}, [setLoggedInUser])
 
 	const logoutAction = useCallback(() => {
 		setUser(null)
 		setCookie('authToken', '', {sameSite: 'strict', path: '/', maxAge: 0})
+		return true
 	}, [setUser, setCookie])
 
 	useEffect(() => {

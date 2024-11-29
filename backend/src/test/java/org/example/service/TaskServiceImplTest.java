@@ -44,7 +44,7 @@ public class TaskServiceImplTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();
@@ -137,6 +137,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		this.user.setId(null);
 		this.user.setUsername("Teszt Elek2");
+		this.user.setPassword("tesztA12");
 		userService.saveUser(this.user);
 
 		taskService.saveTask(task1);
@@ -223,6 +224,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		this.user.setId(null);
 		this.user.setUsername("test");
+		this.user.setPassword("tesztA12");
 		userService.saveUser(this.user);
 
 		taskService.saveTask(task1);
@@ -271,6 +273,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		this.user.setId(null);
 		this.user.setUsername(this.user.getUsername() + "2");
+		this.user.setPassword("tesztA12");
 		userService.saveUser(this.user);
 
 		Task task3 = Task.builder()
@@ -363,6 +366,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		filter.setKeywords(null);
 		filter.setCompletedUserId(this.user.getId());
+		filter.setCompleted(true);
 		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
@@ -433,6 +437,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		this.user.setId(null);
 		this.user.setUsername(this.user.getUsername() + "2");
+		this.user.setPassword("tesztA12");
 		userService.saveUser(user);
 		updateTaskProperties.setOwnerid(this.user.getId());
 		taskService.updateTask(updateTaskProperties);

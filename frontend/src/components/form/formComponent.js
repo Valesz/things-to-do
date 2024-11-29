@@ -22,11 +22,31 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 
 	const actionCallback = useCallback((e) => {
 		e.preventDefault()
-		action?.()
+		action?.(e)
 	}, [action])
 
+	const testValid = useCallback((e) => {
+		if (!formData[e.target?.name]) {
+			return
+		}
+
+		const name = e.target?.name
+		const value = e.target?.value
+
+		setFormData(prevState => {
+			return {
+				...prevState,
+				[name]: {
+					...prevState[name],
+					invalid: prevState[name].invalidCallback?.(value)
+				}
+			}
+		})
+		return formData[name].invalid
+	}, [formData, setFormData])
+
 	return (
-		<form className={className || 'flex flex-column gap-5 h-min'} onSubmit={actionCallback}>
+		<form className={className || 'flex flex-column gap-5 h-min w-full justify-content-center align-items-center'} onSubmit={actionCallback}>
 			{
 				formData &&
 				Object.keys(formData).map(key => {
@@ -43,6 +63,9 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 										value={inputField.value}
 										onChange={handleChange}
 										type={inputField.textType}
+										onBlur={testValid}
+										invalid={inputField.invalid}
+										ref={inputField.ref}
 									/>
 									<label htmlFor={inputField.name}>{inputField.label}</label>
 								</FloatLabel>
@@ -62,6 +85,8 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 													handleChange(e) :
 													toastRef.current.show({severity: 'error', summary: 'Too Long keyword', detail: 'Keyword must not exceed a length of 23'})}
 										pt={{container: {className: inputField.containerClassName || 'w-16rem lg:max-h-15rem overflow-y-auto'}}}
+										onBlur={testValid}
+										invalid={inputField.invalid}
 									/>
 									<label htmlFor={inputField.name}>{inputField.label}</label>
 								</FloatLabel>
@@ -80,6 +105,8 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 										hideOnRangeSelection={true}
 										readOnlyInput={true}
 										touchUI
+										invalid={inputField.invalid}
+										onBlur={testValid}
 									/>
 									<label htmlFor={inputField.name}>{inputField.label}</label>
 								</FloatLabel>
@@ -97,6 +124,8 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 													value={option.value}
 													onChange={handleChange}
 													checked={inputField.value === option.value}
+													invalid={option.invalid}
+													onBlur={testValid}
 												/>
 												<label htmlFor={option.name} className={'ml-2'}>{option.label}</label>
 											</div>
@@ -110,9 +139,11 @@ const FormComponent = ({formData, setFormData, submitButton, extraButtons, class
 									<InputTextarea
 										id={inputField.name}
 										name={inputField.name}
-										className={inputField.className || 'w-full max-w-20rem md:max-w-full md:w-30rem'}
+										className={inputField.className || 'W-full max-w-20rem md:max-w-full md:w-30rem'}
 										value={inputField.value}
 										onChange={handleChange}
+										invalid={inputField.invalid}
+										onBlur={testValid}
 									/>
 									<label htmlFor={inputField.name}>{inputField.label}</label>
 								</FloatLabel>

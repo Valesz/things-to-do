@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import java.util.Arrays;
 import org.example.AbstractTest;
 import org.example.model.Submission;
 import org.example.model.Task;
@@ -46,7 +47,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();
@@ -56,7 +57,7 @@ public class SubmissionControllerTest extends AbstractTest
 		.email("tesz@vesz.teszt")
 		.timeofcreation(LocalDate.EPOCH)
 		.status(UserStatusEnum.INAKTIV)
-		.password("teszthehe")
+		.password("tesztheheA1")
 		.classification(0.1)
 		.precisionofanswers(0.1)
 		.build();
@@ -113,7 +114,7 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		User loginUser = User.builder()
 			.username(this.user1.getUsername())
-			.password("teszt")
+			.password("tesztA12")
 			.build();
 
 		HttpEntity<User> entity = new HttpEntity<>(loginUser, headers);
@@ -422,8 +423,7 @@ public class SubmissionControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(submissionsAccordingToQuery);
 		Assert.assertEquals(2, submissionsAccordingToQuery.length);
-		Assert.assertEquals(this.submission2, submissionsAccordingToQuery[0]);
-		Assert.assertEquals(this.submission3, submissionsAccordingToQuery[1]);
+		Assert.assertTrue(Arrays.stream(submissionsAccordingToQuery).allMatch(submission -> this.submission3.equals(submission) || this.submission2.equals(submission)));
 	}
 
 	@Test

@@ -35,8 +35,7 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_GIVEN:
-				case NULL_ARGUMENT:
+				case NULL_ARGUMENT, ID_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:
@@ -64,11 +63,10 @@ public class SubmissionController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_NOT_GIVEN:
+				case ID_NOT_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
-				case CONSTRAINT_VIOLATION:
-				case ID_NOT_FOUND:
+				case ID_NOT_FOUND, CONSTRAINT_VIOLATION:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:

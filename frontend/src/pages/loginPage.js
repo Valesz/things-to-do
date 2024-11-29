@@ -1,6 +1,6 @@
-import LoginComponent from '../components/login-register/login/loginComponent'
+import LoginComponent from '../components/auth/login/loginComponent'
 import {Divider} from 'primereact/divider'
-import RegisterComponent from '../components/login-register/register/registerComponent'
+import RegisterComponent from '../components/auth/register/registerComponent'
 import {useRef} from 'react'
 import {Toast} from 'primereact/toast'
 

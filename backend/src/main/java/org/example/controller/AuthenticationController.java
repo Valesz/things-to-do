@@ -41,8 +41,7 @@ public class AuthenticationController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_GIVEN:
-				case NULL_ARGUMENT:
+				case NULL_ARGUMENT, ID_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:

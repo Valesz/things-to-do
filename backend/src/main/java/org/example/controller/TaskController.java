@@ -38,8 +38,7 @@ public class TaskController
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.CREATED)
-	public Task addTask(@RequestBody Task task,
-		@RequestHeader(name = "Authorization") String token)
+	public Task addTask(@RequestBody Task task)
 	{
 		try
 		{
@@ -50,8 +49,7 @@ public class TaskController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_GIVEN:
-				case NULL_ARGUMENT:
+				case NULL_ARGUMENT, ID_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:
@@ -79,11 +77,10 @@ public class TaskController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_NOT_GIVEN:
+				case ID_NOT_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
-				case ID_NOT_FOUND:
-				case CONSTRAINT_VIOLATION:
+				case CONSTRAINT_VIOLATION, ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
@@ -108,12 +105,10 @@ public class TaskController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case NULL_ARGUMENT:
-				case ID_NOT_GIVEN:
+				case ID_NOT_GIVEN, NULL_ARGUMENT, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
-				case ID_NOT_FOUND:
-				case CONSTRAINT_VIOLATION:
+				case CONSTRAINT_VIOLATION, ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
 
 				default:
@@ -251,8 +246,7 @@ public class TaskController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_GIVEN:
-				case NULL_ARGUMENT:
+				case NULL_ARGUMENT, ID_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:

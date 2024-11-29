@@ -37,7 +37,7 @@ public class KeywordsForTasksServiceImplTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();

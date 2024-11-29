@@ -24,7 +24,7 @@ export async function fetchText(relativeEndpoint, requestOptions) {
 			const data = isText && await response.text()
 
 			if (!response.ok) {
-				const error = (data?.message) || response.status
+				const error = data || response.status
 				return await Promise.reject(new Error(error))
 			}
 

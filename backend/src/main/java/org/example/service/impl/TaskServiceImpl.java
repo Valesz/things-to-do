@@ -270,13 +270,13 @@ public class TaskServiceImpl implements TaskService
 	private void validateTaskProperties(Task task) throws ServiceException
 	{
 		String errorMessage = checkForNullProperties(task);
-		if (!StringUtils.isNotBlank(errorMessage))
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
 		}
 
 		errorMessage = checkConstraints(task);
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
 		}
@@ -286,12 +286,12 @@ public class TaskServiceImpl implements TaskService
 	{
 		StringBuilder sb = new StringBuilder();
 
-		if (StringUtils.isNotBlank(task.getName()))
+		if (StringUtils.isBlank(task.getName()))
 		{
 			sb.append("name property not set, ");
 		}
 
-		if (task.getDescription() == null)
+		if (StringUtils.isBlank(task.getDescription()))
 		{
 			sb.append("description property not set, ");
 		}

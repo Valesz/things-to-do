@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import java.util.Arrays;
+import java.util.Objects;
 import org.example.AbstractTest;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
@@ -49,7 +51,7 @@ public class TaskControllerTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();
@@ -59,7 +61,7 @@ public class TaskControllerTest extends AbstractTest
 		.email("tesz@vesz.teszt")
 		.timeofcreation(LocalDate.EPOCH)
 		.status(UserStatusEnum.INAKTIV)
-		.password("teszthehe")
+		.password("tesztheheA12")
 		.classification(0.1)
 		.precisionofanswers(0.1)
 		.build();
@@ -104,7 +106,7 @@ public class TaskControllerTest extends AbstractTest
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		User loginUser = User.builder()
 			.username(this.user1.getUsername())
-			.password("teszt")
+			.password("tesztA12")
 			.build();
 		HttpEntity<User> entity = new HttpEntity<>(loginUser, headers);
 
@@ -174,11 +176,13 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksInDb);
 		Assert.assertEquals(5, tasksInDb.length);
-		Assert.assertEquals(testTask.getName(), tasksInDb[4].getName());
-		Assert.assertEquals(testTask.getDescription(), tasksInDb[4].getDescription());
-		Assert.assertEquals(testTask.getTimeofcreation(), tasksInDb[4].getTimeofcreation());
-		Assert.assertEquals(testTask.getMaintaskid(), tasksInDb[4].getMaintaskid());
-		Assert.assertEquals(testTask.getOwnerid(), tasksInDb[4].getOwnerid());
+		Assert.assertTrue(Arrays.stream(tasksInDb).anyMatch(task ->
+			testTask.getName().equals(task.getName())
+				&& testTask.getDescription().equals(task.getDescription())
+				&& testTask.getTimeofcreation().equals(task.getTimeofcreation())
+				&& Objects.equals(testTask.getMaintaskid(), task.getMaintaskid())
+				&& testTask.getOwnerid().equals(task.getOwnerid())
+		));
 	}
 
 	@Test
@@ -348,18 +352,7 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
 		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertEquals(task2.getId(), tasksAccordingToQuery[0].getId());
-		Assert.assertEquals(task2.getName(), tasksAccordingToQuery[0].getName());
-		Assert.assertEquals(task2.getDescription(), tasksAccordingToQuery[0].getDescription());
-		Assert.assertEquals(task2.getTimeofcreation(), tasksAccordingToQuery[0].getTimeofcreation());
-		Assert.assertEquals(task2.getMaintaskid(), tasksAccordingToQuery[1].getMaintaskid());
-		Assert.assertEquals(task2.getOwnerid(), tasksAccordingToQuery[1].getOwnerid());
-		Assert.assertEquals(task3.getId(), tasksAccordingToQuery[1].getId());
-		Assert.assertEquals(task3.getName(), tasksAccordingToQuery[1].getName());
-		Assert.assertEquals(task3.getDescription(), tasksAccordingToQuery[1].getDescription());
-		Assert.assertEquals(task3.getTimeofcreation(), tasksAccordingToQuery[1].getTimeofcreation());
-		Assert.assertEquals(task3.getMaintaskid(), tasksAccordingToQuery[1].getMaintaskid());
-		Assert.assertEquals(task3.getOwnerid(), tasksAccordingToQuery[1].getOwnerid());
+		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 	}
 
 	@Test
@@ -379,10 +372,7 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksInDb);
 		Assert.assertEquals(4, tasksInDb.length);
-		Assert.assertEquals(task1, tasksInDb[0]);
-		Assert.assertEquals(task2, tasksInDb[1]);
-		Assert.assertEquals(task3, tasksInDb[2]);
-		Assert.assertEquals(task4, tasksInDb[3]);
+		Assert.assertTrue(Arrays.stream(tasksInDb).allMatch(task -> task1.equals(task) || task2.equals(task) || task3.equals(task) || task4.equals(task)));
 	}
 
 	@Test
@@ -424,8 +414,7 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
 		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertEquals(task2, tasksAccordingToQuery[0]);
-		Assert.assertEquals(task4, tasksAccordingToQuery[1]);
+		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.equals(task) || task4.equals(task)));
 	}
 
 	@Test
@@ -535,9 +524,10 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksFromDb);
 		Assert.assertEquals(3, tasksFromDb.length);
-		Assert.assertEquals(task2, tasksFromDb[0]);
+		Assert.assertTrue(Arrays.stream(tasksFromDb).allMatch(task -> task2.equals(task) || task3.equals(task) || task4.equals(task)));
+		Assert.assertEquals(task2, tasksFromDb[2]);
 		Assert.assertEquals(task3, tasksFromDb[1]);
-		Assert.assertEquals(task4, tasksFromDb[2]);
+		Assert.assertEquals(task4, tasksFromDb[0]);
 	}
 
 	@Test

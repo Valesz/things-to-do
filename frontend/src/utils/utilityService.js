@@ -12,3 +12,19 @@ export function makeKeywordObjectForBackEnd(keywordList, taskId) {
 		}
 	})
 }
+
+export const setInvalidAttributeToFromElements = (formData, setFormData, fieldNamesWithInvalidStatus) => {
+	let valami = formData
+
+	for (const property in fieldNamesWithInvalidStatus) {
+		valami = {
+			...valami,
+			[property]: {
+				...formData[property],
+				invalid: fieldNamesWithInvalidStatus[property].invalid
+			}
+		}
+	}
+
+	setFormData({...valami})
+}

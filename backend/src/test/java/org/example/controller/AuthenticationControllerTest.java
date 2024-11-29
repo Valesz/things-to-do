@@ -39,7 +39,7 @@ public class AuthenticationControllerTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();
@@ -64,7 +64,7 @@ public class AuthenticationControllerTest extends AbstractTest
 			.email("tesz@vesz.teszt")
 			.timeofcreation(LocalDate.EPOCH)
 			.status(UserStatusEnum.INAKTIV)
-			.password("teszthehe")
+			.password("tesztheheA12")
 			.classification(0.1)
 			.precisionofanswers(0.1)
 			.build();
@@ -92,7 +92,7 @@ public class AuthenticationControllerTest extends AbstractTest
 	{
 		User loginUser = User.builder()
 			.username(this.user1.getUsername())
-			.password("teszt")
+			.password("tesztA12")
 			.build();
 
 		ResponseEntity<String> response = restTemplate.postForEntity(baseEndpoint + "login", loginUser, String.class);

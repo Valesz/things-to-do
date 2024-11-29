@@ -3,7 +3,6 @@ package org.example.controller;
 import org.example.MyConfiguration;
 import org.example.model.User;
 import org.example.service.UserService;
-import org.example.service.impl.AuthenticationServiceImpl;
 import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,6 @@ public class UserController
 	@Autowired
 	private UserService userService;
 
-	@Autowired
-	private AuthenticationServiceImpl authenticationService;
-
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.CREATED)
 	public User addUser(@RequestBody User user)
@@ -40,8 +36,7 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_GIVEN:
-				case NULL_ARGUMENT:
+				case NULL_ARGUMENT, ID_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case CONSTRAINT_VIOLATION:
@@ -71,7 +66,7 @@ public class UserController
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
-				case ID_NOT_GIVEN:
+				case ID_NOT_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
 
 				case ID_NOT_FOUND:

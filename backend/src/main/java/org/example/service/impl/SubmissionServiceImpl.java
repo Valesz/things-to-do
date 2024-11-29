@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.example.model.Submission;
 import org.example.model.listing.SubmissionListing;
 import org.example.repository.SubmissionRepository;
@@ -69,6 +70,11 @@ public class SubmissionServiceImpl implements SubmissionService
 	@Override
 	public Iterable<SubmissionListing> getBySubmissionsObject(Submission submission)
 	{
+		if (submission == null)
+		{
+			return getAllSubmissions();
+		}
+
 		SqlParameterSource namedParams = new MapSqlParameterSource()
 			.addValue("id", submission.getId())
 			.addValue("taskid", submission.getTaskid())
@@ -206,13 +212,13 @@ public class SubmissionServiceImpl implements SubmissionService
 	{
 
 		String errorMessage = checkForNullProperties(submission);
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.NULL_ARGUMENT, errorMessage);
 		}
 
 		errorMessage = checkConstraints(submission);
-		if (!errorMessage.isEmpty())
+		if (StringUtils.isNotBlank(errorMessage))
 		{
 			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION, errorMessage);
 		}
@@ -227,7 +233,7 @@ public class SubmissionServiceImpl implements SubmissionService
 			errorMessage.append("taskid property is not set, ");
 		}
 
-		if (submission.getDescription() == null)
+		if (StringUtils.isBlank(submission.getDescription()))
 		{
 			errorMessage.append("description property is not set, ");
 		}

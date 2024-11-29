@@ -5,13 +5,13 @@ import reportWebVitals from './reportWebVitals'
 import {PrimeReactProvider} from 'primereact/api'
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 import HomePage from './pages/homePage'
-import ProfilePage from './pages/profilePage'
+import ProfilePage from './pages/profile/profilePage'
 import './index.css'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
 import LoginPage from './pages/loginPage'
-import TaskListingPage from './pages/taskListingPage'
-import TaskPage from './pages/taskPage'
+import TaskListingPage from './pages/task/taskListingPage'
+import TaskPage from './pages/task/taskPage'
 
 const routes = [
 	{
@@ -24,10 +24,6 @@ const routes = [
 			},
 			{
 				path: '/profile/:id',
-				element: <ProfilePage/>
-			},
-			{
-				path: '/profile',
 				element: <ProfilePage/>
 			},
 			{

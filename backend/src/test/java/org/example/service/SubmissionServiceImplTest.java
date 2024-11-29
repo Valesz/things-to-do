@@ -4,6 +4,7 @@ import org.example.AbstractTest;
 import org.example.model.Submission;
 import org.example.model.Task;
 import org.example.model.User;
+import org.example.model.listing.SubmissionListing;
 import org.example.repository.TaskRepository;
 import org.example.repository.UserRepository;
 import org.example.utils.enums.SubmissionAcceptanceEnum;
@@ -38,7 +39,7 @@ public class SubmissionServiceImplTest extends AbstractTest
 		.email("teszt@teszt.teszt")
 		.timeofcreation(LocalDate.now())
 		.status(UserStatusEnum.AKTIV)
-		.password("teszt")
+		.password("tesztA12")
 		.classification(0.5)
 		.precisionofanswers(0.8)
 		.build();
@@ -202,41 +203,41 @@ public class SubmissionServiceImplTest extends AbstractTest
 		submissionService.saveSubmission(submission3);
 		submissionService.saveSubmission(submission4);
 
-		Spliterator<Submission> submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
+		Spliterator<SubmissionListing> submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.id(submission1.getId())
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission1::equals));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission1::listingObjEquals));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.taskid(oldTaskId)
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission2.equals(submission) || submission4.equals(submission)));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission2.listingObjEquals(submission) || submission4.listingObjEquals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.description("Good Description")
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission1.equals(submission) || submission3.equals(submission)));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission1.listingObjEquals(submission) || submission3.listingObjEquals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.timeofsubmission(LocalDate.EPOCH)
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission1.equals(submission) || submission4.equals(submission)));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission1.listingObjEquals(submission) || submission4.listingObjEquals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission2.equals(submission) || submission3.equals(submission)));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission2.listingObjEquals(submission) || submission3.listingObjEquals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(Submission.builder()
 			.submitterid(oldUserId)
 			.build()
 		).spliterator();
-		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission3.equals(submission) || submission4.equals(submission)));
+		Assert.assertTrue(StreamSupport.stream(submissionSpliterator, false).allMatch(submission -> submission3.listingObjEquals(submission) || submission4.listingObjEquals(submission)));
 
 		submissionSpliterator = submissionService.getBySubmissionsObject(null).spliterator();
 		Assert.assertEquals(4, StreamSupport.stream(submissionSpliterator, false).count());
@@ -272,14 +273,14 @@ public class SubmissionServiceImplTest extends AbstractTest
 		submissionService.saveSubmission(submission2);
 		submissionService.saveSubmission(submission3);
 
-		Iterable<Submission> submissionIterable = submissionService.getBySubmissionsObject(Submission.builder()
+		Iterable<SubmissionListing> submissionIterable = submissionService.getBySubmissionsObject(Submission.builder()
 			.acceptance(SubmissionAcceptanceEnum.IN_PROGRESS)
 			.build()
 		);
-		Iterator<Submission> submissionIterator = submissionIterable.iterator();
+		Iterator<SubmissionListing> submissionIterator = submissionIterable.iterator();
 
 		Assert.assertEquals(1, StreamSupport.stream(submissionIterable.spliterator(), false).count());
-		Assert.assertEquals(submission3, submissionIterator.next());
+		Assert.assertTrue(submission3.listingObjEquals(submissionIterator.next()));
 		Assert.assertFalse(submissionIterator.hasNext());
 	}
 

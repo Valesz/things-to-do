@@ -32,7 +32,7 @@ const NavbarComponent = () => {
 			icon: 'pi pi-user',
 			show: user,
 			command: () => {
-				navigate('/profile')
+				navigate(`/profile/${user.id}`)
 			}
 		},
 		{

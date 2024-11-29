@@ -1,7 +1,6 @@
 package org.example.utils.enums;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -20,7 +19,7 @@ public class UserStatusEnumDeserializer extends StdDeserializer<UserStatusEnum>
 	}
 
 	@Override
-	public UserStatusEnum deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException
+	public UserStatusEnum deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
 	{
 		JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 

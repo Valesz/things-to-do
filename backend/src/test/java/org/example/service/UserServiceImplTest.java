@@ -38,7 +38,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -97,7 +97,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -115,7 +115,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -125,7 +125,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("tesz@vesz.teszt")
 			.timeofcreation(LocalDate.EPOCH)
 			.status(UserStatusEnum.INAKTIV)
-			.password("teszthehe")
+			.password("tesztheheA12")
 			.classification(0.1)
 			.precisionofanswers(0.1)
 			.build();
@@ -135,7 +135,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@tesztel.tesztelek")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.1)
 			.precisionofanswers(0.8)
 			.build();
@@ -145,7 +145,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("tesz@vesz.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszthehe")
+			.password("tesztheheA12")
 			.classification(0.5)
 			.precisionofanswers(0.1)
 			.build();
@@ -204,7 +204,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -214,6 +214,7 @@ public class UserServiceImplTest extends AbstractTest
 
 		user.setId(null);
 		user.setUsername(user.getUsername() + "2");
+		user.setPassword("tesztA12");
 		userService.saveUser(user);
 		Assert.assertEquals(user, userService.getUserById(user.getId()));
 
@@ -230,7 +231,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -285,13 +286,13 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> userService.updateUser(user));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ID_NOT_GIVEN);
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_GIVEN, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test
@@ -303,13 +304,13 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
 
 		ServiceException exception = Assert.assertThrows(ServiceException.class, () -> userService.updateUser(user));
-		Assert.assertEquals(exception.getServiceExceptionTypeEnum(), ServiceExceptionType.ID_NOT_FOUND);
+		Assert.assertEquals(ServiceExceptionType.ID_NOT_FOUND, exception.getServiceExceptionTypeEnum());
 	}
 
 	@Test
@@ -320,7 +321,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -336,7 +337,7 @@ public class UserServiceImplTest extends AbstractTest
 
 		userInDb = userService.getUserById(user.getId());
 		Assert.assertNotNull(userInDb);
-		Assert.assertEquals(userInDb.getStatus(), UserStatusEnum.INAKTIV);
+		Assert.assertEquals(UserStatusEnum.INAKTIV, userInDb.getStatus());
 	}
 
 	@Test
@@ -347,7 +348,7 @@ public class UserServiceImplTest extends AbstractTest
 			.email("teszt@teszt.teszt")
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.password("teszt")
+			.password("tesztA12")
 			.classification(0.5)
 			.precisionofanswers(0.8)
 			.build();
@@ -359,6 +360,7 @@ public class UserServiceImplTest extends AbstractTest
 
 		user.setId(null);
 		user.setUsername(user.getUsername() + "2");
+		user.setPassword("tesztA12");
 		userService.saveUser(user);
 		Assert.assertNotNull(userService.getUserById(user.getId()));
 
