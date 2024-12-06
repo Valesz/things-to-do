@@ -1,6 +1,6 @@
 import {useState, useCallback} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {useAuth} from '../../../contexts/AuthContext'
+import {useAuth} from '../../../hooks/useAuth'
 import LoginVisual from './loginVisual'
 import PropTypes from 'prop-types'
 import {setInvalidAttributeToFromElements} from '../../../utils/utilityService'

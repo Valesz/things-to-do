@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import FormComponent from '../../../../components/form/formComponent'
 
 const AddSubmissionVisual = ({formData, setFormData, title, submitButton, addSubmissionCallback}) => {
-
 	return (
 		<div className={'flex flex-column surface-50'}>
 			<div className={'flex flex-column gap-3'}>

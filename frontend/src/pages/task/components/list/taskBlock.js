@@ -3,13 +3,29 @@ import {Tag} from 'primereact/tag'
 import {Button} from 'primereact/button'
 import {useNavigate} from 'react-router-dom'
 import PropTypes from 'prop-types'
+import {Card} from 'primereact/card'
+import {useMemo} from 'react'
 
 const TaskBlock = ({task, index, buttons}) => {
 
 	const navigate = useNavigate()
 
+	const header = useMemo(() => (
+		<div className={'flex justify-content-center align-items-center gap-4'}>
+			<i className={'pi pi-exclamation-triangle text-4xl text-red-400'}/>
+			<h1 className={'text-center'}>Task not found!</h1>
+			<i className={'pi pi-exclamation-triangle text-4xl text-red-400'}/>
+		</div>
+	), [])
+
 	if (!task) {
-		return null
+		return (
+			<div className={'flex h-full w-full justify-content-center align-items-center'}>
+				<Card header={header} className={'text-center shadow-none'}>
+					<span>Task not found! Make sure you entered the right id!</span>
+				</Card>
+			</div>
+		)
 	}
 
 	return (

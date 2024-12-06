@@ -11,13 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.Getter;
+import org.example.service.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
 @Getter
-public class JwtServiceImpl
+public class JwtServiceImpl implements JwtService
 {
 	@Value("${security.jwt.secret-key}")
 	private String secretKey;

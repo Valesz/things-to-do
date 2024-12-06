@@ -22,6 +22,14 @@ export const viewSolutionsForTaskButtons = (navigate) => [
 	}
 ]
 
+export const viewSolutionForTask = (navigate) => [
+	{
+		label: 'View Solution',
+		onClick: (submission) => navigate(`/task/${submission.taskid}/solutions/${submission.id}`),
+		param: 'all'
+	}
+]
+
 export const updateDeleteButtons = (modifyLabel, deleteLabel, modifyCallback, deleteCallback) => [
 	{
 		label: modifyLabel,

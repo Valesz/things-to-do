@@ -1,5 +1,5 @@
 import {Button} from 'primereact/button'
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import TaskFilterSidebarComponent from './components/filter/sidebar/taskFilterSidebarVisual'
 import {InputText} from 'primereact/inputtext'
 import {FloatLabel} from 'primereact/floatlabel'
@@ -8,52 +8,59 @@ import {Toast} from 'primereact/toast'
 import {Fieldset} from 'primereact/fieldset'
 import TaskFilterComponent from './components/filter/taskFilterComponent'
 import AddTaskComponent from './components/add/addTaskComponent'
-import {fetchTasks} from './services/taskService'
 import TaskListing from './components/list/taskListing'
-import {useAuth} from '../../contexts/AuthContext'
-import {useNavigate} from 'react-router-dom'
+import {useAuth} from '../../hooks/useAuth'
+import {useNavigate, useSearchParams} from 'react-router-dom'
 import {taskViewButtons} from '../../utils/constants/buttons'
+import {useTasks} from './hooks/useTask'
 
 const TaskListingPage = () => {
-	const [tasks, setTasks] = useState([])
 	const toastRef = useRef()
-
 	const [toggleFilter, setToggleFilter] = useState(false)
 	const [toggleAdd, setToggleAdd] = useState(false)
-
-	const [filterTaskName, setFilterTaskName] = useState('')
-
+	const [searchParams, setSearchParams] = useSearchParams()
+	const params = useMemo(() => {
+		return {
+			name: searchParams.get('name'),
+			keywords: searchParams.getAll('keywords'),
+			date: searchParams.get('date'),
+			completed: searchParams.get('completed') || undefined,
+			creatorName: searchParams.get('creatorName')
+		}
+	}, [searchParams])
+	const [tasks, tasksFetchError, isLoading, setTasksInvalid] = useTasks({
+		...params,
+		toastRef: toastRef
+	})
 	const [user] = useAuth()
 	const navigate = useNavigate()
 
-	const fetchTasksCallback = useCallback(async () => {
-		await fetchTasks({name: filterTaskName})
-			.then((tasks) => {
-				setTasks(tasks)
-			})
-			.catch((error) => {
-				toastRef.current.show({severity: 'error', summary: 'Listing error', detail: error.message})
-			})
-	}, [filterTaskName])
+	const loadingDisplay = useMemo(() => (
+		<div className={'flex justify-content-center align-items-center h-screen w-full'}>
+			<p className={'w-4'}>Loading...</p>
+		</div>
+	), [])
 
-	useEffect(() => {
-		fetchTasksCallback()
-	}, [fetchTasksCallback])
-
-	if (tasks === undefined) {
-
-		return (
-			<div className={'flex justify-content-center align-items-center h-screen w-full'}>
-				<p>Loading...</p>
-			</div>
-		)
-	}
+	const errorDisplay = useMemo(() => (
+		<div className={'flex justify-content-center align-items-center h-screen w-full'}>
+			<p className={'w-4'}>{tasksFetchError?.message}</p>
+		</div>
+	), [tasksFetchError])
 
 	return (
 		<div className={'flex flex-column justify-content-start align-items-center h-screen w-full gap-3 mt-6'}>
 			<div className={'flex flex-row gap-3 w-full justify-content-center lg:hidden'}>
 				<FloatLabel>
-					<InputText onBlur={fetchTasksCallback} className="p-inputtext md:p-inputtext-lg" id="taskName" value={filterTaskName} onChange={(e) => setFilterTaskName(e.target.value)}/>
+					<InputText
+						onBlur={(e) => {
+							e.target.value ?
+								searchParams.set('name', e.target.value) :
+								searchParams.delete('name')
+							setSearchParams([...searchParams.entries()])
+						}}
+						className="p-inputtext md:p-inputtext-lg"
+						id="taskName"
+					/>
 					<label htmlFor="taskName" className={'p-component'}>Task Name</label>
 				</FloatLabel>
 				<Button label={'Filter'} outlined className={'hidden md:block'} icon={'pi pi-filter'} onClick={() => setToggleFilter(!toggleFilter)}/>
@@ -63,10 +70,15 @@ const TaskListingPage = () => {
 			<div className={'grid grid-nogutter w-full'}>
 				<div className={'hidden lg:block'} style={{transform: 'translate(0%, -1.5rem)'}}>
 					<Fieldset legend={'Filter'} className={'col-1 xl:ml-3 overflow-y-auto w-20rem'}>
-						<TaskFilterComponent setTasks={setTasks} toastRef={toastRef}/>
+						<TaskFilterComponent toastRef={toastRef}/>
 					</Fieldset>
 				</div>
-				<TaskListing taskList={tasks} buttons={taskViewButtons(navigate)}/>
+
+				{
+					(tasksFetchError && errorDisplay)
+					|| (isLoading && loadingDisplay)
+					|| <TaskListing taskList={tasks} buttons={taskViewButtons(navigate)}/>
+				}
 
 			</div>
 			{user && (
@@ -79,9 +91,17 @@ const TaskListingPage = () => {
 			)}
 			<Tooltip target={'.p-speeddial-action'} position={'left'}/>
 			<Toast ref={toastRef} position={'top-left'}/>
-			{user && <AddTaskComponent visible={toggleAdd} setVisible={setToggleAdd} toastRef={toastRef} setTasks={setTasks}/>}
+			{
+				user &&
+				<AddTaskComponent
+					visible={toggleAdd}
+					setVisible={setToggleAdd}
+					toastRef={toastRef}
+					onSuccess={() => setTasksInvalid(false)}
+				/>
+			}
 			<TaskFilterSidebarComponent
-				setTasks={setTasks}
+
 				visible={toggleFilter}
 				onHide={() => setToggleFilter(false)}
 				toastRef={toastRef}

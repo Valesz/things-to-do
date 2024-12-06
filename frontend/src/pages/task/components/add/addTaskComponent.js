@@ -1,11 +1,11 @@
 import {useCallback, useState} from 'react'
 import {addTasks} from '../../services/taskService'
 import AddTaskVisual from './addTaskVisual'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import PropTypes from 'prop-types'
 import {Button} from 'primereact/button'
 
-const AddTaskComponent = ({visible, setVisible, toastRef, setTasks}) => {
+const AddTaskComponent = ({visible, setVisible, toastRef, onSuccess}) => {
 
 	//TODO: ADD mainTaskId option
 	// const [mainTaskId, setMainTaskId] = useState(null);
@@ -49,12 +49,12 @@ const AddTaskComponent = ({visible, setVisible, toastRef, setTasks}) => {
 		})
 			.then((task) => {
 				task.ownername = user.username
-				setTasks((prev) => [task, ...prev])
 				setVisible(false)
+				onSuccess?.(task)
 			}).catch((taskAdditionError) => {
 				toastRef.current.show({severity: 'error', summary: 'Task addition error', detail: taskAdditionError.message})
 			})
-	}, [formData, setTasks, setVisible, toastRef, token, user])
+	}, [formData, setVisible, toastRef, token, user, onSuccess])
 
 	return (
 		<AddTaskVisual
@@ -78,5 +78,5 @@ AddTaskComponent.propTypes = {
 	visible: PropTypes.bool.isRequired,
 	setVisible: PropTypes.func.isRequired,
 	toastRef: PropTypes.object.isRequired,
-	setTasks: PropTypes.func.isRequired
+	onSuccess: PropTypes.func
 }

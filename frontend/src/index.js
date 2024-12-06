@@ -3,54 +3,17 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
 import {PrimeReactProvider} from 'primereact/api'
-import {createBrowserRouter, RouterProvider} from 'react-router-dom'
+import {BrowserRouter, Route, Routes} from 'react-router-dom'
 import HomePage from './pages/homePage'
-import ProfilePage from './pages/profile/profilePage'
+import 'primereact/resources/primereact.min.css'
 import './index.css'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
+import 'primereact/resources/themes/lara-dark-cyan/theme.css'
 import LoginPage from './pages/loginPage'
-import TaskListingPage from './pages/task/taskListingPage'
-import TaskPage from './pages/task/taskPage'
-
-const routes = [
-	{
-		path: '/',
-		element: <App/>,
-		children: [
-			{
-				path: '/',
-				element: <HomePage/>
-			},
-			{
-				path: '/profile/:id',
-				element: <ProfilePage/>
-			},
-			{
-				path: '/login',
-				element: <LoginPage/>
-			},
-			{
-				path: '/task',
-				element: <TaskListingPage/>
-			},
-			{
-				path: '/task/:taskId',
-				element: <TaskPage/>
-			},
-			{
-				path: '/task/:taskId/solutions/:solutionId',
-				element: <TaskPage/>
-			},
-			{
-				path: '/task/:taskId/:activeTab',
-				element: <TaskPage/>
-			}
-		]
-	}
-]
-
-const router = createBrowserRouter(routes)
+import TaskRoutes from './routes/taskRoutes'
+import ProfileRoutes from './routes/profileRoutes'
+import NotFoundPage from './pages/error/notFoundPage'
 
 const primeReactConfig = {
 	ripple: true
@@ -60,9 +23,18 @@ const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
 	<React.StrictMode>
 		<PrimeReactProvider value={primeReactConfig}>
-			<RouterProvider router={router}>
-				<App/>
-			</RouterProvider>
+			<BrowserRouter>
+				<Routes>
+					<Route path={'/'} element={<App/>}>
+						<Route index element={<HomePage/>}/>
+						<Route path={'task/*'} element={<TaskRoutes/>}/>
+						<Route path={'profile/*'} element={<ProfileRoutes/>}/>
+						<Route path={'login'} element={<LoginPage/>}/>
+						<Route path={'register'} element={<LoginPage/>}/>
+						<Route path={'*'} element={<NotFoundPage/>}/>
+					</Route>
+				</Routes>
+			</BrowserRouter>
 		</PrimeReactProvider>
 	</React.StrictMode>
 )

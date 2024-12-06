@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,6 +36,11 @@ public class GlobalExceptionHandler
 		if (ex instanceof DisabledException)
 		{
 			return new ResponseEntity<>("The account is disabled", HttpStatus.UNAUTHORIZED);
+		}
+
+		if (ex instanceof UsernameNotFoundException)
+		{
+			return new ResponseEntity<>("JWT username not found", HttpStatus.NOT_FOUND);
 		}
 
 		if (ex instanceof AccountStatusException)

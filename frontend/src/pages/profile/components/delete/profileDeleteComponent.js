@@ -1,7 +1,7 @@
 import {useNavigate} from 'react-router-dom'
 import {forwardRef, useCallback, useImperativeHandle} from 'react'
 import {deleteUser} from '../../sevices/userService'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import {confirmWarnDialog} from '../../../../utils/constants/buttons'
 import PropTypes from 'prop-types'
 

@@ -29,9 +29,6 @@ public class MyConfiguration extends AbstractJdbcConfiguration
 	@Autowired
 	Environment environment;
 
-	@Autowired
-	DataSource dataSource;
-
 	@Bean
 	DataSource createDataSource()
 	{
@@ -83,7 +80,7 @@ public class MyConfiguration extends AbstractJdbcConfiguration
 	@Bean
 	NamedParameterJdbcTemplate createNamedParameterJdbcTemplate()
 	{
-		return new NamedParameterJdbcTemplate(dataSource);
+		return new NamedParameterJdbcTemplate(createDataSource());
 	}
 
 	@Bean

@@ -3,10 +3,10 @@ import AddSubmissionVisual from '../add/addSubmissionVisual'
 import {useCallback, useEffect, useState} from 'react'
 import {Button} from 'primereact/button'
 import {modifySubmission} from '../../services/submissionService'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import PropTypes from 'prop-types'
 
-const ModifySubmissionComponent = ({visible, setVisible, toastRef, setSubmissions, submission}) => {
+const ModifySubmissionComponent = ({visible, setVisible, toastRef, submission, onSuccess}) => {
 
 	const [formData, setFormData] = useState({
 		description: {
@@ -43,18 +43,14 @@ const ModifySubmissionComponent = ({visible, setVisible, toastRef, setSubmission
 		})
 			.then(submission => {
 				submission.submittername = user.username
-				setSubmissions(prevState => {
-					const index = prevState.findIndex(_submission => _submission.id === submission.id)
-					prevState[index] = submission
-					return prevState
-				})
 				setVisible(false)
+				onSuccess?.(submission)
 				toastRef.current.show({severity: 'success', summary: 'Solution updated successfully!'})
 			})
 			.catch(error => {
 				toastRef.current.show({severity: 'error', summary: 'Update failed', detail: error.message})
 			})
-	}, [formData, token, submission, setSubmissions, setVisible, toastRef, user])
+	}, [formData, token, submission, setVisible, toastRef, user, onSuccess])
 
 	return (
 		<Dialog
@@ -83,6 +79,6 @@ ModifySubmissionComponent.propTypes = {
 	visible: PropTypes.bool.isRequired,
 	setVisible: PropTypes.func.isRequired,
 	toastRef: PropTypes.object,
-	setSubmissions: PropTypes.func.isRequired,
-	submission: PropTypes.object
+	submission: PropTypes.object,
+	onSuccess: PropTypes.func
 }

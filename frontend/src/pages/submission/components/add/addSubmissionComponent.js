@@ -1,14 +1,14 @@
 import AddSubmissionVisual from './addSubmissionVisual'
 import {useCallback, useState} from 'react'
 import {addSubmission} from '../../services/submissionService'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import {BlockUI} from 'primereact/blockui'
 import {Button} from 'primereact/button'
 import {Dialog} from 'primereact/dialog'
 import LoginComponent from '../../../../components/auth/login/loginComponent'
 import PropTypes from 'prop-types'
 
-const AddSubmissionComponent = ({task, setSubmissions, toastRef, onAdd}) => {
+const AddSubmissionComponent = ({task, toastRef, onSuccess}) => {
 
 	const [loginDialogVisibility, setLoginDialogVisibility] = useState(false)
 	const [user, token] = useAuth()
@@ -45,13 +45,12 @@ const AddSubmissionComponent = ({task, setSubmissions, toastRef, onAdd}) => {
 		})
 			.then(submission => {
 				submission.submittername = user.username
-				setSubmissions(prevState => [submission, ...prevState])
-				onAdd?.()
+				onSuccess?.(submission)
 			})
 			.catch(error => {
 				toastRef.current.show({severity: 'error', summary: 'Failed to submit solution', detail: error.message})
 			})
-	}, [formData, token, user, setSubmissions, onAdd, toastRef, task])
+	}, [formData, token, user, onSuccess, toastRef, task])
 
 	return (
 		<>
@@ -103,7 +102,6 @@ export default AddSubmissionComponent
 
 AddSubmissionComponent.propTypes = {
 	task: PropTypes.object.isRequired,
-	setSubmissions: PropTypes.func.isRequired,
 	toastRef: PropTypes.object.isRequired,
-	onAdd: PropTypes.func
+	onSuccess: PropTypes.func
 }

@@ -1,10 +1,12 @@
 package org.example.controller;
 
+import java.util.Objects;
 import org.example.MyConfiguration;
 import org.example.model.User;
 import org.example.service.UserService;
 import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
+import org.example.utils.exceptions.ServiceExceptionType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
@@ -54,10 +56,21 @@ public class UserController
 
 	@RequestMapping(value = "/", method = RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
-	public User updateUser(@RequestBody User user)
+	public User updateUser(@RequestBody User user,
+		@RequestHeader("Authorization") String token)
 	{
 		try
 		{
+			User requestedUser = userService.getUserByToken(token.substring(7));
+
+			if (user.getId() != null && userService.getUserById(user.getId()) != null
+				&& !Objects.equals(requestedUser.getId(), user.getId()))
+			{
+				throw new ServiceException(ServiceExceptionType.UNAUTHORIZED_TO_CHANGE,
+					"Changing other user's data is not allowed!"
+				);
+			}
+
 			User savedUser = userService.updateUser(user);
 			savedUser.setPassword(null);
 			return savedUser;
@@ -68,6 +81,12 @@ public class UserController
 			{
 				case ID_NOT_GIVEN, INVALID_ARGUMENT:
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+
+				case UNAUTHORIZED_TO_CHANGE:
+					throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+
+				case CONSTRAINT_VIOLATION:
+					throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
 
 				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -112,18 +131,32 @@ public class UserController
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteUser(@PathVariable("id") Long id)
+	public void deleteUser(@PathVariable("id") Long id,
+		@RequestHeader(value = "Authorization") String token)
 	{
 		try
 		{
+			User requestedUser = userService.getUserByToken(token.substring(7));
+
+			if (userService.getUserById(id) != null && !Objects.equals(requestedUser.getId(), id))
+			{
+				throw new ServiceException(ServiceExceptionType.UNAUTHORIZED_TO_CHANGE,
+					"Deleting other user's data is not allowed!"
+				);
+			}
+
 			userService.deleteUser(id);
 		}
 		catch (ServiceException e)
 		{
 			switch (e.getServiceExceptionTypeEnum())
 			{
+				case UNAUTHORIZED_TO_CHANGE:
+					throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+
 				case ID_NOT_FOUND:
 					throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+
 				default:
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 			}

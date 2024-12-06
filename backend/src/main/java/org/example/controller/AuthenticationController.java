@@ -1,9 +1,9 @@
 package org.example.controller;
 
 import org.example.model.User;
+import org.example.service.AuthenticationService;
+import org.example.service.JwtService;
 import org.example.service.UserService;
-import org.example.service.impl.AuthenticationServiceImpl;
-import org.example.service.impl.JwtServiceImpl;
 import org.example.utils.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,13 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthenticationController
 {
 	@Autowired
-	private JwtServiceImpl jwtService;
+	private JwtService jwtService;
 
 	@Autowired
 	private UserService userService;
 
 	@Autowired
-	private AuthenticationServiceImpl authenticationService;
+	private AuthenticationService authenticationService;
 
 	@RequestMapping(value = "/register", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)

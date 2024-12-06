@@ -1,11 +1,11 @@
 import {useCallback, useEffect, useState} from 'react'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import AddTaskVisual from '../add/addTaskVisual'
 import {updateTask} from '../../services/taskService'
 import PropTypes from 'prop-types'
 import {Button} from 'primereact/button'
 
-const ModifyTaskComponent = ({visible, setVisible, toastRef, setTasks, task}) => {
+const ModifyTaskComponent = ({visible, setVisible, toastRef, onSuccess, task}) => {
 
 	const [formData, setFormData] = useState({
 		name: {
@@ -70,17 +70,13 @@ const ModifyTaskComponent = ({visible, setVisible, toastRef, setTasks, task}) =>
 			keywords: formData.keywords.value
 		}).then(task => {
 			task.ownername = user.username
-			setTasks((prevState) => {
-				const index = prevState.findIndex((_task) => _task.id === task.id)
-				prevState[index] = task
-				setVisible(false)
-				return prevState
-			})
+			setVisible(false)
+			onSuccess?.(task)
 			toastRef.current.show({severity: 'success', summary: 'Task Updated successfully!'})
 		}).catch(error => {
 			toastRef.current.show({severity: 'error', summary: 'Update Failed', detail: error.message})
 		})
-	}, [task, token, toastRef, setTasks, setVisible, formData, user])
+	}, [task, token, toastRef, setVisible, formData, user, onSuccess])
 
 	return (
 		<AddTaskVisual
@@ -104,6 +100,6 @@ ModifyTaskComponent.propTypes = {
 	visible: PropTypes.bool.isRequired,
 	setVisible: PropTypes.func.isRequired,
 	toastRef: PropTypes.object.isRequired,
-	setTasks: PropTypes.func.isRequired,
-	task: PropTypes.object.isRequired
+	task: PropTypes.object.isRequired,
+	onSuccess: PropTypes.func
 }

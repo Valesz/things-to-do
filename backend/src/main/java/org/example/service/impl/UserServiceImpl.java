@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.example.model.User;
@@ -188,6 +189,15 @@ public class UserServiceImpl implements UserService
 		{
 			throw new ServiceException(ServiceExceptionType.ID_NOT_FOUND,
 				"User with id " + user.getId() + " doesn't exist. Please use save to save this instance."
+			);
+		}
+
+		User userInDatabase = userRepository.findByUsername(user.getUsername()).orElse(null);
+
+		if (userInDatabase != null && !Objects.equals(userInDatabase.getId(), user.getId()))
+		{
+			throw new ServiceException(ServiceExceptionType.CONSTRAINT_VIOLATION,
+				"User with given username already exists."
 			);
 		}
 

@@ -1,7 +1,12 @@
 import {serverEndpoint} from '../config/server-properties'
 
+const controller = new AbortController()
+
 export async function fetchJson(relativeEndpoint, requestOptions) {
-	return await fetch(serverEndpoint + relativeEndpoint, requestOptions)
+	return await fetch(serverEndpoint + relativeEndpoint, {
+		...requestOptions,
+		signal: controller.signal
+	})
 		.then(async (response) => {
 			const isJson = response.headers.get('content-type')?.includes('application/json')
 			const data = isJson && await response.json()

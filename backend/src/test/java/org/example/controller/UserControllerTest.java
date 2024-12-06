@@ -307,8 +307,8 @@ public class UserControllerTest extends AbstractTest
 	@Test
 	public void updateUserTest()
 	{
-		User propertiesToUpgrade = User.builder()
-			.id(user2.getId())
+		User propertiesToUpdate = User.builder()
+			.id(user1.getId())
 			.username("Csin Csilla")
 			.email("csinos@csilla.hu")
 			.timeofcreation(LocalDate.EPOCH)
@@ -319,21 +319,22 @@ public class UserControllerTest extends AbstractTest
 			.build();
 
 		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(baseURI, HttpMethod.PUT, new HttpEntity<>(propertiesToUpgrade, headers), User.class);
+		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(baseURI, HttpMethod.PUT, new HttpEntity<>(propertiesToUpdate, headers), User.class);
 		Assert.assertEquals(HttpStatus.OK, responseFromUpdate.getStatusCode());
 
-		ResponseEntity<User[]> responseFromDb = this.restTemplate.exchange("/api/user/?id={id}", HttpMethod.GET, new HttpEntity<>(headers), User[].class, propertiesToUpgrade.getId());
+		ResponseEntity<User[]> responseFromDb = this.restTemplate.exchange("/api/user/?id={id}", HttpMethod.GET, new HttpEntity<>(null), User[].class, propertiesToUpdate.getId());
 		Assert.assertNotNull(responseFromDb.getBody());
 		User userFromDb = responseFromDb.getBody()[0];
 
-		Assert.assertEquals(propertiesToUpgrade.getUsername(), userFromDb.getUsername());
-		Assert.assertEquals(propertiesToUpgrade.getEmail(), userFromDb.getEmail());
-		Assert.assertEquals(propertiesToUpgrade.getTimeofcreation(), userFromDb.getTimeofcreation());
-		Assert.assertEquals(propertiesToUpgrade.getStatus(), userFromDb.getStatus());
-		Assert.assertEquals(propertiesToUpgrade.getClassification(), userFromDb.getClassification());
-		Assert.assertEquals(propertiesToUpgrade.getPrecisionofanswers(), userFromDb.getPrecisionofanswers());
+		Assert.assertEquals(propertiesToUpdate.getUsername(), userFromDb.getUsername());
+		Assert.assertEquals(propertiesToUpdate.getEmail(), userFromDb.getEmail());
+		Assert.assertEquals(propertiesToUpdate.getTimeofcreation(), userFromDb.getTimeofcreation());
+		Assert.assertEquals(propertiesToUpdate.getStatus(), userFromDb.getStatus());
+		Assert.assertEquals(propertiesToUpdate.getClassification(), userFromDb.getClassification());
+		Assert.assertEquals(propertiesToUpdate.getPrecisionofanswers(), userFromDb.getPrecisionofanswers());
 	}
 
 	@Test
@@ -376,6 +377,27 @@ public class UserControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
 		Assert.assertEquals("Not Found", responseEntity.getBody().getError());
+		Assert.assertNotNull(responseEntity.getBody().getMessage());
+	}
+
+	@Test
+	public void updateUserWithNullIdTest()
+	{
+		User propertiesToUpdate = User.builder()
+			.id(null)
+			.username("Sanyi a ló")
+			.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+		headers.add(HttpHeaders.ACCEPT, "application/json");
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
+
+		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+
+		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		Assert.assertNotNull(responseEntity.getBody());
 		Assert.assertNotNull(responseEntity.getBody().getMessage());
 	}
 

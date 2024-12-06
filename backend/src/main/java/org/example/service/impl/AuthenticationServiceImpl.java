@@ -2,13 +2,14 @@ package org.example.service.impl;
 
 import org.example.model.User;
 import org.example.repository.UserRepository;
+import org.example.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthenticationServiceImpl
+public class AuthenticationServiceImpl implements AuthenticationService
 {
 	@Autowired
 	private UserRepository userRepository;

@@ -3,7 +3,7 @@ import TaskFilterComponent from '../taskFilterComponent'
 import './taskFilterSidebar.css'
 import PropTypes from 'prop-types'
 
-const TaskFilterSidebarComponent = ({visible, onHide, setTasks, toastRef}) => {
+const TaskFilterSidebarComponent = ({visible, onHide, toastRef}) => {
 
 	const content = (
 		<div className={'block lg:static sidebarHeight'}>
@@ -13,7 +13,7 @@ const TaskFilterSidebarComponent = ({visible, onHide, setTasks, toastRef}) => {
 						<span className={'font-semibold text-2xl text-primary'}>Filter search</span>
 					</div>
 					<div className="overflow-y-auto w-full w-max">
-						<TaskFilterComponent setTasks={setTasks} toastRef={toastRef}/>
+						<TaskFilterComponent toastRef={toastRef}/>
 					</div>
 				</div>
 			</div>
@@ -35,6 +35,5 @@ export default TaskFilterSidebarComponent
 TaskFilterSidebarComponent.propTypes = {
 	visible: PropTypes.bool.isRequired,
 	onHide: PropTypes.func.isRequired,
-	setTasks: PropTypes.func.isRequired,
 	toastRef: PropTypes.object.isRequired
 }

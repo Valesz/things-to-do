@@ -3,9 +3,16 @@ import {Button} from 'primereact/button'
 import {useNavigate} from 'react-router-dom'
 import PropTypes from 'prop-types'
 import {submissionAcceptance} from '../../../../utils/constants/submissionEnums'
+import {useTasks} from '../../../task/hooks/useTask'
+import {useMemo} from 'react'
 
-const SubmissionBlock = ({task, submission, index, buttons, titleShow = 'both'}) => {
+const SubmissionBlock = ({submission, index, buttons, titleShow = 'both'}) => {
 
+	const [tasks] = useTasks({
+		id: submission?.taskid,
+		enabled: titleShow === 'both' || titleShow === 'task'
+	})
+	const task = useMemo(() => tasks?.[0], [tasks])
 	const navigate = useNavigate()
 
 	if (!submission) {
@@ -27,27 +34,27 @@ const SubmissionBlock = ({task, submission, index, buttons, titleShow = 'both'})
 							(
 								titleShow === 'both' &&
 								<span className={'col-7 text-2xl font-bold text-left'}>
-									<span>Solution for {task.name}</span>
-									<span>
-										<span>Solution by:&nbsp;</span>
-										<button
-											onClick={() => navigate(`/profile/${submission.submitterid}`)}
-											className={'underline cursor-pointer m-0 p-0 p-component'}
-											style={{border: 'none', background: 'none', fontSize: 'inherit', color: 'inherit', fontWeight: 'inherit'}}
-											tabIndex={0}
-										>
-											<span>
+									<span className={' text-2xl font-bold text-left'}>
+										Solution for: {task?.name}&nbsp;
+										<span className={'text-base font-semibold text-400'}>
+											<span>- By:&nbsp;</span>
+											<button
+												onClick={() => navigate(`/profile/${submission.submitterid}`)}
+												className={'underline cursor-pointer p-component m-0 p-0'}
+												style={{background: 'none', border: 'none', fontWeight: 'inherit', fontSize: 'inherit', color: 'inherit'}}
+												tabIndex={0}
+											>
 												{submission.submittername}
-											</span>
-										</button>
-										{
-											(submission.acceptance === submissionAcceptance.ACCEPTED &&
-												<i className={'pi pi-check ml-2 text-xl text-green-400'}></i>) ||
-											(submission.acceptance === submissionAcceptance.REJECTED &&
-												<i className={'pi pi-times ml-2 text-xl text-red-400'}></i>) ||
-											<i className={'pi pi-clock ml-2 text-xl'}></i>
-										}
+											</button>
+										</span>
 									</span>
+									{
+										(submission.acceptance === submissionAcceptance.ACCEPTED &&
+											<i className={'pi pi-check ml-2 text-xl text-green-400'}></i>) ||
+										(submission.acceptance === submissionAcceptance.REJECTED &&
+											<i className={'pi pi-times ml-2 text-xl text-red-400'}></i>) ||
+										<i className={'pi pi-clock ml-2 text-xl'}></i>
+									}
 								</span>
 							)
 							|| (
@@ -78,7 +85,7 @@ const SubmissionBlock = ({task, submission, index, buttons, titleShow = 'both'})
 							|| (
 								titleShow === 'task' &&
 								<span className={'col-7 text-2xl font-bold text-left'}>
-									<span>Solution for {task.name}</span>
+									{(task && <span>Solution for {task.name}</span>) || '...Loading'}
 								</span>
 							)
 						)

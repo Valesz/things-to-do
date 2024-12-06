@@ -4,8 +4,8 @@ import io.jsonwebtoken.Claims;
 import java.time.LocalDate;
 import org.example.AbstractTest;
 import org.example.model.User;
+import org.example.service.JwtService;
 import org.example.service.UserService;
-import org.example.service.impl.JwtServiceImpl;
 import org.example.utils.enums.UserStatusEnum;
 import org.junit.After;
 import org.junit.Assert;
@@ -30,7 +30,7 @@ public class AuthenticationControllerTest extends AbstractTest
 	private UserService userService;
 
 	@Autowired
-	private JwtServiceImpl jwtService;
+	private JwtService jwtService;
 
 	private final String baseEndpoint = "/api/auth/";
 
@@ -105,22 +105,4 @@ public class AuthenticationControllerTest extends AbstractTest
 		Assert.assertNotNull(jwtService.extractClaim(jwtToken, Claims::getExpiration));
 		Assert.assertEquals(this.user1.getUsername(), jwtService.extractUsername(jwtToken));
 	}
-
-//	@Test
-//	public void loginWithInvalidCredentials() {
-//		User loginUser = User.builder()
-//			.username(this.user1.getUsername())
-//			.password("tesztelek")
-//			.build();
-//
-//		ResponseEntity<HttpErrorResponseForTests> response = restTemplate.postForEntity(baseEndpoint + "login", loginUser, HttpErrorResponseForTests.class);
-//
-//		Assert.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-//		Assert.assertNotNull(response.getBody());
-//
-//		HttpErrorResponseForTests errorResponse = response.getBody();
-//		Assert.assertNotNull(errorResponse);
-//		Assert.assertNotNull(errorResponse.getError());
-//		Assert.assertEquals("The username or password is incorrect", errorResponse.getMessage());
-//	}
 }

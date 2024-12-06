@@ -2,7 +2,9 @@ package org.example.service;
 
 import org.example.model.User;
 import org.example.utils.exceptions.ServiceException;
+import org.springframework.stereotype.Service;
 
+@Service
 public interface UserService
 {
 

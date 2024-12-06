@@ -68,7 +68,7 @@ public class SubmissionServiceImpl implements SubmissionService
 	}
 
 	@Override
-	public Iterable<SubmissionListing> getBySubmissionsObject(Submission submission)
+	public Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission)
 	{
 		if (submission == null)
 		{
@@ -81,7 +81,8 @@ public class SubmissionServiceImpl implements SubmissionService
 			.addValue("description", submission.getDescription())
 			.addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
 			.addValue("acceptance", submission.getAcceptance() == null ? null : submission.getAcceptance().toString())
-			.addValue("submitterid", submission.getSubmitterid());
+			.addValue("submitterid", submission.getSubmitterid())
+			.addValue("submittername", "%" + submission.getSubmittername() + "%");
 
 		String query = constructQueryByOwnObject(submission);
 
@@ -108,7 +109,7 @@ public class SubmissionServiceImpl implements SubmissionService
 		});
 	}
 
-	private String constructQueryByOwnObject(Submission submission)
+	private String constructQueryByOwnObject(SubmissionListing submission)
 	{
 		StringBuilder query =
 			new StringBuilder(" SELECT SUBMISSION.ID, TASKID, DESCRIPTION, SUBMISSION.TIMEOFSUBMISSION, ACCEPTANCE, SUBMITTERID, USERNAME AS SUBMITTERNAME FROM \"submission\" SUBMISSION ");
@@ -145,6 +146,11 @@ public class SubmissionServiceImpl implements SubmissionService
 		if (submission.getSubmitterid() != null)
 		{
 			query.append(" AND submitterid = :submitterid ");
+		}
+
+		if (submission.getSubmittername() != null)
+		{
+			query.append(" AND USERT.username LIKE :submittername ");
 		}
 
 		query.append(" ORDER BY timeofsubmission DESC, ID DESC ");

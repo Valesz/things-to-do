@@ -1,4 +1,4 @@
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import {useCallback, useEffect, useState} from 'react'
 import FormComponent from '../../../../components/form/formComponent'
 import PropTypes from 'prop-types'
@@ -9,7 +9,7 @@ import {fetchJWTToken} from '../../../../services/authService'
 import {setInvalidAttributeToFromElements} from '../../../../utils/utilityService'
 import {emailRegexPattern, passwordRegexPattern, usernameRegexPattern} from '../../../../utils/constants/regex'
 
-const ProfileModifyComponent = ({user, toastRef, className, extraButtons}) => {
+const ProfileModifyComponent = ({user, toastRef, className, extraButtons, onSuccess}) => {
 	const [loggedInUser, token, loginCallback] = useAuth()
 	const [formData, setFormData] = useState({
 		username: {
@@ -169,7 +169,9 @@ const ProfileModifyComponent = ({user, toastRef, className, extraButtons}) => {
 			.catch(async error => {
 				toastRef.current.show({severity: 'error', summary: 'Login error', detail: error.cause})
 			})
-	}, [formData, toastRef, token, user, loggedInUser, loginCallback])
+
+		onSuccess?.(updatedUser)
+	}, [formData, toastRef, token, user, loggedInUser, loginCallback, onSuccess])
 
 	const header = (
 		<h1 className={'border-x-3 border-primary text-center'}>{user.username}'s data change</h1>
@@ -198,5 +200,6 @@ ProfileModifyComponent.propTypes = {
 	user: PropTypes.object.isRequired,
 	toastRef: PropTypes.object.isRequired,
 	className: PropTypes.string,
-	extraButtons: PropTypes.arrayOf(PropTypes.object)
+	extraButtons: PropTypes.arrayOf(PropTypes.object),
+	onSuccess: PropTypes.func
 }

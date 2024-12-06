@@ -1,11 +1,11 @@
-import {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import {createContext, useCallback, useEffect, useMemo, useState} from 'react'
 import {useCookies} from 'react-cookie'
 import {fetchUserByAuthToken} from '../pages/profile/sevices/userService'
 import {fetchJWTToken} from '../services/authService'
 import PropTypes from 'prop-types'
 import {userStatusEnum} from '../utils/constants/userEnums'
 
-const AuthContext = createContext()
+export const AuthContext = createContext()
 
 const AuthProvider = ({children}) => {
 	const [user, setUser] = useState(null)
@@ -69,10 +69,6 @@ const AuthProvider = ({children}) => {
 }
 
 export default AuthProvider
-
-export const useAuth = () => {
-	return useContext(AuthContext)
-}
 
 AuthProvider.propTypes = {
 	children: PropTypes.any.isRequired

@@ -1,10 +1,10 @@
 import {forwardRef, useCallback, useImperativeHandle} from 'react'
 import {deleteSubmission} from '../../services/submissionService'
-import {useAuth} from '../../../../contexts/AuthContext'
+import {useAuth} from '../../../../hooks/useAuth'
 import {confirmWarnDialog} from '../../../../utils/constants/buttons'
 import PropTypes from 'prop-types'
 
-const SubmissionDeleteComponent = forwardRef(({toastRef, onSuccess, setSubmissions}, ref) => {
+const SubmissionDeleteComponent = forwardRef(({toastRef, onSuccess}, ref) => {
 	const [, token] = useAuth()
 
 	const deleteSubmissionCallback = useCallback(async (id) => {
@@ -14,7 +14,6 @@ const SubmissionDeleteComponent = forwardRef(({toastRef, onSuccess, setSubmissio
 
 		await deleteSubmission(token, id)
 			.then(() => {
-				setSubmissions?.(prevState => [...prevState.filter(submission => submission.id !== id)])
 				onSuccess?.(id)
 
 				toastRef.current.show({severity: 'success', summary: 'Deletion success', detail: 'Solution deleted successfully!'})
@@ -22,7 +21,7 @@ const SubmissionDeleteComponent = forwardRef(({toastRef, onSuccess, setSubmissio
 			.catch(error => {
 				toastRef.current.show({severity: 'error', summary: 'Failed to delete solution', detail: error.message})
 			})
-	}, [token, setSubmissions, toastRef, onSuccess])
+	}, [token, toastRef, onSuccess])
 
 	useImperativeHandle(ref, () => ({
 		deleteSubmissionCallback(id) {
@@ -40,6 +39,5 @@ export default SubmissionDeleteComponent
 
 SubmissionDeleteComponent.propTypes = {
 	toastRef: PropTypes.object.isRequired,
-	onSuccess: PropTypes.func,
-	setSubmissions: PropTypes.func
+	onSuccess: PropTypes.func
 }

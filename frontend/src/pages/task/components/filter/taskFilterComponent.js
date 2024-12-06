@@ -1,41 +1,43 @@
 import {useCallback, useState} from 'react'
-import {fetchTasks} from '../../services/taskService'
 import TaskFilterVisual from './taskFilterVisual'
 import {Button} from 'primereact/button'
 import PropTypes from 'prop-types'
+import {useSearchParams} from 'react-router-dom'
 
-const TaskFilterComponent = ({setTasks, toastRef}) => {
+const TaskFilterComponent = ({toastRef, onChange}) => {
+	const [searchParams, setSearchParams] = useSearchParams()
+
 	const [filterFormData, setFilterFormData] = useState(
 		{
 			taskName: {
 				label: 'Task name',
 				name: 'taskName',
-				value: '',
+				value: searchParams.get('name') || '',
 				type: 'text'
 			},
 			creatorName: {
 				label: 'Creator name',
 				name: 'creatorName',
-				value: '',
+				value: searchParams.get('creatorName') || '',
 				type: 'text'
 			},
 			keywords: {
 				label: 'Keywords',
 				name: 'keywords',
-				value: [],
+				value: searchParams.getAll('keywords') || [],
 				type: 'chips'
 			},
 			date: {
 				label: 'Date',
 				name: 'date',
-				value: '',
+				value: searchParams.get('date') || '',
 				type: 'date',
 				mode: 'range'
 			},
 			completion: {
 				label: 'Completion status:',
 				name: 'completion',
-				value: '',
+				value: searchParams.get('completed') || '',
 				type: 'radio',
 				options: [
 					{
@@ -62,20 +64,37 @@ const TaskFilterComponent = ({setTasks, toastRef}) => {
 	)
 
 	const fetchTasksCallback = useCallback(async () => {
-		fetchTasks({
-			name: filterFormData.taskName.value,
-			keywords: filterFormData.keywords.value,
-			date: filterFormData.date.value,
-			completed: filterFormData.completion.value,
-			creatorName: filterFormData.creatorName.value
+		setSearchParams(() => {
+			let res = {}
+			filterFormData.taskName.value &&
+			(res = {
+				...res,
+				name: filterFormData.taskName.value
+			})
+			filterFormData.keywords.value &&
+			(res = {
+				...res,
+				keywords: filterFormData.keywords.value
+			})
+			filterFormData.date.value &&
+			(res = {
+				...res,
+				date: filterFormData.date.value
+			})
+			filterFormData.completion.value &&
+			(res = {
+				...res,
+				completed: filterFormData.completion.value
+			})
+			filterFormData.creatorName.value &&
+			(res = {
+				...res,
+				creatorName: filterFormData.creatorName.value
+			})
+			return res
 		})
-			.then((tasks) => {
-				setTasks(tasks)
-			})
-			.catch((error) => {
-				toastRef.current.show({severity: 'error', summary: 'Listing error', detail: error.message})
-			})
-	}, [filterFormData, setTasks, toastRef])
+		onChange?.(filterFormData)
+	}, [setSearchParams, filterFormData, onChange])
 
 	return (
 		<TaskFilterVisual
@@ -96,6 +115,6 @@ const TaskFilterComponent = ({setTasks, toastRef}) => {
 export default TaskFilterComponent
 
 TaskFilterComponent.propTypes = {
-	setTasks: PropTypes.func.isRequired,
-	toastRef: PropTypes.object.isRequired
+	toastRef: PropTypes.object.isRequired,
+	onChange: PropTypes.func
 }

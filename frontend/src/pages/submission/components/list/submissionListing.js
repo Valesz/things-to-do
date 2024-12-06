@@ -3,7 +3,7 @@ import {DataView} from 'primereact/dataview'
 import SubmissionBlock from './submissionBlock'
 import PropTypes from 'prop-types'
 
-const SubmissionListing = ({submissionList, buttons, className, titleShow = 'both'}) => {
+const SubmissionListing = ({submissionList, buttons, className, titleShow = 'both', paginatorPosition = 'both'}) => {
 	const [first, setFirst] = useState(0)
 	const [rows, setRows] = useState(5)
 
@@ -39,7 +39,7 @@ const SubmissionListing = ({submissionList, buttons, className, titleShow = 'bot
 					setFirst(e.first)
 					setRows(e.rows)
 				}}
-				paginatorPosition={'both'}
+				paginatorPosition={paginatorPosition || 'both'}
 				pageLinkSize={window.innerWidth >= 576 ? 5 : 3}
 				paginatorTemplate={window.innerWidth
 				>= 576 ? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown' : 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'}
@@ -64,5 +64,6 @@ SubmissionListing.propTypes = {
 	submissionList: PropTypes.arrayOf(PropTypes.object).isRequired,
 	buttons: PropTypes.arrayOf(PropTypes.object),
 	className: PropTypes.string,
-	titleShow: PropTypes.string
+	titleShow: PropTypes.string,
+	paginatorPosition: PropTypes.string
 }

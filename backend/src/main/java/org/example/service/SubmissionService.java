@@ -16,7 +16,7 @@ public interface SubmissionService
 
 	Submission getSubmissionById(Long id);
 
-	Iterable<SubmissionListing> getBySubmissionsObject(Submission submission);
+	Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission);
 
 	Submission saveSubmission(Submission submission) throws ServiceException;
 

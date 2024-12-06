@@ -1,31 +1,51 @@
 import {useNavigate, useParams} from 'react-router-dom'
 
-import {useCallback, useEffect, useRef, useState} from 'react'
-import {fetchUser} from './sevices/userService'
-import {useAuth} from '../../contexts/AuthContext'
+import {useCallback, useMemo, useRef, useState} from 'react'
+import {useAuth} from '../../hooks/useAuth'
 import ProfileBlock from './components/profileBlock'
 import {Toast} from 'primereact/toast'
 import TaskListing from '../task/components/list/taskListing'
-import {fetchTasks} from '../task/services/taskService'
 import {TabPanel, TabView} from 'primereact/tabview'
 import {ConfirmDialog} from 'primereact/confirmdialog'
 import ModifyTaskComponent from '../task/components/modify/modifyTaskComponent'
-import {openDialog, taskViewButtons, updateDeleteButtons, viewSolutionsForTaskButtons} from '../../utils/constants/buttons'
+import {openDialog, taskViewButtons, updateDeleteButtons, viewSolutionForTask, viewSolutionsForTaskButtons} from '../../utils/constants/buttons'
 import ProfileModifyComponent from './components/modify/profileModifyComponent'
 import {Dialog} from 'primereact/dialog'
 import ProfileDeleteComponent from './components/delete/profileDeleteComponent'
 import TaskDeleteComponent from '../task/components/delete/taskDeleteComponent'
+import {useUsers} from './hooks/useUsers'
+import {useTasks} from '../task/hooks/useTask'
+import {useSubmissions} from '../submission/hooks/useSubmissions'
+import SubmissionListing from '../submission/components/list/submissionListing'
+import NotFoundPage from '../error/notFoundPage'
 
 function ProfilePage() {
 	const [user] = useAuth()
-	const [localUser, setLocalUser] = useState(null)
 	const {id} = useParams()
 	const toastRef = useRef(null)
 	const profileDeleteRef = useRef(null)
 	const taskDeleteRef = useRef(null)
-	const [createdTasks, setCreatedTasks] = useState([])
-	// const [submissions, setSubmissions] = useState([]);
-	const [completedTasks, setCompletedTasks] = useState([])
+	const [localUsers, localUserFetchError, isLocalUserLoading, setLocalUserValid] = useUsers({
+		id: id ?? user?.id,
+		enabled: !!id || !!user?.id,
+		toastRef: toastRef
+	})
+	const localUser = useMemo(() => localUsers?.[0], [localUsers])
+	const [createdTasks, createdTaskError, isCreatedTasksLoading, setCreatedTasksValid] = useTasks({
+		creatorName: localUser?.username,
+		enabled: !!localUser?.username,
+		toastRef: toastRef
+	})
+	const [completedTasks, completedTaskError, isCompletedTasksLoading] = useTasks({
+		completed: true,
+		completedUserId: localUser?.id,
+		enabled: !!localUser?.id && !!createdTasks,
+		toastRef: toastRef
+	})
+	const [submissions, submissionError, isSubmissionLoading] = useSubmissions({
+		submitterId: localUser?.id,
+		enabled: !!localUser?.id
+	})
 	const [modifyProfileVisible, setModifyProfileVisible] = useState(false)
 	const [modifyTaskVisible, setModifyTaskVisible] = useState(false)
 	const [modifyTask, setModifyTask] = useState({
@@ -35,113 +55,83 @@ function ProfilePage() {
 	})
 	const navigate = useNavigate()
 
-	const getUserCallback = useCallback(async () => {
-		if (id === undefined) {
-			setLocalUser(user)
-			return
-		}
+	const loadingDisplay = useMemo(() => (
+		<div className={'flex justify-content-center align-items-center h-screen w-full'}>
+			<p>Loading...</p>
+		</div>
+	), [])
 
-		await fetchUser({id: id})
-			.then(userData => {
-				setLocalUser(userData[0])
-			})
-			.catch(error => {
-				toastRef.current.show({severity: 'error', summary: 'Couldn\'t load user', detail: error.message})
-			})
+	const errorDisplay = useCallback((error) => (
+		<div className={'flex justify-content-center align-items-center h-screen w-full'}>
+			<p>{error.message}</p>
+		</div>
+	), [])
 
-	}, [id, user])
-
-	useEffect(() => {
-		getUserCallback()
-	}, [getUserCallback])
-
-	const getTasksOfUser = useCallback(async () => {
-		if (!localUser) {
-			return
-		}
-
-		await fetchTasks({ownerId: localUser.id})
-			.then((tasks) => {
-				setCreatedTasks(tasks)
-			})
-			.catch(error => {
-				toastRef.current.show({severity: 'error', summary: 'Failed to get tasks', detail: error.message})
-			})
-	}, [localUser])
-
-	useEffect(() => {
-		getTasksOfUser()
-	}, [getTasksOfUser])
-
-	// const getSubmissionsForTaskByUser = useCallback(async () => {
-	// 	if (!localUser) {
-	// 		return;
-	// 	}
-	//
-	// 	await fetchSubmission({submitterId: localUser.id})
-	// 		.then(submissions => {
-	// 			setSubmissions(submissions)
-	// 		})
-	// 		.catch(error => {
-	// 			toastRef.current.show({severity: 'error', summary: 'Failed to get submissions', detail: error});
-	// 		})
-	// }, [localUser])
-
-	const getCompletedTasksOfUser = useCallback(async () => {
-		if (!localUser) {
-			return
-		}
-
-		await fetchTasks({
-			completed: true,
-			completedUserId: localUser.id
-		})
-			.then(tasks => {
-				setCompletedTasks(tasks)
-			})
-			.catch(error => {
-				toastRef.current.show({severity: 'error', summary: 'Failed to get completed tasks', detail: error.message})
-			})
-	}, [localUser])
-
-	useEffect(() => {
-		getCompletedTasksOfUser()
-	}, [getCompletedTasksOfUser])
+	if (id && !parseInt(id)) {
+		return (
+			<NotFoundPage/>
+		)
+	}
 
 	return (
 		<div>
-			<ProfileBlock
-				user={localUser}
-				title={`${localUser ? localUser.username : 'Unknown'}'s Profile`}
-				buttons={
-					localUser?.id === user?.id ?
-						updateDeleteButtons('Modify Profile', 'Delete Profile',
-							() => setModifyProfileVisible(true),
-							(id) => profileDeleteRef.current.deleteProfile(id)) :
-						undefined
-				}
-			/>
+			{(localUserFetchError && errorDisplay(localUserFetchError))
+				|| (isLocalUserLoading && loadingDisplay)
+				||
+				<ProfileBlock
+					user={localUser}
+					title={`${localUser ? localUser.username : 'Unknown'}'s Profile`}
+					buttons={
+						localUser?.id === user?.id ?
+							updateDeleteButtons('Modify Profile', 'Delete Profile',
+								() => setModifyProfileVisible(true),
+								(id) => profileDeleteRef.current.deleteProfile(id)) :
+							undefined
+					}
+				/>}
 			{localUser &&
 				<TabView className={'px-2 lg:px-8'} pt={{panelContainer: {className: 'p-0'}}}>
 					<TabPanel header={'Completed tasks'} className={'w-full sm:w-auto'}>
-						<TaskListing
-							taskList={completedTasks}
-							buttons={viewSolutionsForTaskButtons(navigate)}
-							className={'col-12 mx-auto'}
-						/>
+						{
+							(completedTaskError && errorDisplay(completedTaskError))
+							|| (isCompletedTasksLoading && loadingDisplay)
+							||
+							<TaskListing
+								taskList={completedTasks}
+								buttons={viewSolutionsForTaskButtons(navigate)}
+								className={'col-12 mx-auto'}
+							/>
+						}
 					</TabPanel>
 					<TabPanel header={'Tasks created'} className={'w-full sm:w-auto'}>
-						<TaskListing
-							taskList={createdTasks}
-							buttons={
-								(user && user.id === localUser.id
-									&& updateDeleteButtons('Modify Task', 'Delete Task',
-										(task) => openDialog(setModifyTaskVisible, () => setModifyTask(task)),
-										(id) => taskDeleteRef.current.deleteTaskCallback(id)))
-								|| taskViewButtons(navigate)
-							}
-							className={'col-12 mx-auto'}
-						/>
+						{
+							(createdTaskError && errorDisplay(createdTaskError))
+							|| (isCreatedTasksLoading && loadingDisplay)
+							||
+							<TaskListing
+								taskList={createdTasks}
+								buttons={
+									(user && user.id === localUser.id
+										&& updateDeleteButtons('Modify Task', 'Delete Task',
+											(task) => openDialog(setModifyTaskVisible, () => setModifyTask(task)),
+											(id) => taskDeleteRef.current.deleteTaskCallback(id)))
+									|| taskViewButtons(navigate)
+								}
+								className={'col-12 mx-auto'}
+							/>
+						}
+					</TabPanel>
+					<TabPanel header={'Submissions'} className={'w-full sm:w-auto'}>
+						{
+							(submissionError && errorDisplay(submissionError))
+							|| (isSubmissionLoading && loadingDisplay)
+							||
+							<SubmissionListing
+								submissionList={submissions}
+								titleShow={'both'}
+								buttons={viewSolutionForTask(navigate)}
+							/>
+						}
 					</TabPanel>
 				</TabView>
 			}
@@ -150,7 +140,7 @@ function ProfilePage() {
 				visible={modifyTaskVisible}
 				setVisible={setModifyTaskVisible}
 				toastRef={toastRef}
-				setTasks={setCreatedTasks}
+				onSuccess={() => setCreatedTasksValid(false)}
 				task={modifyTask}
 			/>
 			<Dialog
@@ -167,12 +157,22 @@ function ProfilePage() {
 							label: 'Close',
 							onClick: () => setModifyProfileVisible(false)
 						}]}
+						onSuccess={() => setLocalUserValid(false)}
 					/>
 				}
 			>
 			</Dialog>
-			<ProfileDeleteComponent ref={profileDeleteRef} toastRef={toastRef} navigationUrl={'/login'}/>
-			<TaskDeleteComponent ref={taskDeleteRef} toastRef={toastRef} setTasks={setCreatedTasks}/>
+			<ProfileDeleteComponent
+				ref={profileDeleteRef}
+				toastRef={toastRef}
+				navigationUrl={'/login'}
+				onSuccess={() => setLocalUserValid(false)}
+			/>
+			<TaskDeleteComponent
+				ref={taskDeleteRef}
+				toastRef={toastRef}
+				onSuccess={() => setCreatedTasksValid(false)}
+			/>
 			<Toast ref={toastRef}/>
 		</div>
 	)

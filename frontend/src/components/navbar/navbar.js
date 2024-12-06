@@ -6,8 +6,7 @@ import {useEffect, useMemo, useState} from 'react'
 import SideNavbarComponent from './sideNavbar'
 import {ButtonGroup} from 'primereact/buttongroup'
 
-import 'primereact/resources/themes/lara-dark-teal/theme.css'
-import {useAuth} from '../../contexts/AuthContext'
+import {useAuth} from '../../hooks/useAuth'
 
 const NavbarComponent = () => {
 	const navigate = useNavigate()

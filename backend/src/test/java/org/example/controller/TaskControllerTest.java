@@ -81,7 +81,7 @@ public class TaskControllerTest extends AbstractTest
 		.build();
 
 	private final Task task3 = Task.builder()
-		.name("Pelda Task")
+		.name("Example Task")
 		.description("Leiras")
 		.timeofcreation(LocalDate.EPOCH)
 		.ownerid(null)
@@ -89,7 +89,7 @@ public class TaskControllerTest extends AbstractTest
 		.build();
 
 	private final Task task4 = Task.builder()
-		.name("Example Task")
+		.name("Pelda Task")
 		.description("Cool Description")
 		.timeofcreation(LocalDate.now())
 		.ownerid(null)
@@ -125,7 +125,7 @@ public class TaskControllerTest extends AbstractTest
 		task1.setOwnerid(user1.getId());
 		task2.setOwnerid(user2.getId());
 		task3.setOwnerid(user2.getId());
-		task4.setOwnerid(user2.getId());
+		task4.setOwnerid(user1.getId());
 
 		taskService.saveTask(task1);
 		taskService.saveTask(task2);
@@ -380,7 +380,7 @@ public class TaskControllerTest extends AbstractTest
 	{
 		KeywordsForTasks keyword4 = KeywordsForTasks.builder().taskid(task2.getId()).keyword("ABC").build();
 		KeywordsForTasks keyword5 = KeywordsForTasks.builder().taskid(task2.getId()).keyword("DEF").build();
-		KeywordsForTasks keyword6 = KeywordsForTasks.builder().taskid(task4.getId()).keyword("GHI").build();
+		KeywordsForTasks keyword6 = KeywordsForTasks.builder().taskid(task3.getId()).keyword("GHI").build();
 
 		keywordsForTasksRepository.saveAll(List.of(keyword4, keyword5, keyword6));
 
@@ -388,7 +388,6 @@ public class TaskControllerTest extends AbstractTest
 			.name("Example Task")
 			.keywords(List.of("ABC", "GHI"))
 			.ownerid(this.user2.getId())
-			.completedUserId(this.user1.getId())
 			.build();
 
 		HttpHeaders headers = new HttpHeaders();
@@ -414,7 +413,7 @@ public class TaskControllerTest extends AbstractTest
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
 		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.equals(task) || task4.equals(task)));
+		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.equals(task) || task3.equals(task)));
 	}
 
 	@Test
@@ -547,8 +546,8 @@ public class TaskControllerTest extends AbstractTest
 	@Test
 	public void addKeywordTest()
 	{
-		KeywordsForTasks keyword4 = KeywordsForTasks.builder().taskid(task2.getId()).keyword("ABC").build();
-		KeywordsForTasks keyword5 = KeywordsForTasks.builder().taskid(task2.getId()).keyword("DEF").build();
+		KeywordsForTasks keyword4 = KeywordsForTasks.builder().taskid(task1.getId()).keyword("ABC").build();
+		KeywordsForTasks keyword5 = KeywordsForTasks.builder().taskid(task1.getId()).keyword("DEF").build();
 		KeywordsForTasks keyword6 = KeywordsForTasks.builder().taskid(task4.getId()).keyword("GHI").build();
 
 		List<KeywordsForTasks> keywordList = List.of(keyword4, keyword5, keyword6);
