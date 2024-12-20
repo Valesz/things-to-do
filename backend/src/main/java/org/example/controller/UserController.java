@@ -3,6 +3,7 @@ package org.example.controller;
 import java.util.Objects;
 import org.example.MyConfiguration;
 import org.example.model.User;
+import org.example.model.listing.UserListingResponse;
 import org.example.service.UserService;
 import org.example.utils.enums.UserStatusEnum;
 import org.example.utils.exceptions.ServiceException;
@@ -103,22 +104,28 @@ public class UserController
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public Iterable<User> listUsers(@RequestParam(value = "id", required = false) Long id,
+	public UserListingResponse listUsers(@RequestParam(value = "id", required = false) Long id,
 		@RequestParam(value = "username", required = false) String username,
 		@RequestParam(value = "email", required = false) String email,
 		@RequestParam(value = "timeofcreation", required = false) String timeofcreation,
 		@RequestParam(value = "status", required = false) UserStatusEnum status,
 		@RequestParam(value = "classification", required = false) Double classification,
-		@RequestParam(value = "precisionofanswers", required = false) Double precisionofanswers)
+		@RequestParam(value = "precisionofanswers", required = false) Double precisionofanswers,
+		@RequestParam(value = "pagenumber", required = true) long pageNumber,
+		@RequestParam(value = "pagesize", required = true) long pageSize)
 	{
-		return userService.getByUsersObject(new User(id,
+		User filter = new User(id,
 			username != null && !username.isEmpty() ? username : null,
 			email != null && !email.isEmpty() ? email : null,
 			timeofcreation != null && !timeofcreation.isEmpty() ? LocalDate.parse(timeofcreation) : null,
 			status,
 			null,
 			classification,
-			precisionofanswers)
+			precisionofanswers);
+
+		return new UserListingResponse(
+			userService.getByUsersObject(filter, pageNumber, pageSize),
+			userService.getByUsersObjectCount(filter)
 		);
 	}
 

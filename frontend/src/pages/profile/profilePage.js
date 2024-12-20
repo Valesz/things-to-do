@@ -28,23 +28,38 @@ function ProfilePage() {
 	const [localUsers, localUserFetchError, isLocalUserLoading, setLocalUserValid] = useUsers({
 		id: id ?? user?.id,
 		enabled: !!id || !!user?.id,
+		pageNumber: 0,
+		pageSize: 1,
 		toastRef: toastRef
 	})
-	const localUser = useMemo(() => localUsers?.[0], [localUsers])
+	const localUser = useMemo(() => localUsers?.users?.[0], [localUsers])
+	const [firstCreatedTasks, setFirstCreatedTasks] = useState(0)
+	const [rowsCreatedTasks, setRowsCreatedTasks] = useState(5)
 	const [createdTasks, createdTaskError, isCreatedTasksLoading, setCreatedTasksValid] = useTasks({
 		creatorName: localUser?.username,
 		enabled: !!localUser?.username,
+		pageNumber: firstCreatedTasks / rowsCreatedTasks,
+		pageSize: rowsCreatedTasks,
 		toastRef: toastRef
 	})
+	const [firstCompletedTasks, setFirstCompletedTasks] = useState(0)
+	const [rowsCompletedTasks, setRowsCompletedTasks] = useState(5)
 	const [completedTasks, completedTaskError, isCompletedTasksLoading] = useTasks({
 		completed: true,
 		completedUserId: localUser?.id,
+		pageNumber: firstCompletedTasks / rowsCompletedTasks,
+		pageSize: rowsCompletedTasks,
 		enabled: !!localUser?.id && !!createdTasks,
 		toastRef: toastRef
 	})
+	const [firstSubmissions, setFirstSubmissions] = useState(0)
+	const [rowsSubmissions, setRowsSubmissions] = useState(5)
 	const [submissions, submissionError, isSubmissionLoading] = useSubmissions({
 		submitterId: localUser?.id,
-		enabled: !!localUser?.id
+		pageNumber: firstSubmissions / rowsSubmissions,
+		pageSize: rowsSubmissions,
+		enabled: !!localUser?.id,
+		toastRef: toastRef
 	})
 	const [modifyProfileVisible, setModifyProfileVisible] = useState(false)
 	const [modifyTaskVisible, setModifyTaskVisible] = useState(false)
@@ -97,9 +112,15 @@ function ProfilePage() {
 							|| (isCompletedTasksLoading && loadingDisplay)
 							||
 							<TaskListing
-								taskList={completedTasks}
+								taskList={completedTasks?.tasks}
 								buttons={viewSolutionsForTaskButtons(navigate)}
-								className={'col-12 mx-auto'}
+								totalRows={completedTasks?.totalTasks}
+								first={firstCompletedTasks}
+								rows={rowsCompletedTasks}
+								onPageChange={(e) => {
+									setFirstCompletedTasks(e.first)
+									setRowsCompletedTasks(e.rows)
+								}}
 							/>
 						}
 					</TabPanel>
@@ -109,7 +130,7 @@ function ProfilePage() {
 							|| (isCreatedTasksLoading && loadingDisplay)
 							||
 							<TaskListing
-								taskList={createdTasks}
+								taskList={createdTasks?.tasks}
 								buttons={
 									(user && user.id === localUser.id
 										&& updateDeleteButtons('Modify Task', 'Delete Task',
@@ -117,7 +138,13 @@ function ProfilePage() {
 											(id) => taskDeleteRef.current.deleteTaskCallback(id)))
 									|| taskViewButtons(navigate)
 								}
-								className={'col-12 mx-auto'}
+								totalRows={createdTasks?.totalTasks}
+								first={firstCreatedTasks}
+								rows={rowsCreatedTasks}
+								onPageChange={(e) => {
+									setFirstCreatedTasks(e.first)
+									setRowsCreatedTasks(e.rows)
+								}}
 							/>
 						}
 					</TabPanel>
@@ -127,9 +154,16 @@ function ProfilePage() {
 							|| (isSubmissionLoading && loadingDisplay)
 							||
 							<SubmissionListing
-								submissionList={submissions}
+								submissionList={submissions.submissions}
 								titleShow={'both'}
 								buttons={viewSolutionForTask(navigate)}
+								first={firstSubmissions}
+								rows={rowsSubmissions}
+								totalRows={submissions.totalRows}
+								onPageChange={(e) => {
+									setFirstSubmissions(e.first)
+									setRowsSubmissions(e.rows)
+								}}
 							/>
 						}
 					</TabPanel>

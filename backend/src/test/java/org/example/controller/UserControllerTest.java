@@ -1,7 +1,10 @@
 package org.example.controller;
 
+import java.util.Spliterator;
+import java.util.stream.StreamSupport;
 import org.example.AbstractTest;
 import org.example.model.User;
+import org.example.model.listing.UserListingResponse;
 import org.example.service.UserService;
 import org.example.utils.HttpErrorResponseForTests;
 import org.example.utils.enums.UserStatusEnum;
@@ -66,7 +69,7 @@ public class UserControllerTest extends AbstractTest
 		.precisionofanswers(0.1)
 		.build();
 
-	String baseURI = "/api/user/";
+	final String baseURI = "/api/user/";
 
 	private void login()
 	{
@@ -123,24 +126,29 @@ public class UserControllerTest extends AbstractTest
 		headersPost.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(testUser, headersPost);
-		ResponseEntity<User> responseEntity = this.restTemplate.postForEntity("/api/user/", requestBodyWithHeaders, User.class);
+		ResponseEntity<User> responseEntity = this.restTemplate.postForEntity(baseURI, requestBodyWithHeaders, User.class);
 
 		HttpEntity<Void> headersForGet = new HttpEntity<>(headersPost);
-		User[] usersInDb = this.restTemplate.exchange("/api/user/", HttpMethod.GET, headersForGet, User[].class).getBody();
+		UserListingResponse usersInDb = this.restTemplate.exchange(
+			baseURI + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			headersForGet,
+			UserListingResponse.class
+		).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 		Assert.assertNotNull(usersInDb);
-		Assert.assertEquals(5, usersInDb.length);
-		Assert.assertEquals(user1, usersInDb[0]);
-		Assert.assertEquals(user2, usersInDb[1]);
-		Assert.assertEquals(user3, usersInDb[2]);
-		Assert.assertEquals(user4, usersInDb[3]);
-		Assert.assertEquals(testUser.getUsername(), usersInDb[4].getUsername());
-		Assert.assertEquals(testUser.getEmail(), usersInDb[4].getEmail());
-		Assert.assertEquals(testUser.getTimeofcreation(), usersInDb[4].getTimeofcreation());
-		Assert.assertEquals(testUser.getStatus(), usersInDb[4].getStatus());
-		Assert.assertEquals(testUser.getClassification(), usersInDb[4].getClassification());
-		Assert.assertEquals(testUser.getPrecisionofanswers(), usersInDb[4].getPrecisionofanswers());
+		Spliterator<User> users = usersInDb.getUsers().spliterator();
+
+		Assert.assertEquals(5, StreamSupport.stream(users, false).count());
+		Assert.assertTrue(StreamSupport.stream(usersInDb.getUsers().spliterator(), false).anyMatch(
+			user -> user.getUsername().equals(testUser.getUsername())
+				|| user.getEmail().equals(testUser.getEmail())
+				|| user.getTimeofcreation().equals(testUser.getTimeofcreation())
+				|| user.getStatus().equals(testUser.getStatus())
+				|| user.getClassification().equals(testUser.getClassification())
+				|| user.getPrecisionofanswers().equals(testUser.getPrecisionofanswers())
+		));
 	}
 
 	@Test
@@ -225,12 +233,15 @@ public class UserControllerTest extends AbstractTest
 			"&email={email}" +
 			"&status={status}" +
 			"&classification={classification}" +
-			"&precisionofanswers={precisionofanswers}";
+			"&precisionofanswers={precisionofanswers}" +
+			"&pagenumber=0" +
+			"&pagesize=100";
 
-		ResponseEntity<User[]> responseEntity = restTemplate.exchange(baseURI + paramsURI,
+		ResponseEntity<UserListingResponse> responseEntity = restTemplate.exchange(
+			baseURI + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headersPost),
-			User[].class,
+			UserListingResponse.class,
 			queryUser.getId(),
 			queryUser.getUsername(),
 			queryUser.getEmail(),
@@ -239,12 +250,11 @@ public class UserControllerTest extends AbstractTest
 			queryUser.getPrecisionofanswers()
 		);
 
-		User[] usersAccordingToQuery = responseEntity.getBody();
-
+		UserListingResponse usersAccordingToQuery = responseEntity.getBody();
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(usersAccordingToQuery);
-		Assert.assertEquals(1, usersAccordingToQuery.length);
-		Assert.assertEquals(user1, usersAccordingToQuery[0]);
+		Assert.assertEquals(1, usersAccordingToQuery.getUsers().spliterator().getExactSizeIfKnown());
+		Assert.assertEquals(user1, usersAccordingToQuery.getUsers().iterator().next());
 	}
 
 	@Test
@@ -264,12 +274,15 @@ public class UserControllerTest extends AbstractTest
 			"&email={email}" +
 			"&status={status}" +
 			"&classification={classification}" +
-			"&precisionofanswers={precisionofanswers}";
+			"&precisionofanswers={precisionofanswers}" +
+			"&pagenumber=0" +
+			"&pagesize=100";
 
-		ResponseEntity<User[]> responseEntity = restTemplate.exchange(baseURI + paramsURI,
+		ResponseEntity<UserListingResponse> responseEntity = restTemplate.exchange(
+			baseURI + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headersPost),
-			User[].class,
+			UserListingResponse.class,
 			queryUser.getId(),
 			queryUser.getUsername(),
 			queryUser.getEmail(),
@@ -278,13 +291,18 @@ public class UserControllerTest extends AbstractTest
 			queryUser.getPrecisionofanswers()
 		);
 
-		User[] usersAccordingToQuery = responseEntity.getBody();
+		UserListingResponse usersAccordingToQuery = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(usersAccordingToQuery);
-		Assert.assertEquals(2, usersAccordingToQuery.length);
-		Assert.assertEquals(user2, usersAccordingToQuery[0]);
-		Assert.assertEquals(user4, usersAccordingToQuery[1]);
+		Spliterator<User> users = usersAccordingToQuery.getUsers().spliterator();
+
+		Assert.assertEquals(2, users.getExactSizeIfKnown());
+		Assert.assertTrue(
+			StreamSupport.stream(users, false).allMatch(
+				user -> this.user2.equals(user) || this.user4.equals(user)
+			)
+		);
 	}
 
 	@Test
@@ -292,16 +310,25 @@ public class UserControllerTest extends AbstractTest
 	{
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
-		ResponseEntity<User[]> response = this.restTemplate.exchange("/api/user/", HttpMethod.GET, new HttpEntity<>(headers), User[].class);
-		User[] usersArray = response.getBody();
+		ResponseEntity<UserListingResponse> response = this.restTemplate.exchange(
+			baseURI + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			UserListingResponse.class
+		);
+		UserListingResponse usersArray = response.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(usersArray);
-		Assert.assertEquals(4, usersArray.length);
-		Assert.assertEquals(user1, usersArray[0]);
-		Assert.assertEquals(user2, usersArray[1]);
-		Assert.assertEquals(user3, usersArray[2]);
-		Assert.assertEquals(user4, usersArray[3]);
+		Spliterator<User> users = usersArray.getUsers().spliterator();
+
+		Assert.assertEquals(4, users.getExactSizeIfKnown());
+		Assert.assertTrue(StreamSupport.stream(users, false).allMatch(
+			user -> this.user1.equals(user)
+				|| this.user2.equals(user)
+				|| this.user3.equals(user)
+				|| this.user4.equals(user)
+		));
 	}
 
 	@Test
@@ -322,12 +349,26 @@ public class UserControllerTest extends AbstractTest
 		headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(baseURI, HttpMethod.PUT, new HttpEntity<>(propertiesToUpdate, headers), User.class);
+		ResponseEntity<User> responseFromUpdate = this.restTemplate.exchange(
+			baseURI,
+			HttpMethod.PUT,
+			new HttpEntity<>(propertiesToUpdate, headers),
+			User.class
+		);
 		Assert.assertEquals(HttpStatus.OK, responseFromUpdate.getStatusCode());
 
-		ResponseEntity<User[]> responseFromDb = this.restTemplate.exchange("/api/user/?id={id}", HttpMethod.GET, new HttpEntity<>(null), User[].class, propertiesToUpdate.getId());
+		ResponseEntity<UserListingResponse> responseFromDb = this.restTemplate.exchange(
+			baseURI + "?id={id}&pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(null),
+			UserListingResponse.class,
+			propertiesToUpdate.getId()
+		);
 		Assert.assertNotNull(responseFromDb.getBody());
-		User userFromDb = responseFromDb.getBody()[0];
+		UserListingResponse usersFromDb = responseFromDb.getBody();
+		User userFromDb = StreamSupport.stream(usersFromDb.getUsers().spliterator(), false).filter(
+			user -> user.getId().equals(responseFromUpdate.getBody().getId())
+		).findFirst().orElse(new User());
 
 		Assert.assertEquals(propertiesToUpdate.getUsername(), userFromDb.getUsername());
 		Assert.assertEquals(propertiesToUpdate.getEmail(), userFromDb.getEmail());
@@ -350,7 +391,12 @@ public class UserControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange(
+			baseURI,
+			HttpMethod.PUT,
+			requestBodyWithHeaders,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
@@ -372,7 +418,12 @@ public class UserControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange(
+			baseURI,
+			HttpMethod.PUT,
+			requestBodyWithHeaders,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
@@ -394,7 +445,12 @@ public class UserControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<User> requestBodyWithHeaders = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange("/api/user/", HttpMethod.PUT, requestBodyWithHeaders, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> responseEntity = this.restTemplate.exchange(
+			baseURI,
+			HttpMethod.PUT,
+			requestBodyWithHeaders,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		Assert.assertNotNull(responseEntity.getBody());
@@ -407,12 +463,22 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		this.restTemplate.exchange(baseURI + user1.getId(), HttpMethod.DELETE, new HttpEntity<>(user1, headers), Void.class);
+		this.restTemplate.exchange(
+			baseURI + user1.getId(),
+			HttpMethod.DELETE,
+			new HttpEntity<>(user1, headers),
+			Void.class
+		);
 
-		ResponseEntity<User[]> response = this.restTemplate.exchange("/api/user/", HttpMethod.GET, new HttpEntity<>(headers), User[].class);
+		ResponseEntity<UserListingResponse> response = this.restTemplate.exchange(
+			baseURI + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			UserListingResponse.class
+		);
 		Assert.assertNotNull(response.getBody());
 
-		User[] usersArray = Arrays.stream(response.getBody())
+		User[] usersArray = StreamSupport.stream(response.getBody().getUsers().spliterator(), false)
 			.filter(value -> value.getStatus() == UserStatusEnum.AKTIV)
 			.toArray(User[]::new);
 		Assert.assertNotNull(usersArray);
@@ -426,7 +492,12 @@ public class UserControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseURI + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseURI + "-1",
+			HttpMethod.DELETE,
+			new HttpEntity<>(headers),
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());

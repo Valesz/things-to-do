@@ -1,11 +1,13 @@
 package org.example.controller;
 
-import java.util.Arrays;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.stream.StreamSupport;
 import org.example.AbstractTest;
 import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
 import org.example.model.User;
+import org.example.model.listing.TaskListingResponse;
 import org.example.repository.KeywordsForTasksRepository;
 import org.example.model.listing.TaskListingFilter;
 import org.example.service.TaskService;
@@ -171,12 +173,14 @@ public class TaskControllerTest extends AbstractTest
 		HttpEntity<Task> requestBodyWithHeaders = new HttpEntity<>(testTask, headersPost);
 		ResponseEntity<Task> responseEntity = this.restTemplate.postForEntity(baseEndpoint, requestBodyWithHeaders, Task.class);
 
-		Task[] tasksInDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headersPost), Task[].class).getBody();
+		TaskListingResponse tasksInDb = this.restTemplate.exchange(baseEndpoint + "?pagenumber=0&pagesize=10", HttpMethod.GET, new HttpEntity<>(headersPost), TaskListingResponse.class).getBody();
+
+		Assert.assertNotNull(tasksInDb);
+		Spliterator<TaskListingFilter> responseSpliterator = tasksInDb.getTasks().spliterator();
 
 		Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-		Assert.assertNotNull(tasksInDb);
-		Assert.assertEquals(5, tasksInDb.length);
-		Assert.assertTrue(Arrays.stream(tasksInDb).anyMatch(task ->
+		Assert.assertEquals(5, StreamSupport.stream(responseSpliterator, false).count());
+		Assert.assertTrue(StreamSupport.stream(responseSpliterator, false).anyMatch(task ->
 			testTask.getName().equals(task.getName())
 				&& testTask.getDescription().equals(task.getDescription())
 				&& testTask.getTimeofcreation().equals(task.getTimeofcreation())
@@ -306,12 +310,14 @@ public class TaskControllerTest extends AbstractTest
 			"&name={name}" +
 			"&description={description}" +
 			"&maintaskid={maintaskid}" +
-			"&ownerid={ownerid}";
+			"&ownerid={ownerid}" +
+			"&pagenumber=0" +
+			"&pagesize=1000";
 
-		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
+		ResponseEntity<TaskListingResponse> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Task[].class,
+			TaskListingResponse.class,
 			queryTask.getId(),
 			queryTask.getName(),
 			queryTask.getDescription(),
@@ -319,12 +325,14 @@ public class TaskControllerTest extends AbstractTest
 			queryTask.getOwnerid()
 		);
 
-		Task[] tasksAccordingToQuery = responseEntity.getBody();
+		TaskListingResponse tasksAccordingToQuery = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
-		Assert.assertEquals(1, tasksAccordingToQuery.length);
-		Assert.assertEquals(task1, tasksAccordingToQuery[0]);
+		Spliterator<TaskListingFilter> tasks = tasksAccordingToQuery.getTasks().spliterator();
+
+		Assert.assertEquals(1, StreamSupport.stream(tasks, false).count());
+		Assert.assertTrue(task1.listingFilterEquals(tasksAccordingToQuery.getTasks().iterator().next()));
 	}
 
 	@Test
@@ -337,22 +345,24 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		String paramsURI = "?createdafter={timeofcreation}&createdbefore={timeofcreation}";
+		String paramsURI = "?createdafter={timeofcreation}&createdbefore={timeofcreation}&pagenumber=0&pagesize=1000";
 
-		ResponseEntity<TaskListingFilter[]> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
+		ResponseEntity<TaskListingResponse> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			TaskListingFilter[].class,
+			TaskListingResponse.class,
 			queryTask.getTimeofcreation(),
 			queryTask.getTimeofcreation()
 		);
 
-		TaskListingFilter[] tasksAccordingToQuery = responseEntity.getBody();
+		TaskListingResponse tasksAccordingToQuery = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
-		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
+		Spliterator<TaskListingFilter> tasks = tasksAccordingToQuery.getTasks().spliterator();
+
+		Assert.assertEquals(2, StreamSupport.stream(tasks, false).count());
+		Assert.assertTrue(StreamSupport.stream(tasks, false).allMatch(task -> task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 	}
 
 	@Test
@@ -361,18 +371,20 @@ public class TaskControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint,
+		ResponseEntity<TaskListingResponse> responseEntity = restTemplate.exchange(baseEndpoint + "?pagenumber=0&pagesize=1000",
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Task[].class
+			TaskListingResponse.class
 		);
 
-		Task[] tasksInDb = responseEntity.getBody();
+		TaskListingResponse tasksInDb = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksInDb);
-		Assert.assertEquals(4, tasksInDb.length);
-		Assert.assertTrue(Arrays.stream(tasksInDb).allMatch(task -> task1.equals(task) || task2.equals(task) || task3.equals(task) || task4.equals(task)));
+		Spliterator<TaskListingFilter> responseSpliterator = tasksInDb.getTasks().spliterator();
+
+		Assert.assertEquals(4, StreamSupport.stream(responseSpliterator, false).count());
+		Assert.assertTrue(StreamSupport.stream(responseSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task3.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 	}
 
 	@Test
@@ -396,24 +408,28 @@ public class TaskControllerTest extends AbstractTest
 		String paramsURI = "?name={name}" +
 			"&keywords={keyword1}" +
 			"&keywords={keyword2}" +
-			"&ownerid={ownerid}";
+			"&ownerid={ownerid}" +
+			"&pagenumber=0" +
+			"&pagesize=1000";
 
-		ResponseEntity<Task[]> responseEntity = restTemplate.exchange(baseEndpoint + "/" + paramsURI,
+		ResponseEntity<TaskListingResponse> responseEntity = restTemplate.exchange(baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Task[].class,
+			TaskListingResponse.class,
 			queryFilter.getName(),
 			queryFilter.getKeywords().toArray()[0],
 			queryFilter.getKeywords().toArray()[1],
 			queryFilter.getOwnerid()
 		);
 
-		Task[] tasksAccordingToQuery = responseEntity.getBody();
+		TaskListingResponse tasksAccordingToQuery = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksAccordingToQuery);
-		Assert.assertEquals(2, tasksAccordingToQuery.length);
-		Assert.assertTrue(Arrays.stream(tasksAccordingToQuery).allMatch(task -> task2.equals(task) || task3.equals(task)));
+		Spliterator<TaskListingFilter> tasks = tasksAccordingToQuery.getTasks().spliterator();
+
+		Assert.assertEquals(2, StreamSupport.stream(tasks, false).count());
+		Assert.assertTrue(StreamSupport.stream(tasks, false).allMatch(task -> task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 	}
 
 	@Test
@@ -433,12 +449,12 @@ public class TaskControllerTest extends AbstractTest
 		ResponseEntity<Task> responseEntity = restTemplate.exchange(baseEndpoint, HttpMethod.PUT, new HttpEntity<>(propertiesToUpdate, headers), Task.class);
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-		ResponseEntity<Task[]> responseFromDb = this.restTemplate.exchange(baseEndpoint + "?id={id}", HttpMethod.GET, new HttpEntity<>(headers), Task[].class, this.task1.getId());
+		ResponseEntity<TaskListingResponse> responseFromDb = this.restTemplate.exchange(baseEndpoint + "?id={id}&pagenumber=0&pagesize=1000", HttpMethod.GET, new HttpEntity<>(headers), TaskListingResponse.class, this.task1.getId());
 		Assert.assertEquals(HttpStatus.OK, responseFromDb.getStatusCode());
 		Assert.assertNotNull(responseFromDb.getBody());
-		Task taskFromDb = responseFromDb.getBody()[0];
+		TaskListingResponse taskFromDb = responseFromDb.getBody();
 
-		Assert.assertEquals(propertiesToUpdate, taskFromDb);
+		Assert.assertTrue(propertiesToUpdate.listingFilterEquals(taskFromDb.getTasks().iterator().next()));
 	}
 
 	@Test
@@ -515,18 +531,17 @@ public class TaskControllerTest extends AbstractTest
 
 		ResponseEntity<Void> deleteResponse = this.restTemplate.exchange(baseEndpoint + this.task1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
 
-		ResponseEntity<Task[]> responseEntity = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Task[].class);
+		ResponseEntity<TaskListingResponse> responseEntity = this.restTemplate.exchange(baseEndpoint + "?pagenumber=0&pagesize=1000", HttpMethod.GET, new HttpEntity<>(headers), TaskListingResponse.class);
 
-		Task[] tasksFromDb = responseEntity.getBody();
+		TaskListingResponse tasksFromDb = responseEntity.getBody();
 
 		Assert.assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		Assert.assertNotNull(tasksFromDb);
-		Assert.assertEquals(3, tasksFromDb.length);
-		Assert.assertTrue(Arrays.stream(tasksFromDb).allMatch(task -> task2.equals(task) || task3.equals(task) || task4.equals(task)));
-		Assert.assertEquals(task2, tasksFromDb[2]);
-		Assert.assertEquals(task3, tasksFromDb[1]);
-		Assert.assertEquals(task4, tasksFromDb[0]);
+		Spliterator<TaskListingFilter> tasks = tasksFromDb.getTasks().spliterator();
+
+		Assert.assertEquals(3, StreamSupport.stream(tasks, false).count());
+		Assert.assertTrue(StreamSupport.stream(tasks, false).noneMatch(task1::listingFilterEquals));
 	}
 
 	@Test

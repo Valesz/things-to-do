@@ -26,7 +26,7 @@ export async function addSubmission({authToken, taskId, description, timeOfSubmi
 	return await fetchJson(baseEndpoint, requestOptions)
 }
 
-export async function fetchSubmission({id, taskId, description, timeOfSubmission, acceptance, submitterId, submitterName}) {
+export async function fetchSubmission({id, taskId, description, timeOfSubmission, acceptance, submitterId, submitterName, pageNumber = 0, pageSize = 5}) {
 	const requestOptions = {
 		method: 'GET',
 		headers: {
@@ -41,7 +41,9 @@ export async function fetchSubmission({id, taskId, description, timeOfSubmission
 		(timeOfSubmission ? `&timeofsubmission=${formatDate(timeOfSubmission)}` : '') +
 		(acceptance ? `&acceptance=${acceptance}` : '') +
 		(submitterId ? `&submitterid=${submitterId}` : '') +
-		(submitterName ? `&submittername=${submitterName}` : '')
+		(submitterName ? `&submittername=${submitterName}` : '') +
+		(pageNumber !== undefined ? `&pagenumber=${pageNumber}` : '') +
+		(pageSize !== undefined ? `&pagesize=${pageSize}` : '')
 
 	return await fetchJson(baseEndpoint + params, requestOptions)
 }

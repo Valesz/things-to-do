@@ -10,9 +10,11 @@ const SubmissionBlock = ({submission, index, buttons, titleShow = 'both'}) => {
 
 	const [tasks] = useTasks({
 		id: submission?.taskid,
+		pageNumber: 0,
+		pageSize: 1,
 		enabled: titleShow === 'both' || titleShow === 'task'
 	})
-	const task = useMemo(() => tasks?.[0], [tasks])
+	const task = useMemo(() => tasks?.tasks?.[0], [tasks])
 	const navigate = useNavigate()
 
 	if (!submission) {
@@ -25,7 +27,7 @@ const SubmissionBlock = ({submission, index, buttons, titleShow = 'both'}) => {
 	}
 
 	return (
-		<div key={submission.id} className={'col-12 m-1'}>
+		<div key={submission.id} className={'col-12 m-1 sm:px-4 px-2'}>
 			<div className={classNames('flex flex-column xl:align-items-start py-2 px-2 gap-3', {'border-top-1 surface-border': index === undefined || index !== 0})}>
 				<div className={'grid grid-nogutter w-full'}>
 					{

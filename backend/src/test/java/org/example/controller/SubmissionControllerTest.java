@@ -1,10 +1,14 @@
 package org.example.controller;
 
 import java.util.Arrays;
+import java.util.Spliterator;
+import java.util.stream.StreamSupport;
 import org.example.AbstractTest;
 import org.example.model.Submission;
 import org.example.model.Task;
 import org.example.model.User;
+import org.example.model.listing.SubmissionListing;
+import org.example.model.listing.SubmissionListingResponse;
 import org.example.repository.TaskRepository;
 import org.example.service.SubmissionService;
 import org.example.service.UserService;
@@ -185,17 +189,33 @@ public class SubmissionControllerTest extends AbstractTest
 		ResponseEntity<Submission> response = this.restTemplate.postForEntity(baseEndpoint, request, Submission.class);
 		Submission submissionFromResponse = response.getBody();
 
-		Submission[] submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class).getBody();
+		SubmissionListingResponse submissionsFromDb = this.restTemplate.exchange(
+			baseEndpoint + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			SubmissionListingResponse.class
+		).getBody();
 
 		Assert.assertEquals(HttpStatus.CREATED, response.getStatusCode());
 		Assert.assertNotNull(submissionFromResponse);
 		Assert.assertNotNull(submissionsFromDb);
-		Assert.assertEquals(submissionFromResponse, submissionsFromDb[4]);
-		Assert.assertEquals(testSubmission.getTaskid(), submissionsFromDb[4].getTaskid());
-		Assert.assertEquals(testSubmission.getDescription(), submissionsFromDb[4].getDescription());
-		Assert.assertEquals(testSubmission.getTimeofsubmission(), submissionsFromDb[4].getTimeofsubmission());
-		Assert.assertEquals(testSubmission.getAcceptance(), submissionsFromDb[4].getAcceptance());
-		Assert.assertEquals(testSubmission.getSubmitterid(), submissionsFromDb[4].getSubmitterid());
+		Spliterator<SubmissionListing> submissions = submissionsFromDb.getSubmissions().spliterator();
+
+		Assert.assertTrue(StreamSupport.stream(
+			submissionsFromDb.getSubmissions().spliterator(),
+			false
+		).anyMatch(submissionFromResponse::listingObjEquals));
+
+		Assert.assertTrue(
+			StreamSupport.stream(submissions, false).anyMatch(
+				submission ->
+					submission.getTaskid().equals(testSubmission.getTaskid())
+					|| submission.getSubmitterid().equals(testSubmission.getSubmitterid())
+					|| submission.getDescription().equals(testSubmission.getDescription())
+					|| submission.getTimeofsubmission().equals(testSubmission.getTimeofsubmission())
+					|| submission.getAcceptance().equals(testSubmission.getAcceptance())
+			)
+		);
 	}
 
 	@Test
@@ -211,7 +231,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(submission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -237,7 +261,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -254,7 +282,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(null, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -279,7 +311,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -304,7 +340,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -329,7 +369,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -354,7 +398,11 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(testSubmission, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(baseEndpoint, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.postForEntity(
+			baseEndpoint,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -374,15 +422,18 @@ public class SubmissionControllerTest extends AbstractTest
 			"&description={description}" +
 			"&timeofsubmission={timeofsubmission}" +
 			"&acceptance={acceptance}" +
-			"&submitterid={submitterid}";
+			"&submitterid={submitterid}" +
+			"&pagenumber=0" +
+			"&pagesize=100";
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint + paramsURI,
+		ResponseEntity<SubmissionListingResponse> response = this.restTemplate.exchange(
+			baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Submission[].class,
+			SubmissionListingResponse.class,
 			querySubmission.getId(),
 			querySubmission.getTaskid(),
 			querySubmission.getDescription(),
@@ -391,12 +442,12 @@ public class SubmissionControllerTest extends AbstractTest
 			querySubmission.getSubmitterid()
 		);
 
-		Submission[] submissionsAccordingToQuery = response.getBody();
+		SubmissionListingResponse submissionsAccordingToQuery = response.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(submissionsAccordingToQuery);
-		Assert.assertEquals(1, submissionsAccordingToQuery.length);
-		Assert.assertNotNull(submissionsAccordingToQuery[0]);
+		Assert.assertEquals(1, submissionsAccordingToQuery.getSubmissions().spliterator().getExactSizeIfKnown());
+		Assert.assertNotNull(submissionsAccordingToQuery.getSubmissions().iterator().next());
 	}
 
 	@Test
@@ -406,24 +457,29 @@ public class SubmissionControllerTest extends AbstractTest
 			.acceptance(SubmissionAcceptanceEnum.ACCEPTED)
 			.build();
 
-		String paramsURI = "?acceptance={acceptance}";
+		String paramsURI = "?acceptance={acceptance}&pagenumber=0&pagesize=100";
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint + paramsURI,
+		ResponseEntity<SubmissionListingResponse> response = this.restTemplate.exchange(
+			baseEndpoint + paramsURI,
 			HttpMethod.GET,
 			new HttpEntity<>(headers),
-			Submission[].class,
+			SubmissionListingResponse.class,
 			querySubmission.getAcceptance()
 		);
 
-		Submission[] submissionsAccordingToQuery = response.getBody();
+		SubmissionListingResponse submissionsAccordingToQuery = response.getBody();
+
+		Assert.assertNotNull(submissionsAccordingToQuery);
+		Spliterator<SubmissionListing> submissions = submissionsAccordingToQuery.getSubmissions().spliterator();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
-		Assert.assertNotNull(submissionsAccordingToQuery);
-		Assert.assertEquals(2, submissionsAccordingToQuery.length);
-		Assert.assertTrue(Arrays.stream(submissionsAccordingToQuery).allMatch(submission -> this.submission3.equals(submission) || this.submission2.equals(submission)));
+		Assert.assertEquals(2, StreamSupport.stream(submissions, false).count());
+		Assert.assertTrue(StreamSupport.stream(submissions, false).allMatch(
+			submission -> this.submission3.listingObjEquals(submission) || this.submission2.listingObjEquals(submission))
+		);
 	}
 
 	@Test
@@ -432,17 +488,26 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Submission[]> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class);
+		ResponseEntity<SubmissionListingResponse> response = this.restTemplate.exchange(
+			baseEndpoint + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			SubmissionListingResponse.class
+		);
 
-		Submission[] submissionsInDb = response.getBody();
+		SubmissionListingResponse submissionsInDb = response.getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(submissionsInDb);
-		Assert.assertEquals(4, submissionsInDb.length);
-		Assert.assertEquals(this.submission1, submissionsInDb[0]);
-		Assert.assertEquals(this.submission2, submissionsInDb[1]);
-		Assert.assertEquals(this.submission3, submissionsInDb[2]);
-		Assert.assertEquals(this.submission4, submissionsInDb[3]);
+		Spliterator<SubmissionListing> submissions = submissionsInDb.getSubmissions().spliterator();
+
+		Assert.assertEquals(4, StreamSupport.stream(submissions, false).count());
+		Assert.assertTrue(StreamSupport.stream(submissions, false).allMatch(
+			submission -> this.submission1.listingObjEquals(submission)
+				|| this.submission2.listingObjEquals(submission)
+				|| this.submission3.listingObjEquals(submission)
+				|| this.submission4.listingObjEquals(submission)
+		));
 	}
 
 	@Test
@@ -463,15 +528,29 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<Submission> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, Submission.class);
+		ResponseEntity<Submission> response = this.restTemplate.exchange(
+			baseEndpoint,
+			HttpMethod.PUT,
+			request,
+			Submission.class
+		);
 		Submission submissionFromResponse = response.getBody();
 
-		Submission[] submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class).getBody();
+		SubmissionListingResponse submissionsFromDb = this.restTemplate.exchange(
+			baseEndpoint + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			SubmissionListingResponse.class
+		).getBody();
 
 		Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 		Assert.assertNotNull(submissionFromResponse);
 		Assert.assertNotNull(submissionsFromDb);
-		Assert.assertEquals(submissionFromResponse, submissionsFromDb[0]);
+		Spliterator<SubmissionListing> submissions = submissionsFromDb.getSubmissions().spliterator();
+
+		Assert.assertTrue(StreamSupport.stream(submissions, false).anyMatch(
+			submissionFromResponse::listingObjEquals
+		));
 		Assert.assertEquals(propertiesToUpdate.getTaskid(), submissionFromResponse.getTaskid());
 		Assert.assertEquals(propertiesToUpdate.getDescription(), submissionFromResponse.getDescription());
 		Assert.assertEquals(propertiesToUpdate.getTimeofsubmission(), submissionFromResponse.getTimeofsubmission());
@@ -492,7 +571,12 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseEndpoint,
+			HttpMethod.PUT,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -514,7 +598,12 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseEndpoint,
+			HttpMethod.PUT,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -536,7 +625,12 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseEndpoint,
+			HttpMethod.PUT,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -558,7 +652,12 @@ public class SubmissionControllerTest extends AbstractTest
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
 		HttpEntity<Submission> request = new HttpEntity<>(propertiesToUpdate, headers);
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint, HttpMethod.PUT, request, HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseEndpoint,
+			HttpMethod.PUT,
+			request,
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());
@@ -572,17 +671,31 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<Void> response = this.restTemplate.exchange(baseEndpoint + this.submission1.getId(), HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+		ResponseEntity<Void> response = this.restTemplate.exchange(
+			baseEndpoint + this.submission1.getId(),
+			HttpMethod.DELETE,
+			new HttpEntity<>(headers),
+			Void.class
+		);
 
-		ResponseEntity<Submission[]> submissionsFromDb = this.restTemplate.exchange(baseEndpoint, HttpMethod.GET, new HttpEntity<>(headers), Submission[].class);
-		Submission[] submissionsAccordingToQuery = submissionsFromDb.getBody();
+		ResponseEntity<SubmissionListingResponse> submissionsFromDb = this.restTemplate.exchange(
+			baseEndpoint + "?pagenumber=0&pagesize=100",
+			HttpMethod.GET,
+			new HttpEntity<>(headers),
+			SubmissionListingResponse.class
+		);
+		SubmissionListingResponse submissionsAccordingToQuery = submissionsFromDb.getBody();
 
 		Assert.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 		Assert.assertNotNull(submissionsAccordingToQuery);
-		Assert.assertEquals(3, submissionsAccordingToQuery.length);
-		Assert.assertEquals(this.submission2, submissionsAccordingToQuery[0]);
-		Assert.assertEquals(this.submission3, submissionsAccordingToQuery[1]);
-		Assert.assertEquals(this.submission4, submissionsAccordingToQuery[2]);
+		Spliterator<SubmissionListing> submissions = submissionsAccordingToQuery.getSubmissions().spliterator();
+
+		Assert.assertEquals(3, StreamSupport.stream(submissions, false).count());
+		Assert.assertTrue(StreamSupport.stream(submissions, false).allMatch(
+			submission -> this.submission2.listingObjEquals(submission)
+				|| this.submission3.listingObjEquals(submission)
+				|| this.submission4.listingObjEquals(submission)
+		));
 	}
 
 	@Test
@@ -591,7 +704,12 @@ public class SubmissionControllerTest extends AbstractTest
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + this.jwtToken);
 
-		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(baseEndpoint + "-1", HttpMethod.DELETE, new HttpEntity<>(headers), HttpErrorResponseForTests.class);
+		ResponseEntity<HttpErrorResponseForTests> response = this.restTemplate.exchange(
+			baseEndpoint + "-1",
+			HttpMethod.DELETE,
+			new HttpEntity<>(headers),
+			HttpErrorResponseForTests.class
+		);
 
 		Assert.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assert.assertNotNull(response.getBody());

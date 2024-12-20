@@ -5,6 +5,7 @@ import org.example.MyConfiguration;
 import org.example.model.Submission;
 import org.example.model.User;
 import org.example.model.listing.SubmissionListing;
+import org.example.model.listing.SubmissionListingResponse;
 import org.example.service.SubmissionService;
 import org.example.service.UserService;
 import org.example.utils.enums.SubmissionAcceptanceEnum;
@@ -159,21 +160,26 @@ public class SubmissionController
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public Iterable<SubmissionListing> listSubmissions(@RequestParam(required = false, value = "id") Long id,
+	public SubmissionListingResponse listSubmissions(@RequestParam(required = false, value = "id") Long id,
 		@RequestParam(required = false, value = "taskid") Long taskid,
 		@RequestParam(required = false, value = "description") String description,
 		@RequestParam(required = false, value = "timeofsubmission") String timeofsubmission,
 		@RequestParam(required = false, value = "acceptance") SubmissionAcceptanceEnum acceptance,
 		@RequestParam(required = false, value = "submitterid") Long submitterid,
-		@RequestParam(required = false, value = "submittername") String submittername)
+		@RequestParam(required = false, value = "submittername") String submittername,
+		@RequestParam(required = true, value = "pagenumber") long pageNumber,
+		@RequestParam(required = true, value = "pagesize") long pageSize)
 	{
 		if (id == null && taskid == null && description == null && timeofsubmission == null && acceptance == null
 			&& submitterid == null && submittername == null)
 		{
-			return submissionService.getAllSubmissions();
+			return new SubmissionListingResponse(
+				submissionService.getAllSubmissions(pageNumber, pageSize),
+				submissionService.getBySubmissionsObjectCount(null)
+			);
 		}
 
-		return submissionService.getBySubmissionsObject(SubmissionListing.builder()
+		SubmissionListing filter = SubmissionListing.builder()
 			.id(id)
 			.taskid(taskid)
 			.description(description != null && !description.isEmpty() ? description : null)
@@ -181,7 +187,13 @@ public class SubmissionController
 			.acceptance(acceptance)
 			.submitterid(submitterid)
 			.submittername(submittername)
-			.build()
+			.build();
+
+		Iterable<SubmissionListing> submissions = submissionService.getBySubmissionsObject(filter, pageNumber, pageSize);
+
+		return new SubmissionListingResponse(
+			submissions,
+			submissionService.getBySubmissionsObjectCount(filter)
 		);
 	}
 

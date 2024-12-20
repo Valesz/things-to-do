@@ -41,9 +41,9 @@ public class TaskServiceImpl implements TaskService
 	}
 
 	@Override
-	public Iterable<TaskListingFilter> getAllTasksAsListingFilter()
+	public Iterable<TaskListingFilter> getAllTasksAsListingFilter(long pageNumber, long pageSize)
 	{
-		return taskRepository.getAllTasksAsListingFilter();
+		return taskRepository.getAllTasksAsListingFilter(pageNumber, pageSize);
 	}
 
 	@Override
@@ -53,12 +53,12 @@ public class TaskServiceImpl implements TaskService
 	}
 
 	@Override
-	public Iterable<TaskListingFilter> getTasksByFilter(TaskListingFilter filter) throws ServiceException
+	public Iterable<TaskListingFilter> getTasksByFilter(TaskListingFilter filter, long pageNumber, long pageSize) throws ServiceException
 	{
 
 		if (filter == null)
 		{
-			return getAllTasksAsListingFilter();
+			return getAllTasksAsListingFilter(pageNumber, pageSize);
 		}
 
 		MapSqlParameterSource params = new MapSqlParameterSource()
@@ -80,7 +80,7 @@ public class TaskServiceImpl implements TaskService
 			}
 		}
 
-		String query = constructQueryByFilter(filter);
+		String query = constructQueryByFilter(filter, pageNumber, pageSize, false);
 
 		return namedParameterJdbcTemplate.query(query, params, rs ->
 		{
@@ -104,11 +104,58 @@ public class TaskServiceImpl implements TaskService
 		});
 	}
 
-	private String constructQueryByFilter(TaskListingFilter filter)
+	@Override
+	public long getTasksByFilterCount(TaskListingFilter filter) throws ServiceException
 	{
-		StringBuilder sb = new StringBuilder(" SELECT " +
-			"TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, USERNAME, COUNT(*) AS KEYWORDSMATCHING " +
-			"FROM \"task\" TASK");
+
+		if (filter == null)
+		{
+			return taskRepository.count();
+		}
+
+		MapSqlParameterSource params = new MapSqlParameterSource()
+			.addValue("id", filter.getId())
+			.addValue("name", "%" + filter.getName() + "%")
+			.addValue("description", filter.getDescription())
+			.addValue("createdafter", filter.getCreatedAfter() == null ? LocalDate.EPOCH : filter.getCreatedAfter().toString())
+			.addValue("createdbefore", filter.getCreatedBefore() == null ? LocalDate.MAX : filter.getCreatedBefore().toString())
+			.addValue("maintaskid", filter.getMaintaskid())
+			.addValue("ownerid", filter.getOwnerid())
+			.addValue("userid", filter.getCompletedUserId());
+
+		if (filter.getKeywords() != null)
+		{
+			Iterator<String> keywordsIterator = filter.getKeywords().iterator();
+			for (int i = 0; keywordsIterator.hasNext(); i++)
+			{
+				params.addValue(String.format("keywords%d", i), "%" + keywordsIterator.next() + "%");
+			}
+		}
+
+		String queryString = constructQueryByFilter(filter, -1L, -1L, true);
+
+		Long result = namedParameterJdbcTemplate.queryForObject(queryString, params, Long.class);
+
+		return result == null ? -1L : result;
+	}
+
+	private String constructQueryByFilter(TaskListingFilter filter, long pageNumber, long pageSize, boolean justCount)
+	{
+		StringBuilder sb = new StringBuilder();
+
+		if (justCount)
+		{
+			sb.append(" SELECT COUNT(*) as COUNT FROM ( ");
+		}
+
+		if (!justCount)
+		{
+			sb.append(" SELECT " +
+				"TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, USERNAME, COUNT(*) AS KEYWORDSMATCHING " +
+				"FROM \"task\" TASK");
+		} else {
+			sb.append(" SELECT COUNT(TASK.ID) FROM \"task\" TASK ");
+		}
 
 		sb.append(" INNER JOIN \"user\" USERT on TASK.OWNERID = USERT.ID ");
 
@@ -199,13 +246,25 @@ public class TaskServiceImpl implements TaskService
 
 		sb.append(" GROUP BY TASK.id ");
 
-		if (filter.getKeywords() != null)
+		if (filter.getKeywords() != null && !justCount)
 		{
-			sb.append(" ORDER BY KEYWORDSMATCHING DESC, ID DESC ");
+			sb.append(" ORDER BY KEYWORDSMATCHING DESC, TASK.ID DESC ");
 		}
-		else
+		else if (!justCount)
 		{
-			sb.append(" ORDER BY TASK.TIMEOFCREATION DESC, ID DESC ");
+			sb.append(" ORDER BY TASK.TIMEOFCREATION DESC, TASK.ID DESC ");
+		}
+
+		if (pageNumber >= 0 && pageSize >= 0)
+		{
+			sb.append(" LIMIT ").append(pageSize);
+
+			sb.append(" OFFSET ").append(pageNumber * pageSize);
+		}
+
+		if (justCount)
+		{
+			sb.append(" ) ");
 		}
 
 		return sb.toString();

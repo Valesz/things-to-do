@@ -1,17 +1,21 @@
 import {Button} from 'primereact/button'
 import {Toolbar} from 'primereact/toolbar'
 
-import {useNavigate} from 'react-router-dom'
+import {useLocation, useNavigate} from 'react-router-dom'
 import {useEffect, useMemo, useState} from 'react'
 import SideNavbarComponent from './sideNavbar'
 import {ButtonGroup} from 'primereact/buttongroup'
 
 import {useAuth} from '../../hooks/useAuth'
+import useScrollPosition from '../../hooks/useScrollPosition'
+import Logo from '../Logo'
 
 const NavbarComponent = () => {
 	const navigate = useNavigate()
 	const [openSidebar, setOpenSidebar] = useState(false)
 	const [navItems, setNavItems] = useState([])
+	const scrollY = useScrollPosition()
+	const location = useLocation()
 
 	const [user, , , logoutAction] = useAuth()
 
@@ -80,7 +84,7 @@ const NavbarComponent = () => {
 				onClick={() => navigate('/')}
 				tabIndex={0}
 			>
-				LOGO
+				<Logo />
 			</button>
 			<div className={'w-3rem block lg:hidden'}></div>
 		</>
@@ -93,7 +97,7 @@ const NavbarComponent = () => {
 			onClick={() => navigate('/')}
 			tabIndex={0}
 		>
-			LOGO
+			<Logo />
 		</button>
 	)
 
@@ -111,7 +115,24 @@ const NavbarComponent = () => {
 	return (
 		<>
 			<SideNavbarComponent visible={openSidebar} setVisible={setOpenSidebar} items={items}/>
-			<Toolbar className={'sticky w-full z-5 top-0'} start={start} center={center} end={end}/>
+			<Toolbar
+				className={'w-full z-5'}
+				start={start}
+				center={center}
+				end={end}
+				style={{
+					position: location.pathname === "/" ? 'fixed' : 'sticky',
+					top: 0
+				}}
+				pt={{
+					root: {
+						style: {
+							backgroundColor: `rgba(31,41,55,${location.pathname === "/" ? scrollY / 100 : 1})`,
+							borderColor: `rgba(66, 75, 87, ${location.pathname === "/" ? scrollY / 100 : 1})`,
+						}
+					}
+				}}
+			/>
 		</>
 	)
 }

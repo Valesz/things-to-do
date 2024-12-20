@@ -47,7 +47,7 @@ public class UserServiceImplTest extends AbstractTest
 
 		User savedUser = userService.getByUsersObject(User.builder()
 			.id(user.getId())
-			.build()
+			.build(), 0, 100
 		).iterator().next();
 
 		Assert.assertEquals(user, savedUser);
@@ -157,42 +157,42 @@ public class UserServiceImplTest extends AbstractTest
 
 		Iterable<User> userIterable = userService.getByUsersObject(User.builder()
 			.id(user1.getId())
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user1::equals));
 
 		userIterable = userService.getByUsersObject(User.builder()
 			.username("teszt elek")
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user -> user1.equals(user) || user2.equals(user)));
 
 		userIterable = userService.getByUsersObject(User.builder()
 			.email("tesz@vesz.teszt")
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user -> user2.equals(user) || user4.equals(user)));
 
 		userIterable = userService.getByUsersObject(User.builder()
 			.timeofcreation(LocalDate.now())
 			.status(UserStatusEnum.AKTIV)
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user -> user1.equals(user) || user3.equals(user) || user4.equals(user)));
 
 		userIterable = userService.getByUsersObject(User.builder()
 			.precisionofanswers(0.8)
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user -> user1.equals(user) || user3.equals(user)));
 
 		userIterable = userService.getByUsersObject(User.builder()
 			.classification(0.5)
-			.build()
+			.build(), 0, 100
 		);
 		Assert.assertTrue(StreamSupport.stream(userIterable.spliterator(), false).allMatch(user -> user1.equals(user) || user4.equals(user)));
 
-		userIterable = userService.getByUsersObject(null);
+		userIterable = userService.getByUsersObject(null, 0, 100);
 		Assert.assertEquals(4, StreamSupport.stream(userIterable.spliterator(), false).count());
 	}
 

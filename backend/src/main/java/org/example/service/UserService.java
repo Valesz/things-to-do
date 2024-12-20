@@ -14,7 +14,9 @@ public interface UserService
 
 	User getUserByToken(String token);
 
-	Iterable<User> getByUsersObject(User user);
+	long getByUsersObjectCount(User user);
+
+	Iterable<User> getByUsersObject(User user, long pageNumber, long pageSize);
 
 	User saveUser(User user) throws ServiceException;
 

@@ -56,9 +56,9 @@ public class SubmissionServiceImpl implements SubmissionService
 	}
 
 	@Override
-	public Iterable<SubmissionListing> getAllSubmissions()
+	public Iterable<SubmissionListing> getAllSubmissions(long pageNumber, long pageSize)
 	{
-		return submissionRepository.getAllSubmissions();
+		return submissionRepository.getAllSubmissions(pageNumber * pageSize, pageSize);
 	}
 
 	@Override
@@ -68,11 +68,11 @@ public class SubmissionServiceImpl implements SubmissionService
 	}
 
 	@Override
-	public Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission)
+	public Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission, long pageNumber, long pageSize)
 	{
 		if (submission == null)
 		{
-			return getAllSubmissions();
+			return getAllSubmissions(pageNumber, pageSize);
 		}
 
 		SqlParameterSource namedParams = new MapSqlParameterSource()
@@ -84,7 +84,7 @@ public class SubmissionServiceImpl implements SubmissionService
 			.addValue("submitterid", submission.getSubmitterid())
 			.addValue("submittername", "%" + submission.getSubmittername() + "%");
 
-		String query = constructQueryByOwnObject(submission);
+		String query = constructQueryByOwnObject(submission, pageNumber, pageSize, false);
 
 		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
 		{
@@ -109,10 +109,42 @@ public class SubmissionServiceImpl implements SubmissionService
 		});
 	}
 
-	private String constructQueryByOwnObject(SubmissionListing submission)
+	@Override
+	public long getBySubmissionsObjectCount(SubmissionListing submission)
 	{
-		StringBuilder query =
-			new StringBuilder(" SELECT SUBMISSION.ID, TASKID, DESCRIPTION, SUBMISSION.TIMEOFSUBMISSION, ACCEPTANCE, SUBMITTERID, USERNAME AS SUBMITTERNAME FROM \"submission\" SUBMISSION ");
+		if (submission == null)
+		{
+			return submissionRepository.count();
+		}
+
+		SqlParameterSource namedParams = new MapSqlParameterSource()
+			.addValue("id", submission.getId())
+			.addValue("taskid", submission.getTaskid())
+			.addValue("description", submission.getDescription())
+			.addValue("timeofsubmission", submission.getTimeofsubmission() == null ? null : submission.getTimeofsubmission().toString())
+			.addValue("acceptance", submission.getAcceptance() == null ? null : submission.getAcceptance().toString())
+			.addValue("submitterid", submission.getSubmitterid())
+			.addValue("submittername", "%" + submission.getSubmittername() + "%");
+
+		String query = constructQueryByOwnObject(submission, -1L, -1L, true);
+
+		Long result = namedParameterJdbcTemplate.queryForObject(query, namedParams, Long.class);
+
+		return result == null ? -1L : result;
+	}
+
+	private String constructQueryByOwnObject(SubmissionListing submission, long pageNumber, long pageSize, boolean justCount)
+	{
+		StringBuilder query = new StringBuilder();
+
+		if (!justCount)
+		{
+			query.append(
+				" SELECT SUBMISSION.ID, TASKID, DESCRIPTION, SUBMISSION.TIMEOFSUBMISSION, ACCEPTANCE, SUBMITTERID, USERNAME AS SUBMITTERNAME FROM \"submission\" SUBMISSION "
+			);
+		} else {
+			query.append("SELECT COUNT(SUBMISSION.ID) FROM \"submission\" SUBMISSION ");
+		}
 
 		query.append(" INNER JOIN \"user\" USERT ON SUBMISSION.submitterid = USERT.id ");
 
@@ -153,7 +185,16 @@ public class SubmissionServiceImpl implements SubmissionService
 			query.append(" AND USERT.username LIKE :submittername ");
 		}
 
-		query.append(" ORDER BY timeofsubmission DESC, ID DESC ");
+		if (!justCount)
+		{
+			query.append(" ORDER BY timeofsubmission DESC, ID DESC ");
+		}
+
+		if (pageNumber >= 0 && pageSize >= 0) {
+			query.append(" LIMIT ").append(pageSize);
+
+			query.append(" OFFSET ").append(pageNumber * pageSize);
+		}
 
 		return query.toString();
 	}

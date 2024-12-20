@@ -4,7 +4,7 @@ import {addKeywords, deleteKeywords} from './keywordService'
 
 const baseEndpoint = '/api/task/'
 
-export async function fetchTasks({id, name, keywords, date, completed, completedUserId, ownerId, creatorName} = {}) {
+export async function fetchTasks({id, name, keywords, date, completed, completedUserId, ownerId, creatorName, pageNumber = 0, pageSize = 5} = {}) {
 
 	const requestOptions = {
 		method: 'GET',
@@ -24,7 +24,9 @@ export async function fetchTasks({id, name, keywords, date, completed, completed
 		(completed !== undefined ? '&completed=' + completed : '') +
 		(completedUserId ? `&completeduserid=${completedUserId}` : '') +
 		(creatorName ? '&ownername=' + creatorName : '') +
-		(ownerId ? '&ownerid=' + ownerId : '')
+		(ownerId ? '&ownerid=' + ownerId : '') +
+		(pageNumber !== undefined ? `&pagenumber=${pageNumber}` : '') +
+		(pageSize !== undefined ? `&pagesize=${pageSize}` : '')
 
 	return await fetchJson(baseEndpoint + params, requestOptions)
 }

@@ -9,6 +9,7 @@ import org.example.model.KeywordsForTasks;
 import org.example.model.Task;
 import org.example.model.listing.TaskListingFilter;
 import org.example.model.User;
+import org.example.model.listing.TaskListingResponse;
 import org.example.service.KeywordsForTasksService;
 import org.example.service.TaskService;
 import org.example.service.UserService;
@@ -173,7 +174,7 @@ public class TaskController
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public Iterable<TaskListingFilter> listTasksByFilter(@RequestParam(required = false, value = "keywords") Collection<String> keywords,
+	public TaskListingResponse listTasksByFilter(@RequestParam(required = false, value = "keywords") Collection<String> keywords,
 		@RequestParam(required = false, value = "id") Long id,
 		@RequestParam(required = false, value = "name") String name,
 		@RequestParam(required = false, value = "description") String description,
@@ -184,14 +185,17 @@ public class TaskController
 		@RequestParam(required = false, value = "ownername") String ownername,
 		@RequestParam(required = false, value = "completeduserid") Long completeduserid,
 		@RequestParam(required = false, value = "completed") Boolean completed,
-		@RequestHeader(required = false, name = "Authorization") String token)
+		@RequestParam(required = true, value = "pagenumber") int pageNumber,
+		@RequestParam(required = true, value = "pagesize") int pageSize)
 	{
 		if (id == null && name == null && description == null
 			&& createdafter == null && createdbefore == null && maintaskid == null
 			&& ownerid == null && ownername == null && completeduserid == null
 			&& keywords == null && completed == null)
 		{
-			Iterable<TaskListingFilter> tasks = taskService.getAllTasksAsListingFilter();
+
+			Iterable<TaskListingFilter> tasks = taskService.getAllTasksAsListingFilter(pageNumber, pageSize);
+			long totalTasks = taskService.getTasksByFilterCount(null);
 
 			for (TaskListingFilter task : tasks)
 			{
@@ -210,13 +214,13 @@ public class TaskController
 				task.setKeywords(keywordsList);
 			}
 
-			return tasks;
+			return new TaskListingResponse(tasks, totalTasks);
 		}
 
 		if (ownerid == null && ownername != null)
 		{
 			Iterator<User> userIterator = userService.getByUsersObject(User.builder()
-				.username(ownername).build()
+				.username(ownername).build(), 0, 1
 			).iterator();
 
 			if (userIterator.hasNext())
@@ -225,7 +229,7 @@ public class TaskController
 			}
 		}
 
-		Iterable<TaskListingFilter> tasks = taskService.getTasksByFilter(TaskListingFilter.builder()
+		TaskListingFilter filter = TaskListingFilter.builder()
 			.keywords(keywords != null && !keywords.isEmpty() ? keywords : null)
 			.id(id)
 			.name(name != null && !name.isEmpty() ? name : null)
@@ -236,8 +240,10 @@ public class TaskController
 			.ownerid(ownerid)
 			.completedUserId(completeduserid)
 			.completed(completed)
-			.build()
-		);
+			.build();
+
+		Iterable<TaskListingFilter> tasks = taskService.getTasksByFilter(filter, pageNumber, pageSize);
+		long totalTasks = taskService.getTasksByFilterCount(filter);
 
 		for (TaskListingFilter task : tasks)
 		{
@@ -256,7 +262,7 @@ public class TaskController
 			task.setKeywords(keywordsList);
 		}
 
-		return tasks;
+		return new TaskListingResponse(tasks, totalTasks);
 	}
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)

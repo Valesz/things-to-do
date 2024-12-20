@@ -34,12 +34,18 @@ const TaskPage = () => {
 	const [tasks, taskFetchError, isTaskLoading] = useTasks({
 		id: taskId,
 		enabled: !!taskId,
+		pageNumber: 0,
+		pageSize: 1,
 		toastRef: toastRef
 	})
-	const task = useMemo(() => tasks?.[0], [tasks])
+	const task = useMemo(() => tasks?.tasks?.[0], [tasks])
+	const [submissionsFirst, setSubmissionsFirst] = useState(0)
+	const [submissionsRows, setSubmissionsRows] = useState(5)
 	const [submissions, submissionsError, isSubmissionsLoading, setSubmissionsValid] = useSubmissions({
 		taskId: taskId,
 		...submissionParams,
+		pageNumber: submissionsFirst / submissionsRows,
+		pageSize: submissionsRows,
 		enabled: !!taskId,
 		toastRef: toastRef
 	})
@@ -93,11 +99,11 @@ const TaskPage = () => {
 
 	const submissionsFilter = useCallback((event) => {
 		setFilteredSubmissions([
-			...submissions.filter((submission, i, self) =>
+			...submissions?.submissions?.filter((submission, i, self) =>
 				i === self.findIndex(value => submission.submittername === value.submittername)
 			).filter((submission) =>
 				submission.submittername.toLowerCase().startsWith(event.query.toLowerCase())
-			)
+			) ?? []
 		])
 	}, [submissions])
 
@@ -126,15 +132,15 @@ const TaskPage = () => {
 			{
 				gradingMode ?
 					<GradeSubmissionComponent
-						submission={submissions?.find(submission => submission.id === parseInt(id))}
+						submission={submissions?.submissions?.find(submission => submission.id === parseInt(id))}
 						enabled={gradingMode}
 						onSuccess={() => setSubmissionsValid(false)}
 						toastRef={toastRef}
 					/> :
 					<SubmissionBlock
-						submission={submissions?.find(submission => submission.id === parseInt(id))}
+						submission={submissions?.submissions?.find(submission => submission.id === parseInt(id))}
 						buttons={
-							user && submissions?.find(submissions => submissions.id === parseInt(id))?.submitterid === user.id ?
+							user && submissions?.submissions?.find(submissions => submissions.id === parseInt(id))?.submitterid === user.id ?
 								updateDeleteButtons('Modify Solution', 'Delete submission',
 									(submission) => openDialog(setSubmissionModifyDialogVisible, () => setModifySubmissionObject(submission)),
 									(id) => deleteSubmissionRef.current.deleteSubmissionCallback(id))
@@ -190,15 +196,23 @@ const TaskPage = () => {
 						</FloatLabel>
 					</form>
 					<SubmissionListing
-						submissionList={submissions}
+						submissionList={submissions.submissions}
 						titleShow={'submitter'}
 						buttons={submissionButtons}
 						paginatorPosition={'bottom'}
+						first={submissionsFirst}
+						rows={submissionsRows}
+						totalRows={submissions.totalRows}
+						onPageChange={(e) => {
+							setSubmissionsFirst(e.first)
+							setSubmissionsRows(e.rows)
+						}}
+						className={'w-full'}
 					/>
 				</div>
 			}
 		</TabPanel>
-	], [submissions, task, submissionButtons, setSubmissionsValid, isSubmissionsLoading, errorDisplay, loadingDisplay, submitterNameFilter, searchParams, setSearchParams, submissionsError, filteredSubmissions, submissionsFilter])
+	], [submissions, task, submissionButtons, setSubmissionsValid, isSubmissionsLoading, errorDisplay, loadingDisplay, submitterNameFilter, searchParams, setSearchParams, submissionsError, filteredSubmissions, submissionsFilter, submissionsFirst, submissionsRows])
 
 	if ((solutionId && !parseInt(solutionId)) || (taskId && !parseInt(taskId))
 		|| (activeTab && (activeTab !== 'solutions' && activeTab !== 'submit'))) {

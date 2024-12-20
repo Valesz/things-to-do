@@ -6,7 +6,7 @@ const useFetch = (fetchCallback, enabled) => {
 	const [error, setError] = useState(null)
 	const [valid, setValid] = useState(false)
 
-	const fetch = useCallback(async () => {
+	const fetch = useCallback(async (ignore) => {
 		if (valid || !enabled) {
 			return
 		}
@@ -18,6 +18,10 @@ const useFetch = (fetchCallback, enabled) => {
 		const response = await fetchCallback()
 			.catch(error => setError(error))
 
+		if (ignore) {
+			return
+		}
+
 		if (response) {
 			setData(response)
 		}
@@ -27,7 +31,13 @@ const useFetch = (fetchCallback, enabled) => {
 	}, [fetchCallback, valid, enabled, isLoading])
 
 	useEffect(() => {
-		fetch()
+		let ignore = false
+
+		fetch(ignore)
+
+		return () => {
+			ignore = true
+		}
 	}, [fetch])
 
 	useEffect(() => {

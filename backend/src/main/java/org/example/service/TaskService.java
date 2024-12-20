@@ -8,14 +8,15 @@ import org.springframework.stereotype.Service;
 @Service
 public interface TaskService
 {
-
 	Iterable<Task> getAllTasks();
 
-	Iterable<TaskListingFilter> getAllTasksAsListingFilter();
+	Iterable<TaskListingFilter> getAllTasksAsListingFilter(long pageNumber, long pageSize);
 
 	Task getTaskById(Long id);
 
-	Iterable<TaskListingFilter> getTasksByFilter(TaskListingFilter filter) throws ServiceException;
+	Iterable<TaskListingFilter> getTasksByFilter(TaskListingFilter filter, long pageNumber, long pageSize) throws ServiceException;
+
+	long getTasksByFilterCount(TaskListingFilter filter) throws ServiceException;
 
 	Task saveTask(Task task) throws ServiceException;
 

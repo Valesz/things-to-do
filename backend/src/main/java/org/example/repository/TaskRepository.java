@@ -17,6 +17,6 @@ public interface TaskRepository extends CrudRepository<Task, Long>
 
 	@Query(" SELECT TASK.ID, NAME, TASK.DESCRIPTION, TASK.TIMEOFCREATION, MAINTASKID, OWNERID, USERNAME AS OWNERNAME FROM \"task\" TASK "
 		+ " INNER JOIN \"user\" USERT ON USERT.ID = TASK.OWNERID "
-		+ " ORDER BY TIMEOFCREATION DESC, ID DESC")
-	Iterable<TaskListingFilter> getAllTasksAsListingFilter();
+		+ " ORDER BY TIMEOFCREATION DESC, ID DESC LIMIT :LIMIT OFFSET :OFFSET")
+	Iterable<TaskListingFilter> getAllTasksAsListingFilter(@Param("OFFSET") Long offset, @Param("LIMIT") Long limit);
 }

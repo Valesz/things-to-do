@@ -12,4 +12,7 @@ public interface UserRepository extends CrudRepository<User, Long>
 {
 	@Query("SELECT * FROM \"user\" WHERE username = :username")
 	Optional<User> findByUsername(@Param("username") String username);
+
+	@Query("SELECT * FROM \"user\" LIMIT :LIMIT OFFSET :OFFSET")
+	Iterable<User> getAllUsers(@Param("OFFSET") long offset, @Param("LIMIT") long limit);
 }

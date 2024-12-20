@@ -6,7 +6,7 @@ import PropTypes from 'prop-types'
 import {Card} from 'primereact/card'
 import {useMemo} from 'react'
 
-const TaskBlock = ({task, index, buttons}) => {
+const TaskBlock = ({task, index, buttons, className, style}) => {
 
 	const navigate = useNavigate()
 
@@ -29,8 +29,8 @@ const TaskBlock = ({task, index, buttons}) => {
 	}
 
 	return (
-		<div key={task.id} className={'col-12 m-1'}>
-			<div className={classNames('flex flex-column xl:align-items-start p-4 gap-3', {'border-top-1 surface-border': index === undefined || index !== 0})}>
+		<div key={task.id} className={classNames('col-12 m-1', className)} style={style}>
+			<div className={classNames('flex flex-column xl:align-items-start p-4 gap-3', {'border-top-1 surface-border': index !== undefined && index !== 0})}>
 				<div className={'grid grid-nogutter w-full'}>
 					{task.name &&
 						<span className={'col-6 text-2xl font-bold text-left'}>
@@ -60,7 +60,7 @@ const TaskBlock = ({task, index, buttons}) => {
 							))}
 						</span>}
 				</div>
-				{task.description && <span>{task.description}</span>}
+				{task.description && <span className={"text-overflow-clip"}>{task.description}</span>}
 				<div className={'flex flex-row gap-2 flex-grow-1 lg:h-3rem mt-3'}>
 					{buttons && buttons.length > 0 &&
 						buttons.map((button) => {

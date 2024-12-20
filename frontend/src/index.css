@@ -1,3 +1,8 @@
+@font-face {
+	font-family: "Pacifico";
+	src: url("../public/fonts/Pacifico/Pacifico-Regular.ttf");
+}
+
 html, body {
 	margin: 0;
 	padding: 0;
@@ -15,4 +20,20 @@ html, body {
 	* {
 		scroll-behavior: auto;
 	}
+}
+
+.gradient-background {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 75vh;
+	width: 100%;
+	background: rgb(17,24,39);
+	background: linear-gradient(0deg, rgba(17,24,39,1) 50%, rgba(17,26,40,1) 100%);
+}
+
+.pacifico {
+	font-family: "Pacifico", serif;
+	font-weight: 400;
+	font-style: normal;
 }

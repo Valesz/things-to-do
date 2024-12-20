@@ -1,5 +1,5 @@
 import {Button} from 'primereact/button'
-import {useMemo, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import TaskFilterSidebarComponent from './components/filter/sidebar/taskFilterSidebarVisual'
 import {InputText} from 'primereact/inputtext'
 import {FloatLabel} from 'primereact/floatlabel'
@@ -18,6 +18,8 @@ const TaskListingPage = () => {
 	const toastRef = useRef()
 	const [toggleFilter, setToggleFilter] = useState(false)
 	const [toggleAdd, setToggleAdd] = useState(false)
+	const [first, setFirst] = useState(0)
+	const [rows, setRows] = useState(5)
 	const [searchParams, setSearchParams] = useSearchParams()
 	const params = useMemo(() => {
 		return {
@@ -30,10 +32,18 @@ const TaskListingPage = () => {
 	}, [searchParams])
 	const [tasks, tasksFetchError, isLoading, setTasksInvalid] = useTasks({
 		...params,
+		pageNumber: first / rows,
+		pageSize: rows,
 		toastRef: toastRef
 	})
 	const [user] = useAuth()
 	const navigate = useNavigate()
+
+	useEffect(() => {
+		if (first >= tasks?.totalTasks) {
+			setFirst(0)
+		}
+	}, [first, tasks])
 
 	const loadingDisplay = useMemo(() => (
 		<div className={'flex justify-content-center align-items-center h-screen w-full'}>
@@ -70,16 +80,29 @@ const TaskListingPage = () => {
 			<div className={'grid grid-nogutter w-full'}>
 				<div className={'hidden lg:block'} style={{transform: 'translate(0%, -1.5rem)'}}>
 					<Fieldset legend={'Filter'} className={'col-1 xl:ml-3 overflow-y-auto w-20rem'}>
-						<TaskFilterComponent toastRef={toastRef}/>
+						<TaskFilterComponent
+							toastRef={toastRef}
+						/>
 					</Fieldset>
 				</div>
-
-				{
-					(tasksFetchError && errorDisplay)
-					|| (isLoading && loadingDisplay)
-					|| <TaskListing taskList={tasks} buttons={taskViewButtons(navigate)}/>
-				}
-
+				<div className={'col-11 lg:col-8 mx-auto z-index-1 p-component surface-card'}>
+					{
+						(tasksFetchError && errorDisplay)
+						|| (isLoading && loadingDisplay)
+						||
+						<TaskListing
+							taskList={tasks.tasks}
+							buttons={taskViewButtons(navigate)}
+							first={first}
+							rows={rows}
+							totalRows={tasks.totalTasks}
+							onPageChange={(e) => {
+								setFirst(e.first)
+								setRows(e.rows)
+							}}
+						/>
+					}
+				</div>
 			</div>
 			{user && (
 				<>

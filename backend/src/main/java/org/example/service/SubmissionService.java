@@ -12,11 +12,13 @@ public interface SubmissionService
 
 	Integer setAcceptance(Long id, SubmissionAcceptanceEnum accepted);
 
-	Iterable<SubmissionListing> getAllSubmissions();
+	Iterable<SubmissionListing> getAllSubmissions(long pageNumber, long pageSize);
+
+	long getBySubmissionsObjectCount(SubmissionListing submission);
 
 	Submission getSubmissionById(Long id);
 
-	Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission);
+	Iterable<SubmissionListing> getBySubmissionsObject(SubmissionListing submission, long pageNumber, long pageSize);
 
 	Submission saveSubmission(Submission submission) throws ServiceException;
 

@@ -164,42 +164,42 @@ public class TaskServiceImplTest extends AbstractTest
 
 		Iterable<TaskListingFilter> taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.id(task1.getId())
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task1::listingFilterEquals));
 
 		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.name("Example Task")
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.description("Leiras")
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 
 		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.createdAfter(LocalDate.now())
 			.createdBefore(LocalDate.now())
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task1.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.ownerid(this.user.getId())
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task -> task3.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.maintaskid(task1.getId())
-			.build()
+			.build(), 0, 5
 		);
 		Assert.assertTrue(StreamSupport.stream(taskIterable.spliterator(), false).allMatch(task3::listingFilterEquals));
 
-		taskIterable = taskService.getTasksByFilter(null);
+		taskIterable = taskService.getTasksByFilter(null, 0, 5);
 		Assert.assertEquals(4, StreamSupport.stream(taskIterable.spliterator(), false).count());
 	}
 
@@ -242,7 +242,7 @@ public class TaskServiceImplTest extends AbstractTest
 
 		Iterable<TaskListingFilter> taskIterable = taskService.getTasksByFilter(TaskListingFilter.builder()
 			.maintaskid(0L)
-			.build()
+			.build(), 0, 5
 		);
 
 		Iterator<TaskListingFilter> taskIterator = taskIterable.iterator();
@@ -356,27 +356,27 @@ public class TaskServiceImplTest extends AbstractTest
 
 		TaskListingFilter filter = TaskListingFilter.builder().name("Example Task").build();
 
-		Spliterator<TaskListingFilter> taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		Spliterator<TaskListingFilter> taskSpliterator = taskService.getTasksByFilter(filter, 0, 5).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setName(null);
 		filter.setKeywords(List.of("ABC", "GHI"));
-		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		taskSpliterator = taskService.getTasksByFilter(filter, 0, 5).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task3.listingFilterEquals(task)));
 
 		filter.setKeywords(null);
 		filter.setCompletedUserId(this.user.getId());
 		filter.setCompleted(true);
-		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		taskSpliterator = taskService.getTasksByFilter(filter, 0, 5).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task1.listingFilterEquals(task) || task2.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setCompletedUserId(null);
 		filter.setOwnerid(this.user.getId());
-		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		taskSpliterator = taskService.getTasksByFilter(filter, 0, 5).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task -> task3.listingFilterEquals(task) || task4.listingFilterEquals(task)));
 
 		filter.setName("Example Task");
-		taskSpliterator = taskService.getTasksByFilter(filter).spliterator();
+		taskSpliterator = taskService.getTasksByFilter(filter, 0, 5).spliterator();
 		Assert.assertTrue(StreamSupport.stream(taskSpliterator, false).allMatch(task4::listingFilterEquals));
 	}
 

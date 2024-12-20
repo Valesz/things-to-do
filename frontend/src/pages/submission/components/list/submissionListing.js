@@ -1,12 +1,9 @@
-import {useCallback, useRef, useState} from 'react'
-import {DataView} from 'primereact/dataview'
+import {useCallback, useRef} from 'react'
 import SubmissionBlock from './submissionBlock'
 import PropTypes from 'prop-types'
+import {Paginator} from 'primereact/paginator'
 
-const SubmissionListing = ({submissionList, buttons, className, titleShow = 'both', paginatorPosition = 'both'}) => {
-	const [first, setFirst] = useState(0)
-	const [rows, setRows] = useState(5)
-
+const SubmissionListing = ({submissionList, first, rows, totalRows, onPageChange, buttons, className, titleShow = 'both'}) => {
 	const topOfList = useRef(null)
 
 	const listTemplate = useCallback((list) => {
@@ -17,43 +14,62 @@ const SubmissionListing = ({submissionList, buttons, className, titleShow = 'bot
 		return (
 			<div>
 				<div ref={topOfList}></div>
-				<div className={'grid grid-nogutter'}>
-					{submissionList.slice(first, first + rows).map((submission, index) => (
+				<div className={'grid grid-nogutter gap-4'}>
+					{submissionList.map((submission, index) => (
 						<SubmissionBlock key={submission.id} titleShow={titleShow} submission={submission} index={index} buttons={buttons}/>
 					))}
 				</div>
 			</div>
 		)
-	}, [submissionList, buttons, first, rows, titleShow])
+	}, [submissionList, buttons, titleShow])
 
 	return (
-		(submissionList.length > 0
-			&& <DataView
-				value={submissionList}
-				listTemplate={listTemplate}
-				paginator={true}
-				first={first}
-				rows={rows}
-				onPage={(e) => {
-					topOfList.current.scrollIntoView({block: 'center'})
-					setFirst(e.first)
-					setRows(e.rows)
-				}}
-				paginatorPosition={paginatorPosition || 'both'}
-				pageLinkSize={window.innerWidth >= 576 ? 5 : 3}
-				paginatorTemplate={window.innerWidth
-				>= 576 ? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown' : 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'}
-				totalRecords={submissionList.length}
-				rowsPerPageOptions={[5, 10, 20]}
-				className={className || 'col-11 lg:col-11 mx-auto z-index-1'}
-			/>)
-		|| <div className={'col-11 lg:col-8 mx-auto z-index-1 surface-50 p-component text-center h-full'}>
-			<div className={'flex flex-column justify-content-center h-full p-4 gap-4'}>
+		<div className={className} style={{height: 'fit-content'}}>
+			{(submissionList.length > 0
+				&&
 				<div>
-					<span className={'font-semibold text-2xl text-900'}>No Submissions yet!</span>
+					<Paginator
+						first={first}
+						rows={rows}
+						totalRecords={totalRows}
+						rowsPerPageOptions={[5, 10, 20]}
+						onPageChange={(e) => {
+							topOfList.current.scrollIntoView({block: 'center'})
+							onPageChange?.(e)
+						}}
+						template={{
+							layout: window.innerWidth >= 576
+								? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
+								: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
+						}}
+					/>
+					{
+						listTemplate(submissionList)
+					}
+					<Paginator
+						first={first}
+						rows={rows}
+						totalRecords={totalRows}
+						rowsPerPageOptions={[5, 10, 20]}
+						onPageChange={(e) => {
+							topOfList.current.scrollIntoView({block: 'center'})
+							onPageChange?.(e)
+						}}
+						template={{
+							layout: window.innerWidth >= 576
+								? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
+								: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
+						}}
+					/>
+				</div>)
+			|| <div className={'col-11 lg:col-8 mx-auto z-index-1 surface-50 p-component text-center h-full'}>
+				<div className={'flex flex-column justify-content-center h-full p-4 gap-4'}>
+					<div>
+						<span className={'font-semibold text-2xl text-900'}>No Submissions yet!</span>
+					</div>
+					<span className={'text-lg'}>Be the first to solve this task by submitting an answer!</span>
 				</div>
-				<span className={'text-lg'}>Be the first to solve this task by submitting an answer!</span>
-			</div>
+			</div>}
 		</div>
 	)
 }
@@ -65,5 +81,8 @@ SubmissionListing.propTypes = {
 	buttons: PropTypes.arrayOf(PropTypes.object),
 	className: PropTypes.string,
 	titleShow: PropTypes.string,
-	paginatorPosition: PropTypes.string
+	first: PropTypes.number.isRequired,
+	rows: PropTypes.number.isRequired,
+	totalRows: PropTypes.number.isRequired,
+	onPageChange: PropTypes.func,
 }

@@ -55,21 +55,21 @@ public class UserServiceImpl implements UserService
 	@Override
 	public User getUserByToken(String token)
 	{
-		return getByUsersObject(User.builder().username(jwtService.extractUsername(token)).build()).iterator().next();
+		return getByUsersObject(User.builder().username(jwtService.extractUsername(token)).build(), 0, 1).iterator().next();
 	}
 
 	@Override
-	public Iterable<User> getByUsersObject(User user)
+	public long getByUsersObjectCount(User user)
 	{
 
 		if (user == null)
 		{
-			return userRepository.findAll();
+			return userRepository.count();
 		}
 
 		SqlParameterSource namedParams = new MapSqlParameterSource()
 			.addValue("id", user.getId())
-			.addValue("username", user.getUsername())
+			.addValue("username", "%" + user.getUsername() + "%")
 			.addValue("email", user.getEmail())
 			.addValue("timeofcreation", user.getTimeofcreation() == null ? null : user.getTimeofcreation().toString())
 			.addValue("status", user.getStatus() == null ? null : user.getStatus().toString())
@@ -77,7 +77,33 @@ public class UserServiceImpl implements UserService
 			.addValue("classification", user.getClassification())
 			.addValue("precisionofanswers", user.getPrecisionofanswers());
 
-		String query = constructQueryByOwnObject(user);
+		String query = constructQueryByOwnObject(user, -1L, -1L, true);
+
+		Long result = namedParameterJdbcTemplate.queryForObject(query, namedParams, Long.class);
+
+		return result == null ? -1L : result;
+	}
+
+	@Override
+	public Iterable<User> getByUsersObject(User user, long pageNumber, long pageSize)
+	{
+
+		if (user == null)
+		{
+			return userRepository.getAllUsers(pageNumber * pageSize, pageSize);
+		}
+
+		SqlParameterSource namedParams = new MapSqlParameterSource()
+			.addValue("id", user.getId())
+			.addValue("username", "%" + user.getUsername() + "%")
+			.addValue("email", user.getEmail())
+			.addValue("timeofcreation", user.getTimeofcreation() == null ? null : user.getTimeofcreation().toString())
+			.addValue("status", user.getStatus() == null ? null : user.getStatus().toString())
+			.addValue("password", user.getPassword())
+			.addValue("classification", user.getClassification())
+			.addValue("precisionofanswers", user.getPrecisionofanswers());
+
+		String query = constructQueryByOwnObject(user, pageNumber, pageSize, false);
 
 		return namedParameterJdbcTemplate.query(query, namedParams, rs ->
 		{
@@ -102,9 +128,18 @@ public class UserServiceImpl implements UserService
 		});
 	}
 
-	private String constructQueryByOwnObject(User user)
+	private String constructQueryByOwnObject(User user, long pageNumber, long pageSize, boolean justCount)
 	{
-		StringBuilder query = new StringBuilder(" SELECT * FROM \"user\" ");
+		StringBuilder query = new StringBuilder();
+
+		if (!justCount)
+		{
+			query.append(" SELECT * FROM \"user\" ");
+		}
+		else
+		{
+			query.append(" SELECT COUNT(*) FROM \"user\" ");
+		}
 
 		query.append(" WHERE 1 = 1 ");
 
@@ -115,7 +150,7 @@ public class UserServiceImpl implements UserService
 
 		if (user.getUsername() != null)
 		{
-			query.append(" AND username = :username ");
+			query.append(" AND username LIKE :username ");
 		}
 
 		if (user.getEmail() != null)
@@ -141,6 +176,12 @@ public class UserServiceImpl implements UserService
 		if (user.getPrecisionofanswers() != null)
 		{
 			query.append(" AND precisionofanswers = :precisionofanswers ");
+		}
+
+		if (pageNumber >= 0 && pageSize >= 0) {
+			query.append(" LIMIT ").append(pageSize);
+
+			query.append(" OFFSET ").append(pageNumber * pageSize);
 		}
 
 		return query.toString();

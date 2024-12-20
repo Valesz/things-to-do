@@ -14,8 +14,8 @@ public interface SubmissionRepository extends CrudRepository<Submission, Long>
 {
 
 	@Query("SELECT SUBMISSION.ID, TASKID, DESCRIPTION, SUBMISSION.TIMEOFSUBMISSION, ACCEPTANCE, SUBMITTERID, USERNAME AS SUBMITTERNAME "
-		+ "FROM \"submission\" SUBMISSION INNER JOIN \"user\" USERT ON SUBMISSION.submitterid = USERT.ID")
-	Iterable<SubmissionListing> getAllSubmissions();
+		+ "FROM \"submission\" SUBMISSION INNER JOIN \"user\" USERT ON SUBMISSION.SUBMITTERID = USERT.ID LIMIT :LIMIT OFFSET :OFFSET")
+	Iterable<SubmissionListing> getAllSubmissions(@Param("OFFSET") long offset, @Param("LIMIT") long limit);
 
 	@Modifying
 	@Query("UPDATE \"submission\" SET ACCEPTANCE = :ACCEPTANCE WHERE ID = :ID")

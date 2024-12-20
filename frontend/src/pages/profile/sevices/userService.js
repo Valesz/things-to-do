@@ -3,7 +3,7 @@ import {fetchJson, fetchText} from '../../../services/fetchService'
 
 const baseEndpoint = '/api/user/'
 
-export async function fetchUser({id, username, email, timeOfCreation, status, classification, precisionOfAnswers} = {}) {
+export async function fetchUser({id, username, email, timeOfCreation, status, classification, precisionOfAnswers, pageNumber = 0, pageSize = 5} = {}) {
 	const params = '?1=1' +
 		(id ? '&id=' + id : '') +
 		(username && username !== '' ? '&username=' + username : '') +
@@ -14,7 +14,9 @@ export async function fetchUser({id, username, email, timeOfCreation, status, cl
 			|| '') +
 		(status && status !== '' ? '&status=' + status : '') +
 		(classification ? '&classification=' + classification : '') +
-		(precisionOfAnswers ? '&precisionofanswers=' + precisionOfAnswers : '')
+		(precisionOfAnswers ? '&precisionofanswers=' + precisionOfAnswers : '') +
+		(pageNumber !== undefined ? `&pagenumber=${pageNumber}` : '') +
+		(pageSize !== undefined ? `&pagesize=${pageSize}` : '')
 
 	const requestOptions = {
 		method: 'GET',
