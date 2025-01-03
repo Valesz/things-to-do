@@ -9,7 +9,6 @@ import TaskBlock from './task/components/list/taskBlock'
 import {useNavigate} from 'react-router-dom'
 import TaskListing from './task/components/list/taskListing'
 import useScrollPosition from '../hooks/useScrollPosition'
-import Footer from '../components/footer/footer'
 
 function HomePage() {
 	const navigate = useNavigate()
