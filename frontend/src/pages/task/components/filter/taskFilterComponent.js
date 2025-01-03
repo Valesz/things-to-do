@@ -30,7 +30,7 @@ const TaskFilterComponent = ({toastRef, onChange}) => {
 			date: {
 				label: 'Date',
 				name: 'date',
-				value: searchParams.get('date') || '',
+				value: searchParams.getAll('date').map(x => new Date(x)) || [],
 				type: 'date',
 				mode: 'range'
 			},
@@ -79,7 +79,7 @@ const TaskFilterComponent = ({toastRef, onChange}) => {
 			filterFormData.date.value &&
 			(res = {
 				...res,
-				date: filterFormData.date.value
+				date: filterFormData.date.value.filter(value => value)
 			})
 			filterFormData.completion.value &&
 			(res = {

@@ -18,6 +18,8 @@ import {useTasks} from '../task/hooks/useTask'
 import {useSubmissions} from '../submission/hooks/useSubmissions'
 import SubmissionListing from '../submission/components/list/submissionListing'
 import NotFoundPage from '../error/notFoundPage'
+import {ProgressSpinner} from 'primereact/progressspinner'
+import Modal from '../../components/Modal'
 
 function ProfilePage() {
 	const [user] = useAuth()
@@ -207,6 +209,9 @@ function ProfilePage() {
 				toastRef={toastRef}
 				onSuccess={() => setCreatedTasksValid(false)}
 			/>
+			<Modal show={isLocalUserLoading || isCreatedTasksLoading || isCompletedTasksLoading || isSubmissionLoading}>
+				<ProgressSpinner />
+			</Modal>
 			<Toast ref={toastRef}/>
 		</div>
 	)

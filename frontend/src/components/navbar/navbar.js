@@ -86,7 +86,7 @@ const NavbarComponent = () => {
 			>
 				<Logo />
 			</button>
-			<div className={'w-3rem block lg:hidden'}></div>
+			<div className={"lg:hidden w-3rem"}></div>
 		</>
 	)
 
@@ -108,7 +108,7 @@ const NavbarComponent = () => {
 					item && <Button key={item.id} visible={item.show} label={item.label} icon={item.icon} text={item.id.startsWith('text')} onClick={item.command}/>
 				))}
 			</ButtonGroup>
-			<Button className={'flex lg:hidden'} icon={'pi pi-bars'} onClick={() => setOpenSidebar(true)}/>
+			<Button className={'lg:hidden'} icon={'pi pi-bars'} onClick={() => setOpenSidebar(true)}/>
 		</>
 	)
 
@@ -116,7 +116,7 @@ const NavbarComponent = () => {
 		<>
 			<SideNavbarComponent visible={openSidebar} setVisible={setOpenSidebar} items={items}/>
 			<Toolbar
-				className={'w-full z-5'}
+				className={'z-5 w-full'}
 				start={start}
 				center={center}
 				end={end}

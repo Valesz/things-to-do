@@ -3,7 +3,7 @@ import {useCallback, useRef} from 'react'
 import PropTypes from 'prop-types'
 import {Paginator} from 'primereact/paginator'
 
-const TaskListing = ({taskList, first, rows, totalRows, onPageChange, buttons, className}) => {
+const TaskListing = ({taskList, first, rows, totalRows, onPageChange, buttons, className, paginator = true, style, wrapText}) => {
 	const topOfList = useRef(null)
 
 	const listTemplate = useCallback((list) => {
@@ -16,51 +16,57 @@ const TaskListing = ({taskList, first, rows, totalRows, onPageChange, buttons, c
 				<div ref={topOfList}></div>
 				<div className={'grid grid-nogutter'}>
 					{taskList.map((task, index) => (
-						<TaskBlock key={task.id} task={task} index={index} buttons={buttons}/>
+						<TaskBlock key={task.id} task={task} index={index} buttons={buttons} wrapText={wrapText}/>
 					))}
 				</div>
 			</div>
 		)
-	}, [taskList, buttons])
+	}, [taskList, buttons, wrapText])
 
 	return (
-		<div className={className} style={{height: 'fit-content'}}>
+		<div className={className} style={style || {height: 'fit-content'}}>
 			{(taskList.length > 0
 					&&
 					<div>
-						<Paginator
-							first={first}
-							rows={rows}
-							totalRecords={totalRows}
-							rowsPerPageOptions={[5, 10, 20]}
-							onPageChange={(e) => {
-								topOfList.current.scrollIntoView({block: 'center'})
-								onPageChange?.(e)
-							}}
-							template={{
-								layout: window.innerWidth >= 576
-									? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
-									: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
-							}}
-						/>
+						{
+							paginator &&
+							<Paginator
+								first={first}
+								rows={rows}
+								totalRecords={totalRows}
+								rowsPerPageOptions={[5, 10, 20]}
+								onPageChange={(e) => {
+									topOfList.current.scrollIntoView({block: 'center'})
+									onPageChange?.(e)
+								}}
+								template={{
+									layout: window.innerWidth >= 576
+										? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
+										: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
+								}}
+							/>
+						}
 						{
 							listTemplate(taskList)
 						}
-						<Paginator
-							first={first}
-							rows={rows}
-							totalRecords={totalRows}
-							rowsPerPageOptions={[5, 10, 20]}
-							onPageChange={(e) => {
-								topOfList.current.scrollIntoView({block: 'center'})
-								onPageChange?.(e)
-							}}
-							template={{
-								layout: window.innerWidth >= 576
-									? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
-									: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
-							}}
-						/>
+						{
+							paginator &&
+							<Paginator
+								first={first}
+								rows={rows}
+								totalRecords={totalRows}
+								rowsPerPageOptions={[5, 10, 20]}
+								onPageChange={(e) => {
+									topOfList.current.scrollIntoView({block: 'center'})
+									onPageChange?.(e)
+								}}
+								template={{
+									layout: window.innerWidth >= 576
+										? 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
+										: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
+								}}
+							/>
+						}
 					</div>)
 				|| <div className={'col-11 lg:col-8 mx-auto z-index-1 surface-50 p-component text-center'}>
 					<div className={'flex flex-column justify-content-center h-full p-4 gap-4'}>
@@ -84,4 +90,7 @@ TaskListing.propTypes = {
 	rows: PropTypes.number.isRequired,
 	totalRows: PropTypes.number.isRequired,
 	onPageChange: PropTypes.func,
+	paginator: PropTypes.bool,
+	style: PropTypes.object,
+	wrapText: PropTypes.bool,
 }

@@ -17,9 +17,9 @@ export async function fetchTasks({id, name, keywords, date, completed, completed
 		(id ? '&id=' + id : '') +
 		(name && name !== '' ? '&name=' + name : '') +
 		(keywords && keywords.length > 0 ? '&keywords=' + keywords.join('&keywords=') : '') +
-		((date &&
-				(date[0] !== null ? '&createdafter=' + formatDate(date[0]) : '') +
-				(date[1] !== null ? '&createdbefore=' + formatDate(date[1]) : ''))
+		((date && date.length > 0 &&
+				(date[0] ? '&createdafter=' + formatDate(date[0]) : '') +
+				(date[1] ? '&createdbefore=' + formatDate(date[1]) : ''))
 			|| '') +
 		(completed !== undefined ? '&completed=' + completed : '') +
 		(completedUserId ? `&completeduserid=${completedUserId}` : '') +

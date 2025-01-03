@@ -6,7 +6,7 @@ import PropTypes from 'prop-types'
 import {Card} from 'primereact/card'
 import {useMemo} from 'react'
 
-const TaskBlock = ({task, index, buttons, className, style}) => {
+const TaskBlock = ({task, index, buttons, className, style, wrapText}) => {
 
 	const navigate = useNavigate()
 
@@ -60,7 +60,14 @@ const TaskBlock = ({task, index, buttons, className, style}) => {
 							))}
 						</span>}
 				</div>
-				{task.description && <span className={"text-overflow-clip"}>{task.description}</span>}
+				{
+					task.description &&
+					<span
+						className={wrapText && "text-wrap-vertical"}
+					>
+						{task.description}
+					</span>
+				}
 				<div className={'flex flex-row gap-2 flex-grow-1 lg:h-3rem mt-3'}>
 					{buttons && buttons.length > 0 &&
 						buttons.map((button) => {
@@ -84,5 +91,8 @@ export default TaskBlock
 TaskBlock.propTypes = {
 	task: PropTypes.object.isRequired,
 	index: PropTypes.number,
-	buttons: PropTypes.arrayOf(PropTypes.object)
+	buttons: PropTypes.arrayOf(PropTypes.object),
+	className: PropTypes.string,
+	style: PropTypes.object,
+	wrapText: PropTypes.bool
 }

@@ -43,7 +43,7 @@ public class TaskServiceImpl implements TaskService
 	@Override
 	public Iterable<TaskListingFilter> getAllTasksAsListingFilter(long pageNumber, long pageSize)
 	{
-		return taskRepository.getAllTasksAsListingFilter(pageNumber, pageSize);
+		return taskRepository.getAllTasksAsListingFilter(pageNumber * pageSize, pageSize);
 	}
 
 	@Override

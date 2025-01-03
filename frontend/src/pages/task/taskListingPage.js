@@ -13,6 +13,8 @@ import {useAuth} from '../../hooks/useAuth'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {taskViewButtons} from '../../utils/constants/buttons'
 import {useTasks} from './hooks/useTask'
+import {ProgressSpinner} from 'primereact/progressspinner'
+import Modal from '../../components/Modal'
 
 const TaskListingPage = () => {
 	const toastRef = useRef()
@@ -25,7 +27,7 @@ const TaskListingPage = () => {
 		return {
 			name: searchParams.get('name'),
 			keywords: searchParams.getAll('keywords'),
-			date: searchParams.get('date'),
+			date: searchParams.getAll('date'),
 			completed: searchParams.get('completed') || undefined,
 			creatorName: searchParams.get('creatorName')
 		}
@@ -58,7 +60,10 @@ const TaskListingPage = () => {
 	), [tasksFetchError])
 
 	return (
-		<div className={'flex flex-column justify-content-start align-items-center h-screen w-full gap-3 mt-6'}>
+		<div className={'flex flex-column justify-content-start align-items-center w-full gap-3 mt-6'}>
+			<Modal show={isLoading}>
+				<ProgressSpinner />
+			</Modal>
 			<div className={'flex flex-row gap-3 w-full justify-content-center lg:hidden'}>
 				<FloatLabel>
 					<InputText
