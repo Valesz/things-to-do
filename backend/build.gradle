@@ -1,7 +1,10 @@
 plugins {
 	id 'java'
 	id "io.freefair.lombok" version "8.10"
+	id 'application'
 }
+
+mainClassName = "org.example.Main"
 
 repositories {
 	mavenCentral()
